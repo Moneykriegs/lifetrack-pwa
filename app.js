@@ -41,6 +41,47 @@ const MEAL_SLOTS = [
   { id:'dinner',    label:'Cena',      icon:'🌙'  },
 ];
 
+const CUTTING_STYLES = [
+  { id:'aggressive_cut', label:'Corte agresivo',  desc:'-25% TDEE',  factor:-0.25, emoji:'🔥' },
+  { id:'moderate_cut',   label:'Corte moderado',  desc:'-15% TDEE',  factor:-0.15, emoji:'✂️'  },
+  { id:'maintenance',    label:'Mantenimiento',   desc:'= TDEE',     factor:0,     emoji:'⚖️'  },
+  { id:'lean_bulk',      label:'Volumen limpio',  desc:'+10% TDEE',  factor:0.10,  emoji:'💪'  },
+  { id:'bulk',           label:'Volumen',         desc:'+20% TDEE',  factor:0.20,  emoji:'📈'  },
+  { id:'custom',         label:'Meta manual',     desc:'personalizada', factor:null, emoji:'⚙️' },
+];
+
+// Prep foods por categoría (macros por porción estándar)
+const PREP_FOODS = [
+  // Proteínas
+  { id:'pf_chicken', cat:'🍗 Proteínas', name:'Pechuga de pollo',    kcal:248, prot:46, carbs:0,  fat:5.4, qty:150 },
+  { id:'pf_tuna',    cat:'🍗 Proteínas', name:'Atún en lata',        kcal:116, prot:26, carbs:0,  fat:1,   qty:100 },
+  { id:'pf_eggs2',   cat:'🍗 Proteínas', name:'Huevos (2 piezas)',   kcal:180, prot:12, carbs:2,  fat:14,  qty:120 },
+  { id:'pf_beef',    cat:'🍗 Proteínas', name:'Carne molida magra',  kcal:265, prot:30, carbs:0,  fat:15,  qty:150 },
+  { id:'pf_salmon',  cat:'🍗 Proteínas', name:'Salmón al horno',     kcal:312, prot:30, carbs:0,  fat:20,  qty:150 },
+  { id:'pf_turkey',  cat:'🍗 Proteínas', name:'Pechuga de pavo',     kcal:203, prot:45, carbs:3,  fat:1,   qty:150 },
+  { id:'pf_tofu',    cat:'🍗 Proteínas', name:'Tofu salteado',       kcal:144, prot:15, carbs:4,  fat:8,   qty:100 },
+  { id:'pf_whey',    cat:'🍗 Proteínas', name:'Shake de proteína',   kcal:130, prot:25, carbs:3,  fat:2,   qty:300 },
+  // Carbohidratos
+  { id:'pf_rice',    cat:'🍚 Carbos',    name:'Arroz blanco cocido', kcal:195, prot:4,  carbs:42, fat:0.4, qty:150 },
+  { id:'pf_swetp',   cat:'🍚 Carbos',    name:'Camote / batata',     kcal:155, prot:3.5,carbs:36, fat:0.2, qty:180 },
+  { id:'pf_oats',    cat:'🍚 Carbos',    name:'Avena con leche',     kcal:220, prot:8,  carbs:35, fat:5,   qty:300 },
+  { id:'pf_pasta',   cat:'🍚 Carbos',    name:'Pasta integral',      kcal:237, prot:9,  carbs:45, fat:2,   qty:150 },
+  { id:'pf_quinoa',  cat:'🍚 Carbos',    name:'Quinoa cocida',       kcal:180, prot:6.6,carbs:32, fat:2.9, qty:150 },
+  { id:'pf_banana',  cat:'🍚 Carbos',    name:'Plátano mediano',     kcal:105, prot:1.3,carbs:27, fat:0.4, qty:120 },
+  { id:'pf_bread',   cat:'🍚 Carbos',    name:'Pan integral (2)',    kcal:160, prot:6,  carbs:30, fat:2,   qty:80  },
+  // Verduras
+  { id:'pf_broc',    cat:'🥦 Verduras',  name:'Brócoli al vapor',   kcal:55,  prot:3.7,carbs:11, fat:0.6, qty:150 },
+  { id:'pf_spin',    cat:'🥦 Verduras',  name:'Espinaca salteada',  kcal:41,  prot:5.3,carbs:6.8,fat:0.5, qty:150 },
+  { id:'pf_carrot',  cat:'🥦 Verduras',  name:'Zanahoria cocida',   kcal:52,  prot:1.2,carbs:12, fat:0.3, qty:130 },
+  { id:'pf_salad',   cat:'🥦 Verduras',  name:'Ensalada mixta',     kcal:35,  prot:2,  carbs:7,  fat:0.5, qty:150 },
+  { id:'pf_pepper',  cat:'🥦 Verduras',  name:'Pimiento salteado',  kcal:46,  prot:1.4,carbs:9.3,fat:0.5, qty:150 },
+  // Otros
+  { id:'pf_avo',     cat:'🥑 Otros',     name:'Aguacate (½)',        kcal:120, prot:1.5,carbs:6,  fat:11,  qty:75  },
+  { id:'pf_yogurt',  cat:'🥑 Otros',     name:'Yogur griego',        kcal:97,  prot:9,  carbs:3.6,fat:5,   qty:100 },
+  { id:'pf_almonds', cat:'🥑 Otros',     name:'Almendras (30 g)',    kcal:173, prot:6,  carbs:6,  fat:15,  qty:30  },
+  { id:'pf_cottage', cat:'🥑 Otros',     name:'Requesón / cottage',  kcal:98,  prot:11, carbs:3.4,fat:4.3, qty:100 },
+];
+
 const ACTIVITIES = [
   { name:'Correr',        icon:'🏃', met:9.8  },
   { name:'Caminar',       icon:'🚶', met:3.5  },
@@ -66,7 +107,7 @@ const DB = {
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
 
-  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'' }); },
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom' }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
   foodLog()       { return this._g('lt_food', {}); },
@@ -718,6 +759,7 @@ const App = {
     this.bindExerciseModal();
     this.bindPlanModal();
     this.bindWellnessModal();
+    this.bindPrepModal();
 
     await Notif.init();
 
@@ -922,6 +964,26 @@ const App = {
       if (!confirm('¿Cerrar sesión de Google?')) return;
       await CloudSync.signOut();
     });
+    // Live TDEE preview when any body-param or cutting style changes
+    ['setting-age','setting-height','setting-gender','setting-activity','setting-cutting-style'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', () => {
+        const tmp = {
+          age: parseInt(document.getElementById('setting-age').value)||null,
+          height: parseInt(document.getElementById('setting-height').value)||null,
+          gender: document.getElementById('setting-gender').value,
+          activityLevel: document.getElementById('setting-activity').value,
+          calorieGoal: parseInt(document.getElementById('setting-goal').value)||2000,
+          cuttingStyle: document.getElementById('setting-cutting-style').value,
+        };
+        this._updateTDEEPreview(tmp);
+        // Auto-fill calorieGoal field if style is not custom
+        if (tmp.cuttingStyle !== 'custom') {
+          const tdee = this._calcTDEE(tmp);
+          const computed = this._calcGoalFromStyle(tdee, tmp.cuttingStyle);
+          if (computed) document.getElementById('setting-goal').value = computed;
+        }
+      });
+    });
   },
 
   openSettings() {
@@ -947,14 +1009,44 @@ const App = {
     document.getElementById('setting-water-goal').value=s.waterGoal||2500;
     document.getElementById('setting-weight-goal').value=s.weightGoal||'';
     document.getElementById('setting-mcp-url').value=s.mcpUrl||'';
+    document.getElementById('setting-cutting-style').value=s.cuttingStyle||'custom';
+    this._updateTDEEPreview(s);
     this.updateNotifBadge();
     this.openModal('modal-settings');
   },
 
   closeSettings() { this.closeModal('modal-settings'); },
 
+  // ── helpers TDEE / cutting ────────────────────────────────
+  _calcTDEE(s) {
+    if (!s.height || !s.age) return null;
+    const w = DB.weightLog(); const kg = w.length ? w[w.length-1].kg : 70;
+    const bmr = s.gender==='female'
+      ? 10*kg + 6.25*s.height - 5*s.age - 161
+      : 10*kg + 6.25*s.height - 5*s.age + 5;
+    const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9};
+    return Math.round(bmr * (mult[s.activityLevel||'moderate']||1.55));
+  },
+  _calcGoalFromStyle(tdee, style) {
+    const cs = CUTTING_STYLES.find(c=>c.id===style);
+    if (!cs || cs.factor===null || !tdee) return null;
+    return Math.round(tdee * (1 + cs.factor));
+  },
+  _updateTDEEPreview(s) {
+    const el = document.getElementById('tdee-preview');
+    if (!el) return;
+    const tdee = this._calcTDEE(s);
+    const style = s.cuttingStyle || 'custom';
+    if (!tdee) { el.textContent = 'Añade edad y altura para calcular el TDEE'; el.style.color='var(--text-muted)'; return; }
+    const cs = CUTTING_STYLES.find(c=>c.id===style);
+    const target = style==='custom' ? (s.calorieGoal||2000) : this._calcGoalFromStyle(tdee, style);
+    el.innerHTML = `TDEE: <strong>${tdee}</strong> kcal → <strong style="color:var(--primary)">${target}</strong> kcal${cs&&cs.factor!==null?' ('+cs.desc+')':''}`;
+    el.style.color='var(--text-muted)';
+  },
+
   saveSettings() {
-    const s = {
+    const style = document.getElementById('setting-cutting-style').value;
+    const rawS = {
       name: document.getElementById('setting-name').value.trim()||'Usuario',
       age:  parseInt(document.getElementById('setting-age').value)||null,
       height: parseInt(document.getElementById('setting-height').value)||null,
@@ -964,7 +1056,15 @@ const App = {
       waterGoal: parseInt(document.getElementById('setting-water-goal').value)||2500,
       weightGoal: parseFloat(document.getElementById('setting-weight-goal').value)||null,
       mcpUrl: document.getElementById('setting-mcp-url').value.trim().replace(/\/$/,''),
+      cuttingStyle: style,
     };
+    // Auto-compute calorieGoal when style != custom
+    if (style !== 'custom') {
+      const tdee = this._calcTDEE(rawS);
+      const computed = this._calcGoalFromStyle(tdee, style);
+      if (computed) rawS.calorieGoal = computed;
+    }
+    const s = rawS;
     DB.saveSettings(s);
     document.getElementById('btn-sync').style.display = s.mcpUrl ? '' : 'none';
     this.closeSettings();
@@ -1270,21 +1370,43 @@ const App = {
   },
 
   updateFoodBar() {
-    const food=DB.todayFood();
-    const kcal=food.reduce((a,f)=>a+f.kcal,0);
-    const prot=food.reduce((a,f)=>a+(f.prot||0),0);
-    const carbs=food.reduce((a,f)=>a+(f.carbs||0),0);
-    const fat=food.reduce((a,f)=>a+(f.fat||0),0);
-    const goal=DB.settings().calorieGoal;
-    const pct=Math.min((kcal/goal)*100,100);
-    document.getElementById('food-kcal-consumed').textContent=kcal;
-    document.getElementById('food-kcal-goal').textContent=`de ${goal} kcal`;
-    const fill=document.getElementById('food-progress-fill');
-    fill.style.width=pct+'%';
-    fill.style.background=pct>100?'var(--danger)':pct>80?'var(--warning)':'var(--success)';
-    document.getElementById('macro-prot').textContent=prot.toFixed(1)+'g';
-    document.getElementById('macro-carbs').textContent=carbs.toFixed(1)+'g';
-    document.getElementById('macro-fat').textContent=fat.toFixed(1)+'g';
+    const food   = DB.todayFood();
+    const kcal   = food.reduce((a,f) => a+f.kcal, 0);
+    const prot   = food.reduce((a,f) => a+(f.prot||0), 0);
+    const carbs  = food.reduce((a,f) => a+(f.carbs||0), 0);
+    const fat    = food.reduce((a,f) => a+(f.fat||0), 0);
+    const burned = DB.todayExercise().reduce((a,e) => a+(e.kcalBurned||0), 0);
+    const goal   = DB.settings().calorieGoal;
+    const netGoal= goal + burned;          // ejercicio amplía el presupuesto
+    const rem    = netGoal - kcal;
+    const pct    = Math.min((kcal / netGoal) * 100, 100);
+
+    // Remaining big display
+    const remEl = document.getElementById('food-kcal-remaining');
+    if (remEl) {
+      if (rem <= 0) {
+        remEl.textContent = Math.abs(rem) > 0 ? `+${Math.abs(rem)} excedidas` : '0';
+        remEl.style.color = 'var(--danger)';
+      } else {
+        remEl.textContent = rem;
+        remEl.style.color = rem < 200 ? 'var(--warning)' : 'var(--primary)';
+      }
+    }
+    // Sub-labels
+    document.getElementById('food-kcal-consumed').textContent = kcal;
+    const goalLabel = document.getElementById('food-kcal-goal');
+    if (goalLabel) goalLabel.textContent = burned
+      ? `meta ${goal} + ${burned} 🔥 = ${netGoal} kcal`
+      : `de ${goal} kcal`;
+    const statusEl = document.getElementById('food-kcal-status');
+    if (statusEl) statusEl.textContent = rem <= 0 ? '¡Meta alcanzada! 🎉' : `${kcal} consumidas · ${rem} restantes`;
+
+    const fill = document.getElementById('food-progress-fill');
+    fill.style.width = pct + '%';
+    fill.style.background = kcal > netGoal ? 'var(--danger)' : pct > 85 ? 'var(--warning)' : 'var(--success)';
+    document.getElementById('macro-prot').textContent  = prot.toFixed(1)+'g';
+    document.getElementById('macro-carbs').textContent = carbs.toFixed(1)+'g';
+    document.getElementById('macro-fat').textContent   = fat.toFixed(1)+'g';
   },
 
   renderFoodLog() {
@@ -2234,6 +2356,281 @@ const App = {
         </div>` : ''}
       </div>
       ${entry.note ? `<div class="wellness-today-note">"${esc(entry.note)}"</div>` : ''}`;
+  },
+
+  // ================================================================
+  // MEAL PREP SEMANAL
+  // ================================================================
+  bindPrepModal() {
+    document.getElementById('btn-open-prep')?.addEventListener('click', () => this.openMealPrep());
+    document.getElementById('btn-close-prep')?.addEventListener('click', () => this.closeMealPrep());
+    document.getElementById('modal-meal-prep')?.addEventListener('click', e => { if (e.target === e.currentTarget) this.closeMealPrep(); });
+    document.getElementById('btn-close-prep-picker')?.addEventListener('click', () => this.closePrepPicker());
+    document.getElementById('prep-search')?.addEventListener('input', e => this.renderPrepFoodList(e.target.value));
+    document.getElementById('prep-apply-all-days')?.addEventListener('change', () => {
+      const lbl = document.getElementById('prep-apply-label');
+      if (lbl) lbl.textContent = document.getElementById('prep-apply-all-days').checked ? 'Todos los días' : 'Solo este día';
+    });
+    // Tab switching
+    document.querySelectorAll('.prep-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.prep-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.renderPrepFoodList(document.getElementById('prep-search')?.value || '');
+      });
+    });
+  },
+
+  openMealPrep() {
+    this.prepCurrentDate = today();
+    this.prepPickerSlot  = null;
+    this.renderPrepOverview();
+    this.renderPrepDaySlots();
+    this.openModal('modal-meal-prep');
+  },
+  closeMealPrep() { this.closePrepPicker(); this.closeModal('modal-meal-prep'); },
+
+  // 7-day overview cards
+  renderPrepOverview() {
+    const el = document.getElementById('prep-week-overview');
+    if (!el) return;
+    const mp = DB.mealPlan();
+    el.innerHTML = Array.from({length:7}, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const ds = fmtDate(d);
+      const entries = mp[ds] || [];
+      const kcal  = entries.reduce((a,e) => a+e.kcal, 0);
+      const dots  = MEAL_SLOTS.map(s => {
+        const has = entries.some(e => e.slot === s.id);
+        return `<span class="prep-dot${has?' filled':''}" title="${s.label}"></span>`;
+      }).join('');
+      const isActive = ds === this.prepCurrentDate;
+      const isToday  = ds === today();
+      return `<button class="prep-day-card${isActive?' active':''}" data-prep-date="${ds}">
+        <div class="prep-day-name">${isToday ? 'Hoy' : DAYS_SHORT[d.getDay()]}</div>
+        <div class="prep-day-num">${d.getDate()}</div>
+        <div class="prep-day-dots">${dots}</div>
+        ${kcal ? `<div class="prep-day-kcal">${kcal}</div>` : '<div class="prep-day-kcal">—</div>'}
+      </button>`;
+    }).join('');
+    el.querySelectorAll('[data-prep-date]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.prepCurrentDate = btn.dataset.prepDate;
+        this.renderPrepOverview();
+        this.renderPrepDaySlots();
+      });
+    });
+  },
+
+  // Slots for selected day
+  renderPrepDaySlots() {
+    const date    = this.prepCurrentDate;
+    const entries = DB.planForDate(date);
+    const d       = new Date(date + 'T12:00:00');
+    const isToday = date === today();
+
+    const titleEl = document.getElementById('prep-day-title');
+    if (titleEl) titleEl.textContent = `${DAYS_FULL[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()]}`;
+
+    const slotsEl = document.getElementById('prep-day-slots');
+    if (!slotsEl) return;
+    const totalKcal = entries.reduce((a,e) => a+e.kcal, 0);
+
+    slotsEl.innerHTML = MEAL_SLOTS.map(slot => {
+      const slotEntries = entries.filter(e => e.slot === slot.id);
+      const slotKcal    = slotEntries.reduce((a,e) => a+e.kcal, 0);
+      const items = slotEntries.map(e => `
+        <div class="prep-entry">
+          <span class="prep-entry-name">${esc(e.recipeName)}</span>
+          <span class="prep-entry-kcal">${e.kcal}</span>
+          <button class="btn-remove" data-prep-del="${e.id}" data-prep-date="${date}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('');
+      return `<div class="prep-slot-row">
+        <div class="prep-slot-hd">
+          <span class="prep-slot-label">${slot.icon} ${slot.label}</span>
+          ${slotKcal ? `<span class="prep-slot-kcal">${slotKcal} kcal</span>` : ''}
+          <button class="prep-add-slot-btn" data-slot="${slot.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="prep-apply-week-btn" data-apply-slot="${slot.id}" title="Aplicar slot a toda la semana">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+        </div>
+        ${items}
+      </div>`;
+    }).join('');
+
+    // Day total + copy button
+    const actionsEl = document.getElementById('prep-day-actions');
+    if (actionsEl) {
+      actionsEl.innerHTML = `
+        <span style="font-size:13px;color:var(--text-muted)">${totalKcal ? totalKcal+' kcal total' : 'Sin comidas'}</span>
+        <button class="btn btn-sm" id="btn-prep-copy-week" style="font-size:12px;padding:5px 10px">📋 Copiar a toda la semana</button>
+        ${isToday && entries.length ? `<button class="btn btn-sm btn-primary" id="btn-prep-log-today" style="font-size:12px;padding:5px 10px">✅ Registrar hoy</button>` : ''}
+      `;
+      document.getElementById('btn-prep-copy-week')?.addEventListener('click', () => this.copyPrepToWeek());
+      document.getElementById('btn-prep-log-today')?.addEventListener('click', () => { this.logTodayPlan(); this.closeMealPrep(); });
+    }
+
+    // Bind add buttons
+    slotsEl.querySelectorAll('[data-slot]').forEach(btn => {
+      btn.addEventListener('click', () => this.openPrepPicker(btn.dataset.slot));
+    });
+    // Bind apply-to-week per slot
+    slotsEl.querySelectorAll('[data-apply-slot]').forEach(btn => {
+      btn.addEventListener('click', () => this.applySlotToWeek(btn.dataset.applySlot));
+    });
+    // Bind remove
+    slotsEl.querySelectorAll('[data-prep-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        DB.removePlanEntry(btn.dataset.prepDate, btn.dataset.prepDel);
+        CloudSync.schedulePush();
+        this.renderPrepOverview();
+        this.renderPrepDaySlots();
+        this.updatePlanBadge();
+      });
+    });
+  },
+
+  // Open quick-fill picker
+  openPrepPicker(slot) {
+    this.prepPickerSlot = slot;
+    const slotMeta = MEAL_SLOTS.find(s => s.id === slot);
+    const titleEl  = document.getElementById('prep-picker-slot-title');
+    if (titleEl) titleEl.textContent = `${slotMeta?.icon || ''} ${slotMeta?.label || slot}`;
+    const allDaysEl = document.getElementById('prep-apply-all-days');
+    if (allDaysEl) allDaysEl.checked = false;
+    const lbl = document.getElementById('prep-apply-label');
+    if (lbl) lbl.textContent = 'Solo este día';
+    document.getElementById('prep-search').value = '';
+    // Activate first tab
+    document.querySelectorAll('.prep-tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+    this.renderPrepFoodList('');
+    document.getElementById('prep-picker').style.display = '';
+  },
+  closePrepPicker() {
+    const p = document.getElementById('prep-picker');
+    if (p) p.style.display = 'none';
+    this.prepPickerSlot = null;
+  },
+
+  renderPrepFoodList(q) {
+    const listEl = document.getElementById('prep-food-list');
+    if (!listEl) return;
+    const activeTab = document.querySelector('.prep-tab-btn.active')?.dataset.tab || 'prep';
+    q = (q||'').toLowerCase();
+
+    if (activeTab === 'prep') {
+      // Group PREP_FOODS by category
+      const grouped = {};
+      PREP_FOODS.forEach(f => {
+        if (q && !f.name.toLowerCase().includes(q)) return;
+        if (!grouped[f.cat]) grouped[f.cat] = [];
+        grouped[f.cat].push(f);
+      });
+      const cats = Object.keys(grouped);
+      if (!cats.length) { listEl.innerHTML = '<div class="empty-state" style="padding:20px">Sin resultados</div>'; return; }
+      listEl.innerHTML = cats.map(cat => `
+        <div class="prep-cat-header">${cat}</div>
+        ${grouped[cat].map(f => `
+          <button class="prep-food-item" data-prep-food="${f.id}">
+            <div class="prep-food-info">
+              <div class="prep-food-name">${esc(f.name)}</div>
+              <div class="prep-food-macros">P:${f.prot}g C:${f.carbs}g G:${f.fat}g · ${f.qty}g</div>
+            </div>
+            <span class="prep-food-kcal">${f.kcal}</span>
+          </button>`).join('')}
+      `).join('');
+      listEl.querySelectorAll('[data-prep-food]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const food = PREP_FOODS.find(f => f.id === btn.dataset.prepFood);
+          if (food) this.addPrepEntry({ name: food.name, kcal: food.kcal, prot: food.prot, carbs: food.carbs, fat: food.fat, qty: food.qty });
+        });
+      });
+    } else {
+      // My Recipes tab
+      const recipes = DB.recipes().filter(r => !q || r.name.toLowerCase().includes(q));
+      if (!recipes.length) { listEl.innerHTML = '<div class="empty-state" style="padding:20px">Sin recetas</div>'; return; }
+      listEl.innerHTML = recipes.map(r => `
+        <button class="prep-food-item" data-prep-recipe="${r.id}">
+          <div class="prep-food-info">
+            <div class="prep-food-name">${esc(r.name)}</div>
+            <div class="prep-food-macros">P:${r.prot||0}g C:${r.carbs||0}g G:${r.fat||0}g</div>
+          </div>
+          <span class="prep-food-kcal">${r.kcal}</span>
+        </button>`).join('');
+      listEl.querySelectorAll('[data-prep-recipe]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = DB.recipes().find(r => r.id == btn.dataset.prepRecipe);
+          if (r) this.addPrepEntry({ name: r.name, kcal: r.kcal, prot: r.prot||0, carbs: r.carbs||0, fat: r.fat||0, qty: r.servingSize||100, isRecipe: true });
+        });
+      });
+    }
+  },
+
+  addPrepEntry(food) {
+    const slot  = this.prepPickerSlot;
+    const allDays = document.getElementById('prep-apply-all-days')?.checked;
+    const dates = allDays
+      ? Array.from({length:7}, (_,i) => { const d=new Date(); d.setDate(d.getDate()+i); return fmtDate(d); })
+      : [this.prepCurrentDate];
+
+    dates.forEach(date => {
+      DB.addPlanEntry(date, { id: Date.now() + Math.random(), slot, recipeName: food.name, kcal: food.kcal, prot: food.prot, carbs: food.carbs, fat: food.fat, qty: food.qty, isRecipe: food.isRecipe||false });
+    });
+    CloudSync.schedulePush();
+    const slotMeta = MEAL_SLOTS.find(s => s.id === slot);
+    toast(`${slotMeta?.icon||''} ${food.name} añadido${allDays?' a toda la semana':''}`, 'success');
+    this.closePrepPicker();
+    this.renderPrepOverview();
+    this.renderPrepDaySlots();
+    this.updatePlanBadge();
+  },
+
+  // Copy all slots of current day to the rest of the week
+  copyPrepToWeek() {
+    const entries = DB.planForDate(this.prepCurrentDate);
+    if (!entries.length) { toast('Este día no tiene comidas', 'error'); return; }
+    let count = 0;
+    Array.from({length:7}, (_,i) => { const d=new Date(); d.setDate(d.getDate()+i); return fmtDate(d); })
+      .filter(ds => ds !== this.prepCurrentDate)
+      .forEach(ds => {
+        const mp = DB.mealPlan();
+        mp[ds] = entries.map(e => ({...e, id: Date.now()+Math.random()}));
+        DB.saveMealPlan(mp);
+        count++;
+      });
+    CloudSync.schedulePush();
+    toast(`Plan copiado a ${count} días ✓`, 'success');
+    this.renderPrepOverview();
+    this.renderPrepDaySlots();
+    this.updatePlanBadge();
+  },
+
+  // Copy a specific slot from current day to all other days this week
+  applySlotToWeek(slotId) {
+    const entries = DB.planForDate(this.prepCurrentDate).filter(e => e.slot === slotId);
+    if (!entries.length) { toast('El slot está vacío', 'error'); return; }
+    const slotMeta = MEAL_SLOTS.find(s => s.id === slotId);
+    let count = 0;
+    Array.from({length:7}, (_,i) => { const d=new Date(); d.setDate(d.getDate()+i); return fmtDate(d); })
+      .filter(ds => ds !== this.prepCurrentDate)
+      .forEach(ds => {
+        const mp = DB.mealPlan();
+        if (!mp[ds]) mp[ds] = [];
+        // Remove existing entries for this slot, then add new ones
+        mp[ds] = mp[ds].filter(e => e.slot !== slotId);
+        entries.forEach(e => mp[ds].push({...e, id: Date.now()+Math.random()}));
+        DB.saveMealPlan(mp);
+        count++;
+      });
+    CloudSync.schedulePush();
+    toast(`${slotMeta?.icon||''} ${slotMeta?.label||slotId} copiado a ${count} días ✓`, 'success');
+    this.renderPrepOverview();
+    this.renderPrepDaySlots();
+    this.updatePlanBadge();
   },
 
   // 7-day wellness history in Historial tab
