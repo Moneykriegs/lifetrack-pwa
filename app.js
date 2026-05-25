@@ -1447,7 +1447,17 @@ const App = {
     document.getElementById('btn-add-recipe').addEventListener('click',()=>this.openRecipeModal());
     document.getElementById('btn-toggle-rec-ai').addEventListener('click',()=>{
       const panel = document.getElementById('rec-panel');
-      const isHidden = panel.style.display === 'none';
+      const sec   = document.getElementById('recipes-section');
+      const chev  = document.getElementById('recipes-chevron');
+      // Open the recipes section first if it's closed
+      if (!this.recipesOpen) {
+        this.recipesOpen = true;
+        sec.style.display = 'block';
+        chev.style.transform = 'rotate(180deg)';
+        this.renderRecipes();
+      }
+      // Toggle the panel (treat '' and 'none' both as hidden)
+      const isHidden = panel.style.display !== 'block';
       panel.style.display = isHidden ? 'block' : 'none';
       if (isHidden) this.renderRecommendations();
     });
