@@ -258,13 +258,22 @@
       <div class="section-header">
         <button class="section-title" id="btn-toggle-recipes" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--text)">
           <svg id="recipes-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:.2s"><polyline points="6 9 12 15 18 9"/></svg>
-          Mis Recetas
+          Recetas
         </button>
-        <button class="btn-icon" id="btn-add-recipe" aria-label="Nueva receta">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn-icon" id="btn-toggle-rec-ai" title="Recomendaciones IA" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;border:none;padding:6px 10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">
+            ✨ IA
+          </button>
+          <button class="btn-icon" id="btn-add-recipe" aria-label="Nueva receta">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
       </div>
       <div id="recipes-section" style="display:none;margin-bottom:12px" class="hidden-section">
+        <!-- AI Recommendations panel (toggled by ✨ IA button) -->
+        <div id="rec-panel" style="margin-bottom:14px"></div>
+        <!-- Divider before user's own recipes -->
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">📖 Mis recetas</div>
         <div id="recipe-list"></div>
       </div>
 
@@ -955,6 +964,27 @@
       <input class="form-input" id="prep-search" placeholder="Buscar alimento..." style="margin:8px 0;font-size:14px">
       <div id="prep-food-list" style="overflow-y:auto;max-height:220px"></div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     INGREDIENT PREFERENCES MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="modal-food-prefs" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="prefs-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <h2 class="modal-title" id="prefs-title" style="margin-bottom:2px">Mis ingredientes favoritos</h2>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">El sistema recomendará recetas con los que selecciones</p>
+      </div>
+      <button class="btn-close" id="btn-close-prefs" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="pref-ingredient-grid" style="max-height:56vh;overflow-y:auto;padding-right:4px"></div>
+    <div id="pref-count-label" style="font-size:12px;color:var(--text-muted);text-align:center;margin:10px 0 4px">
+      Selecciona al menos 3 ingredientes
+    </div>
+    <button class="btn btn-primary" id="btn-save-prefs" disabled style="width:100%">Guardar preferencias</button>
   </div>
 </div>
 

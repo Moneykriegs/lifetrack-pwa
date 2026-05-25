@@ -82,6 +82,142 @@ const PREP_FOODS = [
   { id:'pf_cottage', cat:'🥑 Otros',     name:'Requesón / cottage',  kcal:98,  prot:11, carbs:3.4,fat:4.3, qty:100 },
 ];
 
+// ================================================================
+// INGREDIENT PREFERENCES — base para recomendaciones IA
+// ================================================================
+const INGREDIENTS = [
+  // Proteínas
+  { id:'chicken',      label:'Pollo',              emoji:'🍗', cat:'Proteínas' },
+  { id:'beef',         label:'Carne de res',        emoji:'🥩', cat:'Proteínas' },
+  { id:'pork',         label:'Cerdo',               emoji:'🥓', cat:'Proteínas' },
+  { id:'salmon',       label:'Salmón',              emoji:'🐟', cat:'Proteínas' },
+  { id:'tuna',         label:'Atún',                emoji:'🐠', cat:'Proteínas' },
+  { id:'shrimp',       label:'Camarón',             emoji:'🦐', cat:'Proteínas' },
+  { id:'turkey',       label:'Pavo',                emoji:'🦃', cat:'Proteínas' },
+  { id:'eggs',         label:'Huevos',              emoji:'🥚', cat:'Proteínas' },
+  { id:'tofu',         label:'Tofu',                emoji:'🟨', cat:'Proteínas' },
+  // Verduras
+  { id:'broccoli',     label:'Brócoli',             emoji:'🥦', cat:'Verduras'  },
+  { id:'spinach',      label:'Espinaca',            emoji:'🌿', cat:'Verduras'  },
+  { id:'tomato',       label:'Tomate',              emoji:'🍅', cat:'Verduras'  },
+  { id:'onion',        label:'Cebolla',             emoji:'🧅', cat:'Verduras'  },
+  { id:'garlic',       label:'Ajo',                 emoji:'🧄', cat:'Verduras'  },
+  { id:'peppers',      label:'Pimientos',           emoji:'🫑', cat:'Verduras'  },
+  { id:'zucchini',     label:'Calabacita',          emoji:'🥒', cat:'Verduras'  },
+  { id:'mushrooms',    label:'Champiñones',         emoji:'🍄', cat:'Verduras'  },
+  { id:'carrot',       label:'Zanahoria',           emoji:'🥕', cat:'Verduras'  },
+  { id:'lettuce',      label:'Lechuga',             emoji:'🥬', cat:'Verduras'  },
+  { id:'cucumber',     label:'Pepino',              emoji:'🥒', cat:'Verduras'  },
+  // Carbohidratos
+  { id:'rice',         label:'Arroz',               emoji:'🍚', cat:'Carbohidratos' },
+  { id:'pasta',        label:'Pasta',               emoji:'🍝', cat:'Carbohidratos' },
+  { id:'bread',        label:'Pan integral',        emoji:'🍞', cat:'Carbohidratos' },
+  { id:'oats',         label:'Avena',               emoji:'🌾', cat:'Carbohidratos' },
+  { id:'potato',       label:'Papa',                emoji:'🥔', cat:'Carbohidratos' },
+  { id:'sweet_potato', label:'Camote / batata',     emoji:'🍠', cat:'Carbohidratos' },
+  { id:'quinoa',       label:'Quinoa',              emoji:'🌱', cat:'Carbohidratos' },
+  { id:'tortilla',     label:'Tortilla',            emoji:'🫓', cat:'Carbohidratos' },
+  { id:'banana',       label:'Plátano',             emoji:'🍌', cat:'Carbohidratos' },
+  // Grasas
+  { id:'avocado',      label:'Aguacate',            emoji:'🥑', cat:'Grasas'    },
+  { id:'olive_oil',    label:'Aceite de oliva',     emoji:'🫒', cat:'Grasas'    },
+  { id:'almonds',      label:'Almendras',           emoji:'🌰', cat:'Grasas'    },
+  { id:'nuts',         label:'Nueces',              emoji:'🌰', cat:'Grasas'    },
+  // Lácteos
+  { id:'milk',         label:'Leche',               emoji:'🥛', cat:'Lácteos'   },
+  { id:'yogurt',       label:'Yogur griego',        emoji:'🥛', cat:'Lácteos'   },
+  { id:'cheese',       label:'Queso',               emoji:'🧀', cat:'Lácteos'   },
+  { id:'cottage',      label:'Cottage / requesón',  emoji:'🧀', cat:'Lácteos'   },
+  // Legumbres
+  { id:'beans',        label:'Frijoles',            emoji:'🫘', cat:'Legumbres' },
+  { id:'lentils',      label:'Lentejas',            emoji:'🫘', cat:'Legumbres' },
+  { id:'chickpeas',    label:'Garbanzos',           emoji:'🫘', cat:'Legumbres' },
+];
+
+// ================================================================
+// RECIPE DATABASE — recetas inteligentes etiquetadas por ingrediente
+// ================================================================
+const RECIPE_DB = [
+  // ── DESAYUNOS ──────────────────────────────────────────────
+  { id:'rdb_omelet',        name:'Omelette de espinaca y queso',          emoji:'🍳', mealType:'breakfast', prepTime:10, servingDesc:'1 omelette',
+    ingredients:['eggs','spinach','cheese','onion'],                       kcal:280, prot:22, carbs:4,  fat:19 },
+  { id:'rdb_oats_banana',   name:'Avena con plátano y almendras',          emoji:'🌾', mealType:'breakfast', prepTime:5,  servingDesc:'1 tazón',
+    ingredients:['oats','banana','almonds','milk'],                        kcal:380, prot:14, carbs:58, fat:12 },
+  { id:'rdb_eggs_tomato',   name:'Huevos revueltos con tomate y cebolla', emoji:'🥚', mealType:'breakfast', prepTime:8,  servingDesc:'2 huevos + acompañamiento',
+    ingredients:['eggs','tomato','onion','olive_oil'],                     kcal:230, prot:16, carbs:8,  fat:15 },
+  { id:'rdb_avo_toast',     name:'Tostada de aguacate con huevo',          emoji:'🥑', mealType:'breakfast', prepTime:7,  servingDesc:'2 tostadas',
+    ingredients:['bread','avocado','eggs'],                                kcal:350, prot:14, carbs:32, fat:20 },
+  { id:'rdb_yogurt_banana', name:'Yogur griego con plátano y nueces',      emoji:'🥛', mealType:'breakfast', prepTime:2,  servingDesc:'1 bowl',
+    ingredients:['yogurt','banana','nuts'],                                kcal:290, prot:16, carbs:35, fat:10 },
+  { id:'rdb_burrito_egg',   name:'Burrito de huevo y pavo',                emoji:'🌯', mealType:'breakfast', prepTime:10, servingDesc:'1 burrito',
+    ingredients:['tortilla','eggs','turkey','spinach','cheese'],           kcal:420, prot:32, carbs:38, fat:14 },
+  { id:'rdb_cottage_fruit', name:'Cottage con plátano y almendras',        emoji:'🧀', mealType:'breakfast', prepTime:2,  servingDesc:'1 bowl',
+    ingredients:['cottage','banana','almonds'],                            kcal:260, prot:20, carbs:28, fat:8  },
+  { id:'rdb_oats_eggs',     name:'Avena proteica con huevo y canela',      emoji:'🌾', mealType:'breakfast', prepTime:8,  servingDesc:'1 tazón',
+    ingredients:['oats','eggs','milk','banana'],                           kcal:330, prot:22, carbs:42, fat:9  },
+  // ── ALMUERZOS ──────────────────────────────────────────────
+  { id:'rdb_chicken_rice',  name:'Bowl de pollo y arroz con brócoli',      emoji:'🍗', mealType:'lunch', prepTime:20, servingDesc:'1 bowl grande',
+    ingredients:['chicken','rice','broccoli','olive_oil','garlic'],        kcal:520, prot:48, carbs:52, fat:12 },
+  { id:'rdb_tuna_salad',    name:'Ensalada de atún con aguacate',          emoji:'🐟', mealType:'lunch', prepTime:10, servingDesc:'1 ensalada',
+    ingredients:['tuna','lettuce','tomato','onion','avocado','cucumber'],  kcal:340, prot:28, carbs:14, fat:20 },
+  { id:'rdb_pasta_meat',    name:'Pasta con carne y salsa de tomate',      emoji:'🍝', mealType:'lunch', prepTime:25, servingDesc:'1 plato',
+    ingredients:['pasta','beef','tomato','onion','garlic'],                kcal:560, prot:38, carbs:62, fat:16 },
+  { id:'rdb_turkey_wrap',   name:'Wrap de pavo, aguacate y lechuga',       emoji:'🌯', mealType:'lunch', prepTime:8,  servingDesc:'1 wrap',
+    ingredients:['tortilla','turkey','avocado','lettuce','tomato'],        kcal:430, prot:34, carbs:36, fat:16 },
+  { id:'rdb_salmon_quinoa', name:'Bowl de salmón con quinoa y espinaca',   emoji:'🐟', mealType:'lunch', prepTime:20, servingDesc:'1 bowl',
+    ingredients:['salmon','quinoa','spinach','avocado'],                   kcal:510, prot:38, carbs:38, fat:22 },
+  { id:'rdb_rice_beans',    name:'Arroz con frijoles y carne',             emoji:'🍚', mealType:'lunch', prepTime:30, servingDesc:'1 plato',
+    ingredients:['rice','beans','beef','onion','garlic','tomato'],         kcal:580, prot:34, carbs:72, fat:14 },
+  { id:'rdb_grill_salad',   name:'Ensalada de pollo a la parrilla',        emoji:'🥗', mealType:'lunch', prepTime:20, servingDesc:'1 ensalada grande',
+    ingredients:['chicken','lettuce','tomato','cucumber','avocado','olive_oil'], kcal:380, prot:42, carbs:12, fat:18 },
+  { id:'rdb_lentil_soup',   name:'Sopa de lentejas con zanahoria',         emoji:'🍲', mealType:'lunch', prepTime:35, servingDesc:'1 tazón grande',
+    ingredients:['lentils','carrot','onion','garlic','tomato','spinach'],  kcal:320, prot:20, carbs:54, fat:4  },
+  { id:'rdb_shrimp_tacos',  name:'Tacos de camarón con aguacate',          emoji:'🦐', mealType:'lunch', prepTime:15, servingDesc:'3 tacos',
+    ingredients:['tortilla','shrimp','avocado','tomato','onion'],          kcal:420, prot:30, carbs:40, fat:14 },
+  { id:'rdb_poke',          name:'Poke bowl de salmón',                    emoji:'🍱', mealType:'lunch', prepTime:15, servingDesc:'1 bowl',
+    ingredients:['rice','salmon','avocado','cucumber','onion'],            kcal:490, prot:32, carbs:54, fat:16 },
+  { id:'rdb_mushroom_pasta',name:'Pasta con champiñones y ajo',            emoji:'🍄', mealType:'lunch', prepTime:20, servingDesc:'1 plato',
+    ingredients:['pasta','mushrooms','garlic','olive_oil','spinach','cheese'], kcal:440, prot:16, carbs:64, fat:14 },
+  { id:'rdb_chickpea_curry',name:'Curry de garbanzos con espinaca',        emoji:'🫘', mealType:'lunch', prepTime:25, servingDesc:'1 tazón + arroz',
+    ingredients:['chickpeas','spinach','tomato','onion','garlic','rice'],  kcal:420, prot:16, carbs:72, fat:8  },
+  // ── CENAS ──────────────────────────────────────────────────
+  { id:'rdb_salmon_swetp',  name:'Salmón al horno con camote y brócoli',  emoji:'🐟', mealType:'dinner', prepTime:25, servingDesc:'1 plato',
+    ingredients:['salmon','sweet_potato','broccoli','olive_oil'],          kcal:480, prot:36, carbs:40, fat:18 },
+  { id:'rdb_chicken_grill', name:'Pollo a la plancha con ensalada',        emoji:'🍗', mealType:'dinner', prepTime:20, servingDesc:'1 plato',
+    ingredients:['chicken','lettuce','tomato','cucumber','olive_oil'],     kcal:340, prot:44, carbs:10, fat:14 },
+  { id:'rdb_beef_potato',   name:'Filete de res con papa y pimientos',     emoji:'🥩', mealType:'dinner', prepTime:25, servingDesc:'1 plato',
+    ingredients:['beef','potato','peppers','onion','garlic'],              kcal:520, prot:40, carbs:42, fat:20 },
+  { id:'rdb_turkey_veggies',name:'Pechuga de pavo al horno con verduras',  emoji:'🦃', mealType:'dinner', prepTime:30, servingDesc:'1 plato',
+    ingredients:['turkey','zucchini','peppers','carrot','olive_oil'],      kcal:380, prot:46, carbs:16, fat:12 },
+  { id:'rdb_tofu_rice',     name:'Tofu salteado con arroz y verduras',     emoji:'🟨', mealType:'dinner', prepTime:20, servingDesc:'1 bowl',
+    ingredients:['tofu','rice','broccoli','peppers','onion','garlic'],     kcal:390, prot:20, carbs:54, fat:10 },
+  { id:'rdb_shrimp_garlic', name:'Camarones al ajo con arroz y espinaca', emoji:'🦐', mealType:'dinner', prepTime:15, servingDesc:'1 plato',
+    ingredients:['shrimp','rice','garlic','onion','spinach','olive_oil'],  kcal:380, prot:32, carbs:46, fat:8  },
+  { id:'rdb_chicken_pasta', name:'Pasta con pollo, espinaca y queso',      emoji:'🍝', mealType:'dinner', prepTime:25, servingDesc:'1 plato',
+    ingredients:['pasta','chicken','spinach','garlic','cheese'],           kcal:540, prot:46, carbs:58, fat:14 },
+  { id:'rdb_beef_swetp',    name:'Bowl de res con camote y espinaca',      emoji:'🥩', mealType:'dinner', prepTime:25, servingDesc:'1 bowl',
+    ingredients:['beef','sweet_potato','spinach','onion','garlic'],        kcal:480, prot:38, carbs:44, fat:16 },
+  { id:'rdb_mushroom_quin', name:'Quinoa con champiñones y espinaca',      emoji:'🍄', mealType:'dinner', prepTime:20, servingDesc:'1 bowl',
+    ingredients:['quinoa','mushrooms','spinach','garlic','olive_oil','cheese'], kcal:360, prot:16, carbs:48, fat:12 },
+  { id:'rdb_pork_stir',     name:'Cerdo salteado con brócoli y arroz',    emoji:'🥓', mealType:'dinner', prepTime:20, servingDesc:'1 plato',
+    ingredients:['pork','broccoli','rice','onion','garlic'],               kcal:480, prot:36, carbs:50, fat:14 },
+  // ── SNACKS ─────────────────────────────────────────────────
+  { id:'rdb_egg_avo',       name:'Huevo duro con aguacate',                emoji:'🥚', mealType:'snack', prepTime:10, servingDesc:'2 huevos + ½ aguacate',
+    ingredients:['eggs','avocado'],                                        kcal:270, prot:14, carbs:6,  fat:22 },
+  { id:'rdb_alm_yogurt',    name:'Almendras con yogur griego',             emoji:'🌰', mealType:'snack', prepTime:1,  servingDesc:'1 snack',
+    ingredients:['almonds','yogurt'],                                      kcal:220, prot:14, carbs:12, fat:13 },
+  { id:'rdb_cottage_cuke',  name:'Cottage con pepino y tomate',            emoji:'🧀', mealType:'snack', prepTime:3,  servingDesc:'1 snack',
+    ingredients:['cottage','cucumber','tomato'],                           kcal:150, prot:14, carbs:8,  fat:5  },
+  { id:'rdb_tuna_roll',     name:'Rollitos de lechuga con atún',           emoji:'🥬', mealType:'snack', prepTime:5,  servingDesc:'3-4 rollitos',
+    ingredients:['lettuce','tuna','avocado'],                              kcal:200, prot:22, carbs:4,  fat:10 },
+  { id:'rdb_cheese_nuts',   name:'Queso con nueces',                       emoji:'🧀', mealType:'snack', prepTime:1,  servingDesc:'1 snack',
+    ingredients:['cheese','nuts'],                                         kcal:240, prot:12, carbs:4,  fat:20 },
+  { id:'rdb_roasted_chick', name:'Garbanzos tostados al horno',            emoji:'🫘', mealType:'snack', prepTime:20, servingDesc:'1 porción',
+    ingredients:['chickpeas','olive_oil'],                                 kcal:180, prot:8,  carbs:28, fat:5  },
+  { id:'rdb_banana_alm',    name:'Plátano con crema de almendras',         emoji:'🍌', mealType:'snack', prepTime:1,  servingDesc:'1 plátano + 1 cdta',
+    ingredients:['banana','almonds'],                                      kcal:200, prot:5,  carbs:34, fat:7  },
+];
+
 const ACTIVITIES = [
   { name:'Correr',        icon:'🏃', met:9.8  },
   { name:'Caminar',       icon:'🚶', met:3.5  },
@@ -139,6 +275,9 @@ const DB = {
 
   recipes()          { return this._g('lt_recipes', []); },
   saveRecipes(v)     { this._s('lt_recipes', v); },
+
+  foodPrefs()        { return this._g('lt_food_prefs', null); },
+  saveFoodPrefs(v)   { this._s('lt_food_prefs', v); },
 
   exerciseLog()      { return this._g('lt_exercise', {}); },
   saveExerciseLog(v) { this._s('lt_exercise', v); },
@@ -1298,9 +1437,24 @@ const App = {
       const chev=document.getElementById('recipes-chevron');
       sec.style.display=this.recipesOpen?'block':'none';
       chev.style.transform=this.recipesOpen?'rotate(180deg)':'';
-      if(this.recipesOpen) this.renderRecipes();
+      if(this.recipesOpen){
+        // Show recommendations panel by default when opening
+        const panel = document.getElementById('rec-panel');
+        if (panel) panel.style.display = 'block';
+        this.renderRecipes();
+      }
     });
     document.getElementById('btn-add-recipe').addEventListener('click',()=>this.openRecipeModal());
+    document.getElementById('btn-toggle-rec-ai').addEventListener('click',()=>{
+      const panel = document.getElementById('rec-panel');
+      const isHidden = panel.style.display === 'none';
+      panel.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) this.renderRecommendations();
+    });
+    // Ingredient preferences modal
+    document.getElementById('modal-food-prefs').addEventListener('click', e => { if(e.target===e.currentTarget) this.closeIngredientPrefs(); });
+    document.getElementById('btn-close-prefs').addEventListener('click', () => this.closeIngredientPrefs());
+    document.getElementById('btn-save-prefs').addEventListener('click',  () => this.saveIngredientPrefs());
   },
 
   renderFood() {
@@ -1453,9 +1607,12 @@ const App = {
   },
 
   renderRecipes() {
+    // Also refresh AI recommendations panel
+    this.renderRecommendations();
+
     const recipes=DB.recipes(), list=document.getElementById('recipe-list');
     if(!recipes.length){
-      list.innerHTML=`<p class="text-muted text-center" style="padding:16px">Sin recetas aún. Toca + para crear una.</p>`;
+      list.innerHTML=`<p class="text-muted text-center" style="padding:16px">Sin recetas propias aún. Toca + para crear una.</p>`;
       return;
     }
     list.innerHTML=recipes.map(r=>`
@@ -1476,6 +1633,182 @@ const App = {
       DB.saveRecipes(DB.recipes().filter(r=>r.id!==btn.dataset.delRecipe));
       this.renderRecipes(); toast('Receta eliminada','info');
     }));
+  },
+
+  // ── RECIPE AI RECOMMENDATIONS ────────────────────────────
+  _getMealTypeByHour() {
+    const h = new Date().getHours();
+    if (h < 10) return 'breakfast';
+    if (h < 14) return 'lunch';
+    if (h < 19) return 'dinner';
+    return 'snack';
+  },
+
+  _scoreRecipe(recipe, likedSet, remaining, cuttingStyle) {
+    const matches = recipe.ingredients.filter(i => likedSet.has(i)).length;
+    if (matches === 0) return -1;
+    let score = 0;
+    // Ingredient overlap score (max 50)
+    score += Math.min(matches * 12, 50);
+    // Calorie fit score (max 25): how close kcal is to the expected portion of remaining
+    const targetKcal = recipe.mealType === 'snack'
+      ? Math.min(remaining * 0.2, 220)
+      : remaining * 0.4;
+    const diff = Math.abs(recipe.kcal - targetKcal);
+    score += Math.max(0, 25 - Math.round(diff / 20));
+    // Protein quality (max 25): always good, especially during cut
+    const protRatio = (recipe.prot * 4) / recipe.kcal;
+    const protWeight = (cuttingStyle?.includes('cut') || cuttingStyle === 'maintenance') ? 25 : 15;
+    score += Math.round(protRatio * protWeight);
+    return score;
+  },
+
+  _getRecommendations(mealType) {
+    const prefs = DB.foodPrefs();
+    if (!prefs || !prefs.liked || prefs.liked.length < 3) return null;
+    const likedSet = new Set(prefs.liked);
+    const consumed = DB.todayFood().reduce((a, f) => a + f.kcal, 0);
+    const burned   = DB.todayExercise().reduce((a, e) => a + (e.kcalBurned || 0), 0);
+    const goal     = DB.settings().calorieGoal;
+    const style    = DB.settings().cuttingStyle;
+    const remaining = Math.max((goal + burned) - consumed, 0);
+    const candidates = RECIPE_DB
+      .filter(r => r.mealType === mealType || (remaining < 350 && r.mealType === 'snack'))
+      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remaining, style) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+    return { recommendations: candidates, remaining, mealType };
+  },
+
+  renderRecommendations() {
+    const panel = document.getElementById('rec-panel');
+    if (!panel || panel.style.display === 'none') return;
+    const prefs   = DB.foodPrefs();
+    const hasPrefs = prefs && prefs.liked && prefs.liked.length >= 3;
+    const MEAL_LABELS = { breakfast:'Desayuno', lunch:'Almuerzo', dinner:'Cena', snack:'Snack' };
+
+    if (!hasPrefs) {
+      panel.innerHTML = `
+        <div class="rec-setup-banner">
+          <div class="rec-setup-icon">🥗</div>
+          <div class="rec-setup-text">
+            <div style="font-weight:700;font-size:14px;margin-bottom:3px">Personaliza tus recomendaciones</div>
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.4">Indica qué ingredientes te gustan y el sistema sugerirá recetas ideales para tu meta y momento del día.</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-open-prefs-banner" style="width:100%">🥗 Configurar preferencias</button>`;
+      document.getElementById('btn-open-prefs-banner')?.addEventListener('click', () => this.openIngredientPrefs());
+      return;
+    }
+
+    const mealType = this._getMealTypeByHour();
+    const rec = this._getRecommendations(mealType);
+
+    if (!rec || !rec.recommendations.length) {
+      panel.innerHTML = `<p class="text-muted text-center" style="padding:16px 0;font-size:13px">¡Meta del día casi cubierta! 🎉<br>No quedan muchas calorías disponibles.</p>`;
+      return;
+    }
+
+    const likedSet = new Set(prefs.liked);
+    const remText = rec.remaining > 0 ? `${rec.remaining} kcal disponibles` : '¡Meta alcanzada!';
+    const maxScore = rec.recommendations[0].score;
+
+    panel.innerHTML = `
+      <div class="rec-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="rec-meal-badge">${MEAL_LABELS[rec.mealType]}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${remText}</span>
+        </div>
+        <button class="btn-text-sm" id="btn-edit-prefs">✏️ Prefs</button>
+      </div>
+      <div class="rec-list">
+        ${rec.recommendations.map(r => {
+          const matchCount = r.ingredients.filter(i => likedSet.has(i)).length;
+          const fitPct = Math.round((r.score / maxScore) * 100);
+          return `<div class="rec-card">
+            <div class="rec-card-header">
+              <span class="rec-card-emoji">${r.emoji}</span>
+              <div class="rec-card-info">
+                <div class="rec-card-name">${r.name}</div>
+                <div class="rec-card-meta">⏱ ${r.prepTime} min · ${r.servingDesc}</div>
+              </div>
+              <button class="rec-add-btn" data-rec-add="${r.id}" title="Añadir al registro">+</button>
+            </div>
+            <div class="rec-macros">
+              <span class="rec-macro-chip kcal">${r.kcal} kcal</span>
+              <span class="rec-macro-chip prot">P ${r.prot}g</span>
+              <span class="rec-macro-chip carbs">C ${r.carbs}g</span>
+              <span class="rec-macro-chip fat">G ${r.fat}g</span>
+            </div>
+            <div class="rec-match-row">
+              <div class="rec-match-bar-wrap"><div class="rec-match-bar-fill" style="width:${fitPct}%"></div></div>
+              <span class="rec-match-label">${matchCount} de tus ingredientes</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    panel.querySelectorAll('[data-rec-add]').forEach(btn =>
+      btn.addEventListener('click', () => this.addRecipeDbEntry(btn.dataset.recAdd))
+    );
+    document.getElementById('btn-edit-prefs')?.addEventListener('click', () => this.openIngredientPrefs());
+  },
+
+  addRecipeDbEntry(recipeId) {
+    const r = RECIPE_DB.find(x => x.id === recipeId);
+    if (!r) return;
+    DB.addFood({
+      id: `fd_${Date.now()}`,
+      name: r.name, qty: 1,
+      kcal: r.kcal, prot: r.prot, carbs: r.carbs, fat: r.fat,
+      source: 'recipe_db', recipeDbId: r.id,
+    });
+    this.renderFoodLog();
+    this.updateFoodBar();
+    toast(`${r.emoji} ${r.name} añadida al registro`, 'success');
+  },
+
+  // ── INGREDIENT PREFERENCES MODAL ─────────────────────────
+  openIngredientPrefs() {
+    this.renderIngredientPrefs();
+    this.openModal('modal-food-prefs');
+  },
+
+  closeIngredientPrefs() { this.closeModal('modal-food-prefs'); },
+
+  renderIngredientPrefs() {
+    const liked = new Set(DB.foodPrefs()?.liked || []);
+    const CAT_EMOJI = { 'Proteínas':'🥩','Verduras':'🥦','Carbohidratos':'🍚','Grasas':'🥑','Lácteos':'🥛','Legumbres':'🫘' };
+    const cats = [...new Set(INGREDIENTS.map(i => i.cat))];
+    document.getElementById('pref-ingredient-grid').innerHTML = cats.map(cat => `
+      <div class="pref-cat-header">${CAT_EMOJI[cat] || ''} ${cat}</div>
+      <div class="pref-chip-row">
+        ${INGREDIENTS.filter(i => i.cat === cat).map(i =>
+          `<button class="pref-chip ${liked.has(i.id) ? 'selected' : ''}" data-pref-id="${i.id}">${i.emoji} ${i.label}</button>`
+        ).join('')}
+      </div>`).join('');
+    document.querySelectorAll('.pref-chip').forEach(btn =>
+      btn.addEventListener('click', () => { btn.classList.toggle('selected'); this._updatePrefCount(); })
+    );
+    this._updatePrefCount();
+  },
+
+  _updatePrefCount() {
+    const count = document.querySelectorAll('.pref-chip.selected').length;
+    const el = document.getElementById('pref-count-label');
+    if (el) el.textContent = count
+      ? `${count} ingrediente${count > 1 ? 's' : ''} seleccionado${count > 1 ? 's' : ''}`
+      : 'Selecciona al menos 3 ingredientes';
+    const btn = document.getElementById('btn-save-prefs');
+    if (btn) btn.disabled = count < 3;
+  },
+
+  saveIngredientPrefs() {
+    const liked = [...document.querySelectorAll('.pref-chip.selected')].map(b => b.dataset.prefId);
+    DB.saveFoodPrefs({ liked, updatedAt: new Date().toISOString() });
+    this.closeIngredientPrefs();
+    this.renderRecommendations();
+    toast(`✓ Preferencias guardadas · ${liked.length} ingredientes`, 'success');
   },
 
   openRecipeModal(id=null) {
