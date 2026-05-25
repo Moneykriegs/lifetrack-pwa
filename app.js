@@ -41,6 +41,15 @@ const MEAL_SLOTS = [
   { id:'dinner',    label:'Cena',      icon:'🌙'  },
 ];
 
+// Proporción del objetivo diario asignada a cada slot
+// (breakfast 25% + lunch 33% + snack 12% + dinner 30% = 100%)
+const SLOT_FRACTIONS = {
+  breakfast: 0.25,
+  lunch:     0.33,
+  snack:     0.12,
+  dinner:    0.30,
+};
+
 const CUTTING_STYLES = [
   { id:'aggressive_cut', label:'Corte agresivo',  desc:'-25% TDEE',  factor:-0.25, emoji:'🔥' },
   { id:'moderate_cut',   label:'Corte moderado',  desc:'-15% TDEE',  factor:-0.15, emoji:'✂️'  },
@@ -1720,27 +1729,30 @@ const App = {
     return 'snack';
   },
 
-  _scoreRecipe(recipe, likedSet, remaining, cuttingStyle, todayMicros) {
+  // targetKcal: ideal kcal for this specific meal slot (goal × SLOT_FRACTIONS)
+  // remaining:  kcal still available today (to avoid going over budget)
+  _scoreRecipe(recipe, likedSet, targetKcal, remaining, cuttingStyle, todayMicros) {
     const matches = recipe.ingredients.filter(i => likedSet.has(i)).length;
     if (matches === 0) return -1;
+    // Hard filter: don't recommend if recipe alone exceeds remaining by >20%
+    if (remaining > 0 && recipe.kcal > remaining * 1.2) return -1;
     let score = 0;
 
     // 1. Ingredient overlap (max 50)
     score += Math.min(matches * 12, 50);
 
-    // 2. Calorie fit (max 25): how close kcal is to the expected portion of remaining
-    const targetKcal = recipe.mealType === 'snack'
-      ? Math.min(remaining * 0.2, 220)
-      : remaining * 0.4;
-    const diff = Math.abs(recipe.kcal - targetKcal);
+    // 2. Calorie fit vs slot target (max 25)
+    // Use slot-fraction target, capped at remaining so we don't overshoot
+    const effectiveTarget = remaining > 0 ? Math.min(targetKcal, remaining) : targetKcal;
+    const diff = Math.abs(recipe.kcal - effectiveTarget);
     score += Math.max(0, 25 - Math.round(diff / 20));
 
-    // 3. Protein quality (max 25): higher during cut/maintenance
+    // 3. Protein quality (max 25): higher weight during cut/maintenance
     const protRatio = (recipe.prot * 4) / recipe.kcal;
     const protWeight = (cuttingStyle?.includes('cut') || cuttingStyle === 'maintenance') ? 25 : 15;
     score += Math.round(protRatio * protWeight);
 
-    // 4. Micronutrient gap bonus (max 20): reward recipes that cover what's still deficient today
+    // 4. Micronutrient gap bonus (max 20): reward recipes covering deficient nutrients
     if (todayMicros) {
       const recipeMicros = calcRecipeMicros(recipe);
       let bonus = 0; let counted = 0;
@@ -1748,8 +1760,8 @@ const App = {
         const m = MICROS[k];
         if (!m) return;
         const covered = todayMicros[k] || 0;
-        if (covered / m.rda < 0.6) { // still deficient
-          bonus += Math.min(v / m.rda, 0.5); // recipe contributes up to 50% RDA
+        if (covered / m.rda < 0.6) {
+          bonus += Math.min(v / m.rda, 0.5);
           counted++;
         }
       });
@@ -1775,9 +1787,11 @@ const App = {
     const style     = DB.settings().cuttingStyle;
     const remaining = Math.max((goal + burned) - consumed, 0);
     const todayMicros = this._getTodayMicros();
+    // Target for this meal = fixed fraction of daily goal (not a fraction of remaining)
+    const slotTarget  = Math.round(goal * (SLOT_FRACTIONS[mealType] || 0.25));
     const candidates = RECIPE_DB
-      .filter(r => r.mealType === mealType || (remaining < 350 && r.mealType === 'snack'))
-      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remaining, style, todayMicros) }))
+      .filter(r => r.mealType === mealType || (remaining < slotTarget * 0.6 && r.mealType === 'snack'))
+      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, slotTarget, remaining, style, todayMicros) }))
       .filter(r => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
@@ -2879,11 +2893,14 @@ const App = {
       MEAL_SLOTS.forEach(slot => {
         if (existing.some(e => e.slot === slot.id)) return; // already has entries
         const remainingKcal = Math.max(goal - dayKcal, 0);
-        if (remainingKcal < 50) return; // day is full
+        if (remainingKcal < 50) return; // day already at goal
+
+        // Target = fixed fraction of the daily goal per slot type
+        const slotTarget = Math.round(goal * (SLOT_FRACTIONS[slot.id] || 0.25));
 
         const candidates = RECIPE_DB
           .filter(r => r.mealType === slot.id && !usedIds.has(r.id))
-          .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remainingKcal, style, dayMicros) }))
+          .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, slotTarget, remainingKcal, style, dayMicros) }))
           .filter(r => r.score > 0)
           .sort((a,b) => b.score - a.score);
 
