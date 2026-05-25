@@ -448,6 +448,68 @@ svg { display: block; flex-shrink: 0; }
 }
 .micro-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
+/* ── Micronutrients TODAY view ─────────────────────────────────── */
+.micro-group-header {
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .6px;
+  margin: 14px 0 6px;
+}
+.micro-today-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 10px;
+  background: var(--surface); margin-bottom: 4px;
+  border-left: 3px solid var(--border);
+}
+.micro-today-row.adequate  { border-left-color: var(--success); }
+.micro-today-row.low       { border-left-color: var(--warning); }
+.micro-today-row.deficient { border-left-color: var(--danger); }
+.micro-today-row.limit     { border-left-color: #f97316; }
+.micro-today-row.no-data   { border-left-color: var(--border); opacity: .6; }
+
+.micro-today-left {
+  flex: 1; min-width: 0;
+}
+.micro-today-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.micro-today-rem {
+  font-size: 11px; color: var(--text-muted); margin-top: 1px;
+}
+.micro-today-row.adequate  .micro-today-rem { color: var(--success); }
+.micro-today-row.limit     .micro-today-rem { color: #f97316; }
+
+.micro-today-bar-wrap {
+  width: 70px; height: 5px; background: var(--border);
+  border-radius: 3px; flex-shrink: 0; overflow: hidden;
+}
+.micro-today-bar-fill {
+  height: 100%; border-radius: 3px; transition: width .5s ease;
+  background: var(--success);
+}
+.micro-today-row.low       .micro-today-bar-fill { background: var(--warning); }
+.micro-today-row.deficient .micro-today-bar-fill { background: var(--danger); }
+.micro-today-row.limit     .micro-today-bar-fill { background: #f97316; }
+.micro-today-row.no-data   .micro-today-bar-fill { background: var(--border); }
+
+.micro-today-right {
+  text-align: right; flex-shrink: 0; min-width: 48px;
+}
+.micro-today-val {
+  font-size: 14px; font-weight: 700; color: var(--text); line-height: 1;
+}
+.micro-today-unit {
+  font-size: 10px; color: var(--text-muted); line-height: 1.4;
+}
+.micro-today-pct {
+  font-size: 10px; font-weight: 700; line-height: 1;
+}
+.micro-today-row.adequate  .micro-today-pct { color: var(--success); }
+.micro-today-row.low       .micro-today-pct { color: var(--warning); }
+.micro-today-row.deficient .micro-today-pct { color: var(--danger); }
+.micro-today-row.limit     .micro-today-pct { color: #f97316; }
+.micro-today-row.no-data   .micro-today-pct { color: var(--text-muted); }
+
 /* ================================================================
    HISTORY
    ================================================================ */

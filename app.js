@@ -1747,58 +1747,101 @@ const App = {
   },
 
   renderMicros() {
-    const days=parseInt(document.getElementById('micro-days')?.value||7);
-    const food=DB.foodLog();
-    const range=Array.from({length:days},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(days-1-i));return fmtDate(d);});
+    const days  = parseInt(document.getElementById('micro-days')?.value || 7);
+    const isToday = days === 1;
+    const food  = DB.foodLog();
+    const range = Array.from({length:days}, (_,i) => {
+      const d = new Date(); d.setDate(d.getDate() - (days-1-i)); return fmtDate(d);
+    });
 
-    // Accumulate micros
-    const totals=Object.fromEntries(MICRO_KEYS.map(k=>[k,0]));
-    const hasData=Object.fromEntries(MICRO_KEYS.map(k=>[k,false]));
-    let count=0;
+    // Update subtitle
+    const sub = document.getElementById('micro-subtitle');
+    if (sub) sub.textContent = isToday ? 'Progreso de hoy vs IDR diaria' : `Últimos ${days} días vs IDR`;
 
-    range.forEach(d=>{
-      (food[d]||[]).forEach(f=>{
+    // Accumulate totals
+    const totals  = Object.fromEntries(MICRO_KEYS.map(k => [k, 0]));
+    const hasData = Object.fromEntries(MICRO_KEYS.map(k => [k, false]));
+    let count = 0;
+    range.forEach(d => {
+      (food[d] || []).forEach(f => {
         count++;
-        MICRO_KEYS.forEach(k=>{ if(f[k]!=null){totals[k]+=f[k];hasData[k]=true;} });
+        MICRO_KEYS.forEach(k => { if (f[k] != null) { totals[k] += f[k]; hasData[k] = true; } });
       });
     });
 
-    const grid=document.getElementById('micro-grid');
-    const empty=document.getElementById('micro-empty');
+    const grid  = document.getElementById('micro-grid');
+    const empty = document.getElementById('micro-empty');
 
-    if(count===0){
-      grid.innerHTML=''; empty.style.display='';
+    if (count === 0) {
+      grid.innerHTML = ''; empty.style.display = '';
       return;
     }
-    empty.style.display='none';
+    empty.style.display = 'none';
 
-    // Legend
-    const legend=`<div class="micro-legend">
-      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--success)"></div>≥80% IDR</div>
-      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--warning)"></div>40-79%</div>
-      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--danger)"></div>&lt;40%</div>
-      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--border)"></div>Sin datos</div>
-    </div>`;
-
-    grid.innerHTML=legend+MICRO_KEYS.map(k=>{
-      const m=MICROS[k], total=totals[k], rda=m.rda*days;
-      if(!hasData[k]){
-        return `<div class="micro-item no-data">
+    if (isToday) {
+      // ── TODAY MODE: rich cards with amounts + remaining ────────
+      // Group by category
+      const GROUPS = [
+        { label: '💊 Vitaminas', keys: ['vitA','vitC','vitD','vitE','vitK','vitB6','vitB12','folate'] },
+        { label: '⚗️ Minerales', keys: ['iron','calcium','magnesium','zinc','potassium','sodium','fiber'] },
+      ];
+      grid.innerHTML = GROUPS.map(g => {
+        const rows = g.keys.map(k => {
+          const m   = MICROS[k];
+          const val = totals[k];
+          const rda = m.rda;
+          const pct = hasData[k] ? Math.min(Math.round((val/rda)*100), 150) : 0;
+          const cls = !hasData[k] ? 'no-data'
+            : m.limit ? (pct > 100 ? 'limit' : pct > 70 ? 'adequate' : 'low')
+            : pct >= 80 ? 'adequate' : pct >= 40 ? 'low' : 'deficient';
+          const remaining = Math.max(+(rda - val).toFixed(1), 0);
+          const valFmt = val >= 10 ? val.toFixed(0) : val.toFixed(1);
+          const remLabel = !hasData[k] ? `IDR: ${rda}${m.unit}`
+            : pct >= 100 ? '✓ Cubierto'
+            : `${remaining}${m.unit} restantes`;
+          return `<div class="micro-today-row ${cls}">
+            <div class="micro-today-left">
+              <div class="micro-today-name">${m.label}</div>
+              <div class="micro-today-rem">${remLabel}</div>
+            </div>
+            <div class="micro-today-bar-wrap">
+              <div class="micro-today-bar-fill" style="width:${Math.min(pct,100)}%"></div>
+            </div>
+            <div class="micro-today-right">
+              <div class="micro-today-val">${hasData[k] ? valFmt : '—'}</div>
+              <div class="micro-today-unit">${m.unit}</div>
+              <div class="micro-today-pct">${hasData[k] ? pct+'%' : ''}</div>
+            </div>
+          </div>`;
+        }).join('');
+        return `<div class="micro-group-header">${g.label}</div>${rows}`;
+      }).join('');
+    } else {
+      // ── MULTI-DAY MODE: compact grid (original) ───────────────
+      const legend = `<div class="micro-legend">
+        <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--success)"></div>≥80% IDR</div>
+        <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--warning)"></div>40-79%</div>
+        <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--danger)"></div>&lt;40%</div>
+        <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--border)"></div>Sin datos</div>
+      </div>`;
+      grid.innerHTML = legend + MICRO_KEYS.map(k => {
+        const m = MICROS[k], total = totals[k], rda = m.rda * days;
+        if (!hasData[k]) return `<div class="micro-item no-data">
           <div class="micro-name">${m.label}</div>
           <div class="micro-bar-wrap"><div class="micro-bar-fill" style="width:0%"></div></div>
           <div class="micro-pct">—</div>
           <div class="micro-status-dot"></div>
         </div>`;
-      }
-      const pct=Math.min(Math.round((total/rda)*100),150);
-      const cls=m.limit?(pct>100?'limit':pct>70?'adequate':'low'):pct>=80?'adequate':pct>=40?'low':'deficient';
-      return `<div class="micro-item ${cls}" title="${m.label}: ${total.toFixed(1)}${m.unit} / ${rda}${m.unit}">
-        <div class="micro-name">${m.label}</div>
-        <div class="micro-bar-wrap"><div class="micro-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
-        <div class="micro-pct">${pct}%</div>
-        <div class="micro-status-dot"></div>
-      </div>`;
-    }).join('');
+        const pct = Math.min(Math.round((total/rda)*100), 150);
+        const cls = m.limit ? (pct>100?'limit':pct>70?'adequate':'low') : pct>=80?'adequate':pct>=40?'low':'deficient';
+        return `<div class="micro-item ${cls}" title="${m.label}: ${total.toFixed(1)}${m.unit} / ${rda}${m.unit}">
+          <div class="micro-name">${m.label}</div>
+          <div class="micro-bar-wrap"><div class="micro-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
+          <div class="micro-pct">${pct}%</div>
+          <div class="micro-status-dot"></div>
+        </div>`;
+      }).join('');
+    }
   },
 
   // ================================================================
