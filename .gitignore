@@ -1,0 +1,24 @@
+# Supabase credentials (generated at build time on Netlify)
+supabase-config.js
+
+# Dependencies
+node_modules/
+mcp-server/node_modules/
+
+# Server data (local, no compartir)
+mcp-server/data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code session data
+.claude/

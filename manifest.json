@@ -1,0 +1,39 @@
+{
+  "name": "LifeTrack",
+  "short_name": "LifeTrack",
+  "description": "Gestor de tareas y registro de calorías",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#6366f1",
+  "background_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["health", "productivity"],
+  "lang": "es",
+  "shortcuts": [
+    {
+      "name": "Nueva tarea",
+      "url": "./index.html#tasks",
+      "description": "Añadir una nueva tarea"
+    },
+    {
+      "name": "Registrar comida",
+      "url": "./index.html#food",
+      "description": "Registrar una comida"
+    }
+  ]
+}

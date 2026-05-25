@@ -1,0 +1,11 @@
+# Default: normalizar a LF en el repo
+* text=auto eol=lf
+
+# Shell scripts: siempre LF (para Linux/Netlify)
+*.sh text eol=lf
+
+# Binarios: sin conversión
+*.png binary
+*.jpg binary
+*.svg binary
+*.ico binary

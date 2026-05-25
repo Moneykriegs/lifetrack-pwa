@@ -1,0 +1,2274 @@
+'use strict';
+
+// ================================================================
+// CONSTANTS
+// ================================================================
+const DAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DAYS_FULL  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MONTHS     = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+const MICROS = {
+  vitA:  { label:'Vit A',     unit:'μg', rda:900,  apiKey:'vitamin-a_100g',      limit:false },
+  vitC:  { label:'Vit C',     unit:'mg', rda:90,   apiKey:'vitamin-c_100g',      limit:false },
+  vitD:  { label:'Vit D',     unit:'μg', rda:20,   apiKey:'vitamin-d_100g',      limit:false },
+  vitE:  { label:'Vit E',     unit:'mg', rda:15,   apiKey:'vitamin-e_100g',      limit:false },
+  vitK:  { label:'Vit K',     unit:'μg', rda:120,  apiKey:'vitamin-k_100g',      limit:false },
+  vitB6: { label:'B6',        unit:'mg', rda:1.7,  apiKey:'vitamin-b6_100g',     limit:false },
+  vitB12:{ label:'B12',       unit:'μg', rda:2.4,  apiKey:'vitamin-b12_100g',    limit:false },
+  folate:{ label:'Folato',    unit:'μg', rda:400,  apiKey:'folate_100g',         limit:false },
+  iron:  { label:'Hierro',    unit:'mg', rda:8,    apiKey:'iron_100g',           limit:false },
+  calcium:{ label:'Calcio',   unit:'mg', rda:1000, apiKey:'calcium_100g',        limit:false },
+  magnesium:{ label:'Magnesio',unit:'mg',rda:420,  apiKey:'magnesium_100g',      limit:false },
+  zinc:  { label:'Zinc',      unit:'mg', rda:11,   apiKey:'zinc_100g',           limit:false },
+  potassium:{ label:'Potasio',unit:'mg', rda:3400, apiKey:'potassium_100g',      limit:false },
+  sodium:{ label:'Sodio',     unit:'mg', rda:2300, apiKey:'sodium_100g',         limit:true  },
+  fiber: { label:'Fibra',     unit:'g',  rda:38,   apiKey:'fiber_100g',          limit:false },
+};
+const MICRO_KEYS = Object.keys(MICROS);
+
+const MOODS = [
+  { score:5, emoji:'😄', label:'Genial',  color:'#d1fae5', dotClass:'w-dot-5' },
+  { score:4, emoji:'😊', label:'Bien',    color:'#dcfce7', dotClass:'w-dot-4' },
+  { score:3, emoji:'😐', label:'Regular', color:'#fef9c3', dotClass:'w-dot-3' },
+  { score:2, emoji:'😞', label:'Bajo',    color:'#ffedd5', dotClass:'w-dot-2' },
+  { score:1, emoji:'😩', label:'Agotado', color:'#fee2e2', dotClass:'w-dot-1' },
+];
+
+const MEAL_SLOTS = [
+  { id:'breakfast', label:'Desayuno',  icon:'🌅' },
+  { id:'lunch',     label:'Almuerzo',  icon:'☀️'  },
+  { id:'snack',     label:'Merienda',  icon:'🍎'  },
+  { id:'dinner',    label:'Cena',      icon:'🌙'  },
+];
+
+const ACTIVITIES = [
+  { name:'Correr',        icon:'🏃', met:9.8  },
+  { name:'Caminar',       icon:'🚶', met:3.5  },
+  { name:'Ciclismo',      icon:'🚴', met:6.8  },
+  { name:'Natación',      icon:'🏊', met:6.0  },
+  { name:'Pesas / Gym',   icon:'🏋️', met:3.5  },
+  { name:'HIIT',          icon:'⚡', met:8.0  },
+  { name:'Yoga',          icon:'🧘', met:2.5  },
+  { name:'Fútbol',        icon:'⚽', met:7.0  },
+  { name:'Otro',          icon:'💪', met:5.0  },
+];
+
+const today = () => new Date().toISOString().split('T')[0];
+const fmtDate = d => d.toISOString().split('T')[0];
+
+// ================================================================
+// STORAGE
+// ================================================================
+const DB = {
+  _g(k, d = null) { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : d; } catch { return d; } },
+  _s(k, v)        { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.warn(e); } },
+
+  tasks()         { return this._g('lt_tasks', []); },
+  saveTasks(v)    { this._s('lt_tasks', v); },
+
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'' }); },
+  saveSettings(v) { this._s('lt_settings', v); },
+
+  foodLog()       { return this._g('lt_food', {}); },
+  saveFoodLog(v)  { this._s('lt_food', v); },
+  todayFood()     { return (this.foodLog())[today()] || []; },
+  addFood(entry)  { const l=this.foodLog(); if(!l[today()])l[today()]=[]; l[today()].push(entry); this.saveFoodLog(l); },
+  removeFood(idx) { const l=this.foodLog(); if(l[today()]){l[today()].splice(idx,1); this.saveFoodLog(l);} },
+
+  waterLog()      { return this._g('lt_water', {}); },
+  saveWaterLog(v) { this._s('lt_water', v); },
+  todayWater()    { return (this.waterLog())[today()] || 0; },
+  addWater(ml)    { const l=this.waterLog(); l[today()]=(l[today()]||0)+ml; this.saveWaterLog(l); return l[today()]; },
+
+  weightLog()     { return this._g('lt_weight', []); },
+  saveWeightLog(v){ this._s('lt_weight', v); },
+  logWeight(kg, note='') {
+    const l = this.weightLog().filter(w => w.date !== today());
+    l.push({ date:today(), kg, note }); l.sort((a,b)=>a.date.localeCompare(b.date));
+    this.saveWeightLog(l);
+  },
+
+  completions()   { return this._g('lt_done', {}); },
+  saveCompletions(v){ this._s('lt_done', v); },
+  todayDone()     { return (this.completions())[today()] || {}; },
+  toggleDone(id)  {
+    const all=this.completions(); if(!all[today()])all[today()]={};
+    all[today()][id]=!all[today()][id]; this.saveCompletions(all); return all[today()][id];
+  },
+
+  recipes()          { return this._g('lt_recipes', []); },
+  saveRecipes(v)     { this._s('lt_recipes', v); },
+
+  exerciseLog()      { return this._g('lt_exercise', {}); },
+  saveExerciseLog(v) { this._s('lt_exercise', v); },
+  todayExercise()    { return (this.exerciseLog())[today()] || []; },
+  addExercise(entry) { const l=this.exerciseLog(); if(!l[today()])l[today()]=[]; l[today()].push(entry); this.saveExerciseLog(l); },
+  removeExercise(idx){ const l=this.exerciseLog(); if(l[today()]){l[today()].splice(idx,1); this.saveExerciseLog(l);} },
+
+  wellness()             { return this._g('lt_wellness', {}); },
+  saveWellness(v)        { this._s('lt_wellness', v); },
+  todayWellness()        { return (this.wellness())[today()] || null; },
+  logWellness(entry)     { const w=this.wellness(); w[today()]={...entry, ts:new Date().toISOString()}; this.saveWellness(w); },
+
+  mealPlan()               { return this._g('lt_meal_plan', {}); },
+  saveMealPlan(v)          { this._s('lt_meal_plan', v); },
+  planForDate(date)        { return (this.mealPlan())[date] || []; },
+  addPlanEntry(date, entry){ const mp=this.mealPlan(); if(!mp[date])mp[date]=[]; mp[date].push(entry); this.saveMealPlan(mp); },
+  removePlanEntry(date, id){ const mp=this.mealPlan(); if(mp[date]){mp[date]=mp[date].filter(e=>e.id!==id); this.saveMealPlan(mp);} },
+};
+
+// ================================================================
+// NOTIFICATIONS
+// ================================================================
+const Notif = {
+  timers: {},
+  async init() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    this.scheduleAll();
+  },
+  scheduleAll() {
+    Object.values(this.timers).forEach(clearTimeout); this.timers = {};
+    if (Notification.permission !== 'granted') return;
+    DB.tasks().filter(t => t.notifEnabled && t.notifTime).forEach(t => this.schedule(t));
+  },
+  schedule(task) {
+    this.cancel(task.id);
+    const [h,m] = task.notifTime.split(':').map(Number);
+    const now=new Date(), next=new Date();
+    next.setHours(h,m,0,0); if(next<=now) next.setDate(next.getDate()+1);
+    this.timers[task.id] = setTimeout(async()=>{ await this.show(task); this.schedule(task); }, next-now);
+  },
+  async show(task) {
+    try {
+      const opts = { body: task.description||'¡Es hora!', icon:'./icons/icon.svg', tag:`lt-${task.id}`, renotify:true };
+      if('serviceWorker' in navigator){ const r=await navigator.serviceWorker.ready; r.showNotification(`⏰ ${task.title}`,opts); }
+      else new Notification(`⏰ ${task.title}`, opts);
+    } catch(e){ console.warn(e); }
+  },
+  cancel(id) { if(this.timers[id]){clearTimeout(this.timers[id]);delete this.timers[id];} }
+};
+
+// ================================================================
+// FOOD API (Open Food Facts + micronutrients)
+// ================================================================
+const FoodAPI = {
+  cache: {},
+  MICRO_FIELDS: MICRO_KEYS.map(k => MICROS[k].apiKey).join(','),
+
+  async search(q) {
+    if (this.cache[q]) return this.cache[q];
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?` +
+      `search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20` +
+      `&fields=product_name,nutriments,brands`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+
+    const list = (data.products || [])
+      .filter(p => p.product_name && (p.nutriments?.['energy-kcal_100g'] ?? -1) >= 0)
+      .slice(0, 15)
+      .map(p => {
+        const n = p.nutriments || {};
+        const item = {
+          name:   (p.product_name||'').slice(0,55),
+          brand:  (p.brands||'').split(',')[0].trim(),
+          kcal:   Math.round(n['energy-kcal_100g'] || 0),
+          prot:   +((n.proteins_100g||0).toFixed(1)),
+          carbs:  +((n.carbohydrates_100g||0).toFixed(1)),
+          fat:    +((n.fat_100g||0).toFixed(1)),
+        };
+        // Micros per 100g
+        MICRO_KEYS.forEach(k => {
+          item[k] = n[MICROS[k].apiKey] != null ? n[MICROS[k].apiKey] : null;
+        });
+        return item;
+      });
+
+    this.cache[q] = list;
+    return list;
+  },
+
+  // Scale item to a given gram quantity
+  scale(item, qty) {
+    const f = qty / 100;
+    const entry = {
+      name: item.name, brand: item.brand, qty,
+      kcal:  Math.round(item.kcal  * f),
+      prot:  +((item.prot  * f).toFixed(1)),
+      carbs: +((item.carbs * f).toFixed(1)),
+      fat:   +((item.fat   * f).toFixed(1)),
+    };
+    MICRO_KEYS.forEach(k => { entry[k] = item[k] != null ? +((item[k]*f).toFixed(3)) : null; });
+    return entry;
+  }
+};
+
+// ================================================================
+// CHARTS
+// ================================================================
+const Charts = {
+  ring(canvas, value, max, color) {
+    const dpr=window.devicePixelRatio||1, S=80;
+    canvas.width=S*dpr; canvas.height=S*dpr;
+    canvas.style.width=S+'px'; canvas.style.height=S+'px';
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const cx=S/2,cy=S/2,r=S/2-8,pct=max>0?Math.min(value/max,1):0;
+    ctx.clearRect(0,0,S,S);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.strokeStyle='#E2E8F0'; ctx.lineWidth=9; ctx.stroke();
+    if(pct>0){ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+2*Math.PI*pct);ctx.strokeStyle=color;ctx.lineWidth=9;ctx.lineCap='round';ctx.stroke();}
+  },
+
+  bars(canvas, values, labels, color, goalLine=null) {
+    const dpr=window.devicePixelRatio||1;
+    const rect=canvas.parentElement.getBoundingClientRect();
+    const W=rect.width||300, H=160;
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const pad={t:10,r:8,b:24,l:30};
+    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+    const max=Math.max(...values,goalLine||0,1);
+    const slot=cW/values.length, bw=slot*.55;
+    ctx.clearRect(0,0,W,H);
+    // Grid lines
+    ctx.fillStyle='#CBD5E1'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='right';
+    [0,.5,1].forEach(p=>{
+      const y=pad.t+cH*(1-p);
+      ctx.fillText(Math.round(max*p),pad.l-3,y+3);
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);
+      ctx.strokeStyle='#F1F5F9';ctx.lineWidth=1;ctx.stroke();
+    });
+    if(goalLine){
+      const gy=pad.t+cH*(1-goalLine/max);
+      ctx.beginPath();ctx.setLineDash([4,4]);
+      ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);
+      ctx.strokeStyle='#CBD5E1';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+    }
+    values.forEach((v,i)=>{
+      const bh=Math.max(cH*v/max,v>0?3:0);
+      const x=pad.l+slot*i+(slot-bw)/2, y=pad.t+cH-bh;
+      ctx.fillStyle=color+'CC';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x,y,bw,bh,[3,3,0,0]); else ctx.rect(x,y,bw,bh);
+      ctx.fill();
+      ctx.fillStyle='#94A3B8';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='center';
+      ctx.fillText(labels[i],pad.l+slot*i+slot/2,H-6);
+    });
+  },
+
+  line(canvas, entries, color, goalLine=null) {
+    // entries: [{date, kg}] - sparse data points over time
+    if (!entries.length) return;
+    const dpr=window.devicePixelRatio||1;
+    const rect=canvas.parentElement.getBoundingClientRect();
+    const W=rect.width||300, H=160;
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const pad={t:10,r:10,b:24,l:36};
+    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+
+    const vals = entries.map(e=>e.kg);
+    const minV = Math.min(...vals, goalLine||Infinity) * .98;
+    const maxV = Math.max(...vals, goalLine||0) * 1.02;
+    const range = maxV - minV || 1;
+
+    const toX = (i) => pad.l + (i/(entries.length-1||1))*cW;
+    const toY = (v) => pad.t + cH - (cH*(v-minV)/range);
+
+    ctx.clearRect(0,0,W,H);
+
+    // Y axis labels
+    ctx.fillStyle='#CBD5E1'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='right';
+    [minV, (minV+maxV)/2, maxV].forEach(v=>{
+      const y=toY(v);
+      ctx.fillText(v.toFixed(1),pad.l-3,y+3);
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);
+      ctx.strokeStyle='#F1F5F9';ctx.lineWidth=1;ctx.stroke();
+    });
+
+    // Goal line
+    if(goalLine && goalLine>minV && goalLine<maxV){
+      const gy=toY(goalLine);
+      ctx.beginPath();ctx.setLineDash([4,4]);
+      ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);
+      ctx.strokeStyle=color+'88';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+    }
+
+    // Line
+    ctx.beginPath();
+    entries.forEach((e,i)=>{ i===0?ctx.moveTo(toX(i),toY(e.kg)):ctx.lineTo(toX(i),toY(e.kg)); });
+    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+
+    // Dots + labels
+    entries.forEach((e,i)=>{
+      const x=toX(i),y=toY(e.kg);
+      ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle=color;ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,2.5,0,2*Math.PI);
+      ctx.fillStyle='white';ctx.fill();
+      // X label (day/month)
+      if(i===0||i===entries.length-1||(entries.length<=10)||i%Math.ceil(entries.length/6)===0){
+        const d=new Date(e.date+'T12:00:00');
+        ctx.fillStyle='#94A3B8';ctx.font='9px -apple-system,sans-serif';ctx.textAlign='center';
+        ctx.fillText(`${d.getDate()}/${d.getMonth()+1}`,x,H-6);
+      }
+    });
+  }
+};
+
+// ================================================================
+// TOAST
+// ================================================================
+function toast(msg, type='info') {
+  const c=document.getElementById('toast-container');
+  const el=document.createElement('div');
+  el.className=`toast toast-${type}`; el.textContent=msg;
+  c.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('visible')));
+  setTimeout(()=>{ el.classList.remove('visible'); setTimeout(()=>el.remove(),300); },2800);
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ================================================================
+// MCP SYNC
+// ================================================================
+const MCPSync = {
+  async push() {
+    const url = DB.settings().mcpUrl;
+    if (!url) return;
+    try {
+      const payload = {
+        settings: DB.settings(), tasks: DB.tasks(),
+        completions: DB.completions(), foodLog: DB.foodLog(),
+        waterLog: DB.waterLog(), weightLog: DB.weightLog(),
+        recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
+        mealPlan: DB.mealPlan(), wellness: DB.wellness()
+      };
+      const res = await fetch(`${url}/api/sync`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload), signal: AbortSignal.timeout(6000)
+      });
+      if (!res.ok) throw new Error(res.status);
+      const { data } = await res.json();
+      // Merge back
+      if (data.settings)    DB.saveSettings({ ...DB.settings(), ...data.settings });
+      if (data.tasks)       DB.saveTasks(data.tasks);
+      if (data.completions) DB.saveCompletions(data.completions);
+      if (data.foodLog)     DB.saveFoodLog(data.foodLog);
+      if (data.waterLog)    DB.saveWaterLog(data.waterLog);
+      if (data.weightLog)   DB.saveWeightLog(data.weightLog);
+      if (data.recipes)     DB.saveRecipes(data.recipes);
+      if (data.exerciseLog) DB.saveExerciseLog(data.exerciseLog);
+      if (data.mealPlan)    DB.saveMealPlan(data.mealPlan);
+      if (data.wellness)    DB.saveWellness(data.wellness);
+      return true;
+    } catch(e) { console.warn('MCP sync error:', e); return false; }
+  },
+
+  async test(url) {
+    try {
+      const res = await fetch(`${url}/api/status`, { signal: AbortSignal.timeout(4000) });
+      return res.ok;
+    } catch { return false; }
+  }
+};
+
+// ================================================================
+// CLIENT-SIDE MERGE  (mirrors server data.js mergeSync)
+// ================================================================
+function mergeClientServer(server, client) {
+  const s = server || {}, c = client || {};
+
+  const settings = { ...s.settings, ...c.settings };
+
+  const foodLog = { ...s.foodLog };
+  Object.entries(c.foodLog || {}).forEach(([d, e]) => {
+    if (!foodLog[d] || e.length > foodLog[d].length) foodLog[d] = e;
+  });
+
+  const waterLog = { ...s.waterLog };
+  Object.entries(c.waterLog || {}).forEach(([d, ml]) => {
+    waterLog[d] = Math.max(waterLog[d] || 0, ml);
+  });
+
+  const wMap = new Map();
+  [...(s.weightLog || []), ...(c.weightLog || [])].forEach(w => wMap.set(w.date, w));
+  const weightLog = [...wMap.values()].sort((a, b) => a.date.localeCompare(b.date));
+
+  const tMap = new Map();
+  [...(s.tasks || []), ...(c.tasks || [])].forEach(t => tMap.set(t.id, t));
+  const tasks = [...tMap.values()];
+
+  const completions = { ...s.completions };
+  Object.entries(c.completions || {}).forEach(([d, done]) => {
+    completions[d] = { ...(completions[d] || {}), ...done };
+  });
+
+  const rMap = new Map();
+  (s.recipes || []).forEach(r => rMap.set(r.id, r));
+  (c.recipes || []).forEach(r => {
+    rMap.set(r.id, rMap.has(r.id) ? { ...rMap.get(r.id), ...r } : r);
+  });
+  const recipes = [...rMap.values()];
+
+  const exerciseLog = { ...s.exerciseLog };
+  Object.entries(c.exerciseLog || {}).forEach(([d, e]) => {
+    if (!exerciseLog[d] || e.length > exerciseLog[d].length) exerciseLog[d] = e;
+  });
+
+  const mealPlan = { ...s.mealPlan };
+  Object.entries(c.mealPlan || {}).forEach(([d, e]) => {
+    if (!mealPlan[d] || e.length > mealPlan[d].length) mealPlan[d] = e;
+  });
+
+  const wellness = { ...s.wellness };
+  Object.entries(c.wellness || {}).forEach(([d, entry]) => {
+    const cur = wellness[d];
+    if (!cur || (entry.ts && (!cur.ts || entry.ts > cur.ts))) wellness[d] = entry;
+  });
+
+  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness };
+}
+
+// ================================================================
+// CLOUD SYNC  (Supabase — replaces MCPSync when configured)
+// ================================================================
+const CloudSync = {
+  sb:       null,   // Supabase client instance
+  userId:   null,
+  user:     null,   // { id, email, name, avatar }
+  _pushTimer: null,
+
+  /** Returns 'online' | 'offline-cached' | false */
+  init() {
+    const cfg = window.SUPABASE_CONFIG;
+    if (!cfg?.url || cfg.url.startsWith('YOUR_')) return false;
+
+    // Supabase CDN not loaded (offline?)
+    if (typeof window.supabase === 'undefined') {
+      const cached = this._loadCachedUser();
+      return cached ? 'offline-cached' : false;
+    }
+
+    const { createClient } = window.supabase;
+    this.sb = createClient(cfg.url, cfg.anonKey);
+    return 'online';
+  },
+
+  _localKey: 'lt_cloud_user',
+  _loadCachedUser() {
+    try { return JSON.parse(localStorage.getItem(this._localKey)); } catch { return null; }
+  },
+  _saveUser(u) { localStorage.setItem(this._localKey, JSON.stringify(u)); },
+  _clearUser() { localStorage.removeItem(this._localKey); },
+
+  async getSession() {
+    if (!this.sb) return null;
+    const { data: { session } } = await this.sb.auth.getSession();
+    return session;
+  },
+
+  async signInWithGoogle() {
+    if (!this.sb) return;
+    const { error } = await this.sb.auth.signInWithOAuth({
+      provider: 'google',
+      options:  { redirectTo: window.location.origin + window.location.pathname }
+    });
+    if (error) throw error;
+  },
+
+  async signOut() {
+    if (this.sb) await this.sb.auth.signOut();
+    this._clearUser();
+    this.userId = null;
+    this.user   = null;
+  },
+
+  /** Push local data to Supabase (fire-and-forget OK) */
+  async push() {
+    if (!this.sb || !this.userId) return false;
+    const payload = {
+      settings: DB.settings(), tasks: DB.tasks(),
+      completions: DB.completions(), foodLog: DB.foodLog(),
+      waterLog: DB.waterLog(), weightLog: DB.weightLog(),
+      recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
+      mealPlan: DB.mealPlan(), wellness: DB.wellness()
+    };
+    const { error } = await this.sb
+      .from('user_data')
+      .upsert({ user_id: this.userId, data: payload }, { onConflict: 'user_id' });
+    return !error;
+  },
+
+  /** Pull from Supabase */
+  async pull() {
+    if (!this.sb || !this.userId) return null;
+    const { data, error } = await this.sb
+      .from('user_data')
+      .select('data')
+      .eq('user_id', this.userId)
+      .maybeSingle();
+    if (error) { console.warn('CloudSync pull:', error); return null; }
+    return data?.data ?? null;
+  },
+
+  /** Full bidirectional sync: pull → merge → save local → push merged */
+  async syncFull() {
+    if (!this.sb || !this.userId) return false;
+    try {
+      const serverData = await this.pull();
+      const localData  = {
+        settings: DB.settings(), tasks: DB.tasks(),
+        completions: DB.completions(), foodLog: DB.foodLog(),
+        waterLog: DB.waterLog(), weightLog: DB.weightLog(),
+        recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
+        mealPlan: DB.mealPlan(), wellness: DB.wellness()
+      };
+      const merged = serverData ? mergeClientServer(serverData, localData) : localData;
+      DB.saveSettings(merged.settings);
+      DB.saveTasks(merged.tasks);
+      DB.saveCompletions(merged.completions);
+      DB.saveFoodLog(merged.foodLog);
+      DB.saveWaterLog(merged.waterLog);
+      DB.saveWeightLog(merged.weightLog);
+      DB.saveRecipes(merged.recipes);
+      DB.saveExerciseLog(merged.exerciseLog);
+      DB.saveMealPlan(merged.mealPlan);
+      DB.saveWellness(merged.wellness);
+      await this.push();
+      return true;
+    } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }
+  },
+
+  /** Debounced push — call after any data mutation */
+  schedulePush() {
+    clearTimeout(this._pushTimer);
+    this._pushTimer = setTimeout(() => this.push().catch(() => {}), 8000);
+  }
+};
+
+// ================================================================
+// STREAKS
+// ================================================================
+function calcStreaks() {
+  const s    = DB.settings();
+  const food = DB.foodLog();
+  const water= DB.waterLog();
+  const done = DB.completions();
+  const tasks= DB.tasks();
+  const exLog= DB.exerciseLog();
+
+  const checkDay = (dateStr) => {
+    const dow = new Date(dateStr + 'T12:00:00').getDay();
+    const dayFood  = food[dateStr] || [];
+    const dayKcal  = dayFood.reduce((a,f) => a+f.kcal, 0);
+    const dayTasks = tasks.filter(t => !t.days?.length || t.days.includes(dow));
+    const dayDone  = done[dateStr] || {};
+    return {
+      water:    (water[dateStr]||0) >= (s.waterGoal||2500),
+      calories: dayFood.length > 0 && dayKcal > 0 && dayKcal <= (s.calorieGoal||2000),
+      tasks:    dayTasks.length > 0 && dayTasks.every(t => dayDone[t.id]),
+      exercise: (exLog[dateStr]||[]).length > 0,
+    };
+  };
+
+  // Build streaks from today backwards
+  const keys = ['water','calories','tasks','exercise'];
+  const streaks = Object.fromEntries(keys.map(k => [k, { current:0, todayOk:false }]));
+  const broken  = Object.fromEntries(keys.map(k => [k, false]));
+
+  for (let i = 0; i <= 365; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dateStr = fmtDate(d);
+    const check = checkDay(dateStr);
+    keys.forEach(k => {
+      if (broken[k]) return;
+      if (i === 0) { streaks[k].todayOk = check[k]; }
+      // Only count today if goal is already met; past days always count
+      if (i === 0 && !check[k]) { broken[k] = true; return; }
+      if (check[k]) streaks[k].current++;
+      else { broken[k] = true; }
+    });
+    if (keys.every(k => broken[k])) break;
+  }
+
+  // Update & persist best records
+  const bests = DB._g('lt_streak_bests', {water:0,calories:0,tasks:0,exercise:0});
+  let bestUpdated = false;
+  keys.forEach(k => {
+    if (streaks[k].current > (bests[k]||0)) { bests[k] = streaks[k].current; bestUpdated = true; }
+    streaks[k].best = bests[k]||0;
+  });
+  if (bestUpdated) DB._s('lt_streak_bests', bests);
+
+  return streaks;
+}
+
+// ================================================================
+// WEIGHT PREDICTION
+// ================================================================
+function calcPrediction() {
+  const s = DB.settings();
+  const weights = DB.weightLog();
+  if (!weights.length) return null;
+  const currentKg = weights[weights.length-1].kg;
+
+  // Average intake last 14 days
+  const food = DB.foodLog();
+  const days14 = Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));return fmtDate(d);});
+  const daysWithData = days14.filter(d=>(food[d]||[]).length>0);
+  if (daysWithData.length < 2) return null;
+  const avgKcal = daysWithData.reduce((a,d)=>a+(food[d]||[]).reduce((s,f)=>s+f.kcal,0),0)/daysWithData.length;
+
+  // TDEE (Mifflin-St Jeor)
+  let tdee = s.calorieGoal || 2000;
+  if (s.height && s.age) {
+    const bmr = s.gender==='female'
+      ? 10*currentKg + 6.25*s.height - 5*s.age - 161
+      : 10*currentKg + 6.25*s.height - 5*s.age + 5;
+    const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9};
+    tdee = Math.round(bmr * (mult[s.activityLevel]||1.55));
+  }
+
+  const dailyDeficit = tdee - avgKcal;
+  const kgPerWeek    = (dailyDeficit * 7) / 7700;
+  const goalKg       = s.weightGoal;
+  let weeksToGoal    = null;
+  if (goalKg && Math.abs(kgPerWeek) > 0.01) {
+    weeksToGoal = Math.ceil((currentKg - goalKg) / kgPerWeek);
+  }
+
+  return { currentKg, avgKcal: Math.round(avgKcal), tdee, dailyDeficit: Math.round(dailyDeficit), kgPerWeek: +kgPerWeek.toFixed(2), goalKg, weeksToGoal };
+}
+
+// ================================================================
+// APP
+// ================================================================
+const App = {
+  view: 'dashboard',
+  searchTimer: null,
+  editTaskId: null,
+  pendingFood: null,
+  pendingRecipe: null,
+  editRecipeId: null,
+  deferredInstall: null,
+  recipesOpen: false,
+  selectedActivity: null,
+  planCurrentDate: null,
+  planPickerSlot: null,
+  wellnessMood: null,
+  wellnessEnergy: 3,
+
+  // ── streaks render ────────────────────────────────────────
+  renderStreaks() {
+    const st = calcStreaks();
+    const chips = [
+      { key:'water',    chipId:'streak-water',  valId:'streak-water-val',  bestId:'streak-water-best'  },
+      { key:'calories', chipId:'streak-cal',    valId:'streak-cal-val',    bestId:'streak-cal-best'    },
+      { key:'tasks',    chipId:'streak-tasks',  valId:'streak-tasks-val',  bestId:'streak-tasks-best'  },
+      { key:'exercise', chipId:'streak-ex',     valId:'streak-ex-val',     bestId:'streak-ex-best'     },
+    ];
+    const MILESTONES = [3,7,14,30,60,100];
+    chips.forEach(({ key, chipId, valId, bestId }) => {
+      const s = st[key];
+      const chip = document.getElementById(chipId);
+      const valEl = document.getElementById(valId);
+      const bestEl = document.getElementById(bestId);
+      if (!chip) return;
+      valEl.textContent = s.current;
+      chip.classList.toggle('on-fire', s.current > 0);
+      chip.classList.toggle('today-ok', s.todayOk);
+      // Best record label
+      bestEl.textContent = s.best > 1 ? `Récord: ${s.best}` : '';
+      // Milestone badge — show next goal
+      let milestoneEl = chip.querySelector('.streak-milestone');
+      const next = MILESTONES.find(m => m > s.current);
+      if (next && s.current > 0) {
+        if (!milestoneEl) { milestoneEl = document.createElement('div'); milestoneEl.className='streak-milestone'; chip.appendChild(milestoneEl); }
+        milestoneEl.textContent = `→ ${next}🔥`;
+      } else if (milestoneEl) milestoneEl.remove();
+    });
+
+    // Toast en milestones exactos
+    const milestoneHit = [3,7,14,30,60,100];
+    ['water','calories','tasks','exercise'].forEach(k => {
+      const n = st[k].current;
+      if (milestoneHit.includes(n) && st[k].todayOk) {
+        const labels = {water:'agua 💧',calories:'calorías 🍽️',tasks:'tareas ✅',exercise:'ejercicio 🔥'};
+        toast(`¡${n} días seguidos de ${labels[k]}!`, 'success');
+      }
+    });
+  },
+
+  // ── init ──────────────────────────────────────────────────
+  async init() {
+    this.registerSW();
+    this.bindNav();
+    this.bindInstall();
+    this.bindSettings();
+    this.bindTaskModal();
+    this.bindFoodModal();
+    this.bindRecipeModal();
+    this.bindWeightModal();
+    this.bindWater();
+    this.bindMicroDays();
+    this.bindExerciseModal();
+    this.bindPlanModal();
+    this.bindWellnessModal();
+
+    await Notif.init();
+
+    // Sync button (works with both CloudSync and MCPSync)
+    document.getElementById('btn-sync').addEventListener('click', async () => {
+      toast('Sincronizando...', 'info');
+      const ok = CloudSync.userId
+        ? await CloudSync.syncFull()
+        : await MCPSync.push();
+      toast(ok ? 'Sincronizado ✓' : 'Error al sincronizar', ok ? 'success' : 'error');
+      if (ok) this.renderView();
+    });
+
+    // Auto-push when page goes to background
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') CloudSync.push().catch(() => {});
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data?.type === 'NAVIGATE') this.navigate(e.data.view || 'dashboard');
+      });
+    }
+
+    // ── Auth flow ──────────────────────────────────────────────
+    const authStatus = CloudSync.init();
+
+    if (authStatus === 'online') {
+      this._bindLoginScreen();
+      // Listen for OAuth redirect / sign-out events
+      CloudSync.sb.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN'  && session) await this.onCloudSignIn(session);
+        if (event === 'SIGNED_OUT')             this.onCloudSignOut();
+      });
+      const session = await CloudSync.getSession();
+      if (session) {
+        await this.onCloudSignIn(session);
+      } else {
+        this.showLoginScreen();
+      }
+    } else if (authStatus === 'offline-cached') {
+      // Previously signed in, now offline — use local data
+      const u = CloudSync._loadCachedUser();
+      if (u) this.updateHeaderUser(u);
+      document.getElementById('btn-sync').style.display = '';
+      this.navigate(location.hash.replace('#', '') || 'dashboard');
+    } else {
+      // No Supabase config — fall back to MCP local server mode
+      if (DB.settings().mcpUrl) document.getElementById('btn-sync').style.display = '';
+      this.navigate(location.hash.replace('#', '') || 'dashboard');
+    }
+  },
+
+  // ── Auth helpers ─────────────────────────────────────────────
+  _bindLoginScreen() {
+    document.getElementById('btn-google-signin').addEventListener('click', async () => {
+      document.getElementById('btn-google-signin').textContent = 'Conectando…';
+      try { await CloudSync.signInWithGoogle(); }
+      catch { toast('Error al conectar con Google', 'error'); }
+    });
+    document.getElementById('btn-skip-auth').addEventListener('click', () => {
+      this.hideLoginScreen();
+      this.navigate(location.hash.replace('#', '') || 'dashboard');
+    });
+  },
+
+  async onCloudSignIn(session) {
+    CloudSync.userId = session.user.id;
+    const meta = session.user.user_metadata || {};
+    const u = {
+      id:     session.user.id,
+      email:  session.user.email,
+      name:   meta.full_name || meta.name || session.user.email?.split('@')[0] || 'Usuario',
+      avatar: meta.avatar_url || meta.picture || null
+    };
+    CloudSync.user = u;
+    CloudSync._saveUser(u);
+
+    // Seed name from Google profile if still default
+    const s = DB.settings();
+    if (!s.name || s.name === 'Usuario') DB.saveSettings({ ...s, name: u.name });
+
+    this.updateHeaderUser(u);
+    this.hideLoginScreen();
+    document.getElementById('btn-sync').style.display = '';
+
+    // Show account section in settings
+    document.getElementById('settings-account-section').style.display = '';
+    document.getElementById('settings-user-name').textContent  = u.name;
+    document.getElementById('settings-user-email').textContent = u.email;
+    if (u.avatar) {
+      document.getElementById('settings-avatar').innerHTML =
+        `<img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
+    }
+
+    toast('Sincronizando datos...', 'info');
+    await CloudSync.syncFull();
+    this.navigate(location.hash.replace('#', '') || 'dashboard');
+    toast(`¡Hola, ${u.name}! ✓`, 'success');
+  },
+
+  onCloudSignOut() {
+    this.updateHeaderUser(null);
+    document.getElementById('settings-account-section').style.display = 'none';
+    document.getElementById('btn-sync').style.display = 'none';
+    this.showLoginScreen();
+  },
+
+  updateHeaderUser(u) {
+    const el = document.getElementById('header-user');
+    if (!el) return;
+    if (!u) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    el.innerHTML = u.avatar
+      ? `<img src="${u.avatar}" class="header-avatar" alt="${esc(u.name)}">`
+      : `<div class="header-avatar-init">${esc(u.name.charAt(0).toUpperCase())}</div>`;
+    el.onclick = () => this.openSettings();
+  },
+
+  showLoginScreen() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  },
+
+  hideLoginScreen() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  },
+
+  registerSW() {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  },
+
+  bindNav() {
+    document.querySelectorAll('.nav-item').forEach(btn=>{
+      btn.addEventListener('click',()=>this.navigate(btn.dataset.view));
+    });
+  },
+
+  navigate(viewId) {
+    const valid=['dashboard','tasks','food','progress','history'];
+    if(!valid.includes(viewId)) viewId='dashboard';
+    this.view=viewId;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.getElementById(`view-${viewId}`)?.classList.add('active');
+    document.querySelector(`.nav-item[data-view="${viewId}"]`)?.classList.add('active');
+    const titles={dashboard:'Inicio',tasks:'Mis Tareas',food:'Comidas',progress:'Progreso',history:'Historial'};
+    document.getElementById('view-title').textContent=titles[viewId];
+    this.renderView();
+  },
+
+  renderView() {
+    const renders={
+      dashboard:()=>this.renderDashboard(),
+      tasks:()=>this.renderTasks(),
+      food:()=>this.renderFood(),
+      progress:()=>this.renderProgress(),
+      history:()=>this.renderHistory()
+    };
+    renders[this.view]?.();
+  },
+
+  openModal(id)  { document.getElementById(id).classList.add('open'); },
+  closeModal(id) { document.getElementById(id).classList.remove('open'); },
+
+  // ── Install ────────────────────────────────────────────────
+  bindInstall() {
+    window.addEventListener('beforeinstallprompt',e=>{
+      e.preventDefault(); this.deferredInstall=e;
+      document.getElementById('install-banner').classList.remove('hidden');
+    });
+    document.getElementById('btn-install')?.addEventListener('click',async()=>{
+      if(!this.deferredInstall) return;
+      this.deferredInstall.prompt();
+      const {outcome}=await this.deferredInstall.userChoice;
+      if(outcome==='accepted') document.getElementById('install-banner').classList.add('hidden');
+      this.deferredInstall=null;
+    });
+    window.addEventListener('appinstalled',()=>document.getElementById('install-banner').classList.add('hidden'));
+  },
+
+  // ================================================================
+  // SETTINGS
+  // ================================================================
+  bindSettings() {
+    document.getElementById('btn-settings').addEventListener('click',()=>this.openSettings());
+    document.getElementById('modal-settings').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeSettings();});
+    document.getElementById('btn-close-settings').addEventListener('click',()=>this.closeSettings());
+    document.getElementById('btn-save-settings').addEventListener('click',()=>this.saveSettings());
+    document.getElementById('btn-notif-request').addEventListener('click',async()=>{
+      await Notification.requestPermission(); this.updateNotifBadge();
+    });
+    document.getElementById('btn-test-mcp').addEventListener('click',async()=>{
+      const url=document.getElementById('setting-mcp-url').value.trim().replace(/\/$/,'');
+      if(!url){toast('Ingresa la URL del servidor','error');return;}
+      toast('Probando conexión...','info');
+      const ok=await MCPSync.test(url);
+      toast(ok?'Conexión exitosa ✓':'No se pudo conectar','success');
+    });
+    document.getElementById('btn-sign-out')?.addEventListener('click', async () => {
+      if (!confirm('¿Cerrar sesión de Google?')) return;
+      await CloudSync.signOut();
+    });
+  },
+
+  openSettings() {
+    const s=DB.settings();
+    // Refresh account section
+    const u = CloudSync.user || CloudSync._loadCachedUser();
+    const acctSec = document.getElementById('settings-account-section');
+    if (u && acctSec) {
+      acctSec.style.display = '';
+      document.getElementById('settings-user-name').textContent  = u.name  || '—';
+      document.getElementById('settings-user-email').textContent = u.email || '—';
+      if (u.avatar) {
+        document.getElementById('settings-avatar').innerHTML =
+          `<img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
+      }
+    }
+    document.getElementById('setting-name').value=s.name||'';
+    document.getElementById('setting-age').value=s.age||'';
+    document.getElementById('setting-height').value=s.height||'';
+    document.getElementById('setting-gender').value=s.gender||'male';
+    document.getElementById('setting-activity').value=s.activityLevel||'moderate';
+    document.getElementById('setting-goal').value=s.calorieGoal||2000;
+    document.getElementById('setting-water-goal').value=s.waterGoal||2500;
+    document.getElementById('setting-weight-goal').value=s.weightGoal||'';
+    document.getElementById('setting-mcp-url').value=s.mcpUrl||'';
+    this.updateNotifBadge();
+    this.openModal('modal-settings');
+  },
+
+  closeSettings() { this.closeModal('modal-settings'); },
+
+  saveSettings() {
+    const s = {
+      name: document.getElementById('setting-name').value.trim()||'Usuario',
+      age:  parseInt(document.getElementById('setting-age').value)||null,
+      height: parseInt(document.getElementById('setting-height').value)||null,
+      gender: document.getElementById('setting-gender').value,
+      activityLevel: document.getElementById('setting-activity').value,
+      calorieGoal: parseInt(document.getElementById('setting-goal').value)||2000,
+      waterGoal: parseInt(document.getElementById('setting-water-goal').value)||2500,
+      weightGoal: parseFloat(document.getElementById('setting-weight-goal').value)||null,
+      mcpUrl: document.getElementById('setting-mcp-url').value.trim().replace(/\/$/,''),
+    };
+    DB.saveSettings(s);
+    document.getElementById('btn-sync').style.display = s.mcpUrl ? '' : 'none';
+    this.closeSettings();
+    Notif.scheduleAll();
+    toast('Ajustes guardados','success');
+    this.renderView();
+  },
+
+  updateNotifBadge() {
+    const perm=('Notification' in window)?Notification.permission:'unsupported';
+    const badge=document.getElementById('notif-status');
+    const btn=document.getElementById('btn-notif-request');
+    const map={granted:['granted','Activas ✓'],denied:['denied','Bloqueadas'],default:['default','Pendiente'],unsupported:['denied','No soportado']};
+    const [cls,label]=map[perm]||map.default;
+    badge.className=`notif-badge ${cls}`; badge.textContent=label;
+    btn.style.display=perm==='granted'?'none':'';
+  },
+
+  // ================================================================
+  // DASHBOARD
+  // ================================================================
+  renderDashboard() {
+    const s=DB.settings(), now=new Date(), h=now.getHours();
+    const greet=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches';
+    document.getElementById('dash-greeting').textContent=`${greet}, ${s.name}`;
+    document.getElementById('dash-date').textContent=`${DAYS_FULL[now.getDay()]}, ${now.getDate()} de ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+
+    // Calories
+    const food=DB.todayFood(), kcal=food.reduce((a,f)=>a+f.kcal,0);
+    const burned=DB.todayExercise().reduce((a,e)=>a+e.kcalBurned,0);
+    const netGoal=s.calorieGoal+burned;
+    Charts.ring(document.getElementById('ring-kcal'),kcal,netGoal,'#f59e0b');
+    document.getElementById('ring-kcal-val').textContent=kcal;
+    document.getElementById('ring-kcal-sub').textContent=`/${netGoal}`;
+    const rem=netGoal-kcal;
+    document.getElementById('dash-kcal-detail').textContent=rem>0?`${rem} restantes`:'Meta alcanzada 🎉';
+
+    // Exercise mini-card en dashboard
+    const exCard=document.getElementById('dash-exercise-card');
+    if(burned>0){
+      exCard.style.display='';
+      document.getElementById('dash-exercise-label').textContent=`🔥 +${burned} kcal`;
+      const sessions=DB.todayExercise();
+      document.getElementById('dash-exercise-sessions').textContent=sessions.map(e=>`${e.icon} ${e.name} ${e.duration}min`).join(' · ');
+    } else {
+      exCard.style.display='none';
+    }
+
+    // Tasks
+    const tasks=DB.tasks(), done=DB.todayDone();
+    const todayTasks=tasks.filter(t=>!t.days?.length||t.days.includes(now.getDay()));
+    const doneCount=todayTasks.filter(t=>done[t.id]).length;
+    Charts.ring(document.getElementById('ring-tasks'),doneCount,todayTasks.length||1,'#6366f1');
+    document.getElementById('ring-tasks-val').textContent=doneCount;
+    document.getElementById('ring-tasks-sub').textContent=`/${todayTasks.length}`;
+    document.getElementById('dash-tasks-detail').textContent=todayTasks.length?`${todayTasks.length-doneCount} pendientes`:'Sin tareas hoy';
+
+    // Water
+    const water=DB.todayWater(), wGoal=s.waterGoal||2500;
+    document.getElementById('dash-water-label').textContent=`${water} / ${wGoal} ml`;
+    document.getElementById('dash-water-fill').style.width=Math.min(water/wGoal*100,100)+'%';
+
+    // Weight
+    const weights=DB.weightLog(), lastW=weights[weights.length-1];
+    const prevW=weights[weights.length-2];
+    document.getElementById('dash-weight-val').textContent=lastW?lastW.kg.toFixed(1):'—';
+    if(lastW&&prevW){
+      const diff=+(lastW.kg-prevW.kg).toFixed(1);
+      const el=document.getElementById('dash-weight-trend');
+      el.textContent=diff>0?`▲ +${diff}kg`:diff<0?`▼ ${diff}kg`:'→ Sin cambio';
+      el.style.color=diff>0?'var(--warning)':diff<0?'var(--success)':'var(--text-muted)';
+    }
+    const goalKg=s.weightGoal;
+    document.getElementById('dash-goal-kg').textContent=goalKg?goalKg.toFixed(1)+'kg':'—';
+    if(goalKg&&lastW){
+      const pred=calcPrediction();
+      document.getElementById('dash-goal-eta').textContent=pred?.weeksToGoal>0?`~${pred.weeksToGoal} semanas`:'';
+    }
+
+    // Next task
+    const upcomingTasks=todayTasks.filter(t=>!done[t.id]&&t.notifTime)
+      .map(t=>{const[hh,mm]=t.notifTime.split(':').map(Number);const d=new Date();d.setHours(hh,mm,0,0);return{task:t,time:d};})
+      .filter(t=>t.time>now).sort((a,b)=>a.time-b.time);
+    const card=document.getElementById('next-task-card');
+    if(upcomingTasks.length){
+      card.classList.remove('hidden');
+      document.getElementById('next-task-time').textContent=upcomingTasks[0].task.notifTime;
+      document.getElementById('next-task-name').textContent=upcomingTasks[0].task.title;
+    } else card.classList.add('hidden');
+
+    // Dashboard water quick buttons
+    document.querySelectorAll('#dash-water-card .water-quick-btn').forEach(btn=>{
+      btn.onclick=()=>{ const ml=parseInt(btn.dataset.ml); DB.addWater(ml); toast(`+${ml}ml agua 💧`,'info'); this.renderDashboard(); };
+    });
+    document.getElementById('btn-dash-water-custom')?.addEventListener('click',()=>this.navigate('progress'));
+
+    this.renderStreaks();
+    this.renderWellnessDash();
+  },
+
+  // ================================================================
+  // TASKS
+  // ================================================================
+  bindTaskModal() {
+    document.getElementById('btn-add-task').addEventListener('click',()=>this.openTaskModal());
+    document.getElementById('modal-task').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeTaskModal();});
+    document.getElementById('btn-close-task').addEventListener('click',()=>this.closeTaskModal());
+    document.getElementById('btn-save-task').addEventListener('click',()=>this.saveTask());
+    document.querySelectorAll('.day-btn').forEach(btn=>btn.addEventListener('click',()=>btn.classList.toggle('selected')));
+    document.getElementById('task-notif-toggle').addEventListener('change',e=>{
+      document.getElementById('task-notif-time-wrap').style.display=e.target.checked?'':'none';
+    });
+  },
+
+  renderTasks() {
+    const tasks=DB.tasks(), done=DB.todayDone();
+    const warn=document.getElementById('notif-warn');
+    if(warn) warn.style.display=Notification.permission!=='granted'?'':'none';
+    const list=document.getElementById('task-list');
+    if(!tasks.length){
+      list.innerHTML=`<div class="empty-state"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>No tienes tareas aún</p><p style="font-size:12px">Toca <strong>+</strong> para agregar</p></div>`;
+      return;
+    }
+    list.innerHTML=tasks.map(task=>{
+      const isDone=!!done[task.id];
+      const dayL=task.days?.length?task.days.map(d=>DAYS_SHORT[d]).join(' · '):'Cada día';
+      return `<div class="task-item ${isDone?'done':''}" data-id="${task.id}">
+        <button class="task-check ${isDone?'checked':''}" data-toggle="${task.id}">${isDone?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>
+        <div class="task-info">
+          <div class="task-name">${esc(task.title)}</div>
+          <div class="task-meta">
+            ${task.notifTime?`<span class="task-time"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${task.notifTime}</span>`:''}
+            <span class="task-days">${dayL}</span>
+            ${task.notifEnabled&&task.notifTime?'<span class="task-notif">🔔</span>':''}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="btn-task-action" data-edit="${task.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn-task-action delete" data-delete="${task.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-toggle]').forEach(b=>b.addEventListener('click',()=>this.toggleTask(b.dataset.toggle)));
+    list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>this.openTaskModal(b.dataset.edit)));
+    list.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>this.deleteTask(b.dataset.delete)));
+  },
+
+  toggleTask(id) {
+    const done=DB.toggleDone(id);
+    if(done) toast('Tarea completada ✓','success');
+    this.renderTasks();
+    if(this.view==='dashboard') this.renderDashboard();
+  },
+
+  deleteTask(id) {
+    if(!confirm('¿Eliminar esta tarea?')) return;
+    DB.saveTasks(DB.tasks().filter(t=>t.id!==id));
+    Notif.cancel(id); toast('Tarea eliminada','info'); this.renderTasks();
+  },
+
+  openTaskModal(id=null) {
+    this.editTaskId=id;
+    document.getElementById('modal-task-title').textContent=id?'Editar Tarea':'Nueva Tarea';
+    document.getElementById('btn-save-task').textContent=id?'Guardar cambios':'Añadir tarea';
+    document.getElementById('task-title').value='';
+    document.getElementById('task-description').value='';
+    document.getElementById('task-notif-time').value='';
+    document.getElementById('task-notif-toggle').checked=false;
+    document.getElementById('task-notif-time-wrap').style.display='none';
+    document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('selected'));
+    if(id){
+      const task=DB.tasks().find(t=>t.id===id); if(!task) return;
+      document.getElementById('task-title').value=task.title;
+      document.getElementById('task-description').value=task.description||'';
+      document.getElementById('task-notif-toggle').checked=!!task.notifEnabled;
+      document.getElementById('task-notif-time-wrap').style.display=task.notifEnabled?'':'none';
+      document.getElementById('task-notif-time').value=task.notifTime||'';
+      (task.days||[]).forEach(d=>document.querySelector(`.day-btn[data-day="${d}"]`)?.classList.add('selected'));
+    }
+    this.openModal('modal-task');
+    document.getElementById('task-title').focus();
+  },
+
+  closeTaskModal() { this.closeModal('modal-task'); this.editTaskId=null; },
+
+  saveTask() {
+    const title=document.getElementById('task-title').value.trim();
+    if(!title){toast('El nombre es obligatorio','error');return;}
+    const notifEnabled=document.getElementById('task-notif-toggle').checked;
+    const notifTime=document.getElementById('task-notif-time').value;
+    const days=[...document.querySelectorAll('.day-btn.selected')].map(b=>parseInt(b.dataset.day));
+    const task={ id:this.editTaskId||`t_${Date.now()}`, title,
+      description:document.getElementById('task-description').value.trim(),
+      notifTime:notifTime||null, notifEnabled:notifEnabled&&!!notifTime, days };
+    const tasks=DB.tasks();
+    if(this.editTaskId){ const i=tasks.findIndex(t=>t.id===this.editTaskId); if(i!==-1) tasks[i]=task; }
+    else tasks.push(task);
+    DB.saveTasks(tasks);
+    Notif.cancel(task.id); if(task.notifEnabled) Notif.schedule(task);
+    toast(this.editTaskId?'Tarea actualizada':'Tarea añadida ✓','success');
+    this.closeTaskModal(); this.renderTasks();
+  },
+
+  // ================================================================
+  // FOOD + RECIPES
+  // ================================================================
+  bindFoodModal() {
+    document.getElementById('food-search').addEventListener('input',e=>{
+      clearTimeout(this.searchTimer);
+      const q=e.target.value.trim();
+      if(q.length<2){document.getElementById('food-results').innerHTML='';return;}
+      this.searchTimer=setTimeout(()=>this.searchFood(q),600);
+    });
+    document.getElementById('modal-food-detail').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeFoodModal();});
+    document.getElementById('btn-close-food').addEventListener('click',()=>this.closeFoodModal());
+    document.getElementById('btn-add-food').addEventListener('click',()=>this.addFood());
+    document.querySelectorAll('.qty-preset').forEach(btn=>btn.addEventListener('click',()=>{
+      document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('food-qty').value=btn.dataset.qty;
+      this.updateFoodPreview();
+    }));
+    document.getElementById('food-qty').addEventListener('input',()=>{
+      document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
+      this.updateFoodPreview();
+    });
+    // Recipes toggle
+    document.getElementById('btn-toggle-recipes').addEventListener('click',()=>{
+      this.recipesOpen=!this.recipesOpen;
+      const sec=document.getElementById('recipes-section');
+      const chev=document.getElementById('recipes-chevron');
+      sec.style.display=this.recipesOpen?'block':'none';
+      chev.style.transform=this.recipesOpen?'rotate(180deg)':'';
+      if(this.recipesOpen) this.renderRecipes();
+    });
+    document.getElementById('btn-add-recipe').addEventListener('click',()=>this.openRecipeModal());
+  },
+
+  renderFood() {
+    this.renderFoodLog();
+    this.updateFoodBar();
+    if(this.recipesOpen) this.renderRecipes();
+    this.updatePlanBadge();
+  },
+
+  async searchFood(q) {
+    const spinner=document.getElementById('search-spinner');
+    const results=document.getElementById('food-results');
+    spinner.classList.add('visible'); results.innerHTML='';
+    try {
+      const items=await FoodAPI.search(q);
+      if(!items.length){ results.innerHTML=`<p class="text-muted text-center" style="padding:16px">Sin resultados para "${esc(q)}"</p>`; return; }
+      results.innerHTML=items.map((item,i)=>`
+        <div class="food-result-item" data-idx="${i}">
+          <div class="food-kcal-badge"><span class="food-kcal-value">${item.kcal}</span><span class="food-kcal-unit">kcal</span></div>
+          <div style="flex:1;min-width:0">
+            <div class="food-name">${esc(item.name)}</div>
+            ${item.brand?`<div class="food-brand">${esc(item.brand)}</div>`:''}
+            <div class="food-macros">
+              <span>P:${item.prot}g</span><span>C:${item.carbs}g</span><span>G:${item.fat}g</span>
+            </div>
+          </div>
+          <button class="food-add-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        </div>`).join('');
+      results.querySelectorAll('.food-result-item').forEach((el,i)=>el.addEventListener('click',()=>this.openFoodModal(items[i])));
+    } catch(e) {
+      results.innerHTML=`<p class="text-muted text-center" style="padding:16px">Error al buscar. Comprueba tu conexión.</p>`;
+    } finally { spinner.classList.remove('visible'); }
+  },
+
+  openFoodModal(food) {
+    this.pendingFood=food;
+    document.getElementById('food-modal-name').textContent=food.name;
+    document.getElementById('food-modal-brand').textContent=food.brand||'';
+    document.getElementById('food-modal-per100').textContent=`${food.kcal} kcal · P:${food.prot}g · C:${food.carbs}g · G:${food.fat}g por 100g`;
+    document.getElementById('food-qty').value='100';
+    document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
+    document.querySelector('.qty-preset[data-qty="100"]')?.classList.add('selected');
+    this.updateFoodPreview();
+    this.openModal('modal-food-detail');
+  },
+
+  closeFoodModal() { this.closeModal('modal-food-detail'); this.pendingFood=null; },
+
+  updateFoodPreview() {
+    const food=this.pendingFood; if(!food) return;
+    const qty=parseFloat(document.getElementById('food-qty').value)||100;
+    const e=FoodAPI.scale(food,qty);
+    document.getElementById('food-modal-preview').textContent=
+      `${e.kcal} kcal · Prot:${e.prot}g · Carbs:${e.carbs}g · Grasa:${e.fat}g`;
+  },
+
+  addFood() {
+    const food=this.pendingFood; if(!food) return;
+    const qty=parseFloat(document.getElementById('food-qty').value)||100;
+    const entry=FoodAPI.scale(food,qty);
+    entry.id=`f_${Date.now()}`;
+    DB.addFood(entry);
+    toast(`${food.name.split(' ').slice(0,3).join(' ')} añadido ✓`,'success');
+    this.closeFoodModal();
+    this.renderFoodLog(); this.updateFoodBar();
+    if(this.view==='dashboard') this.renderDashboard();
+  },
+
+  updateFoodBar() {
+    const food=DB.todayFood();
+    const kcal=food.reduce((a,f)=>a+f.kcal,0);
+    const prot=food.reduce((a,f)=>a+(f.prot||0),0);
+    const carbs=food.reduce((a,f)=>a+(f.carbs||0),0);
+    const fat=food.reduce((a,f)=>a+(f.fat||0),0);
+    const goal=DB.settings().calorieGoal;
+    const pct=Math.min((kcal/goal)*100,100);
+    document.getElementById('food-kcal-consumed').textContent=kcal;
+    document.getElementById('food-kcal-goal').textContent=`de ${goal} kcal`;
+    const fill=document.getElementById('food-progress-fill');
+    fill.style.width=pct+'%';
+    fill.style.background=pct>100?'var(--danger)':pct>80?'var(--warning)':'var(--success)';
+    document.getElementById('macro-prot').textContent=prot.toFixed(1)+'g';
+    document.getElementById('macro-carbs').textContent=carbs.toFixed(1)+'g';
+    document.getElementById('macro-fat').textContent=fat.toFixed(1)+'g';
+  },
+
+  renderFoodLog() {
+    const food=DB.todayFood(), list=document.getElementById('food-log-list');
+    if(!food.length){
+      list.innerHTML=`<div class="empty-state"><svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg><p>Busca y añade alimentos</p></div>`;
+      return;
+    }
+    list.innerHTML=food.map((f,i)=>`
+      <div class="log-item">
+        <div class="log-item-info">
+          <div class="log-item-name">${esc(f.name)}</div>
+          <div class="log-item-detail">${f.qty}g · P:${f.prot||0}g C:${f.carbs||0}g G:${f.fat||0}g${f.isRecipe?' 📖':''}</div>
+        </div>
+        <span class="log-item-kcal">${f.kcal}</span>
+        <button class="btn-remove" data-remove="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`).join('');
+    list.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{
+      DB.removeFood(parseInt(btn.dataset.remove));
+      this.renderFoodLog(); this.updateFoodBar();
+      if(this.view==='dashboard') this.renderDashboard();
+    }));
+  },
+
+  // ── RECIPES ───────────────────────────────────────────────
+  bindRecipeModal() {
+    document.getElementById('modal-recipe').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeRecipeModal();});
+    document.getElementById('btn-close-recipe').addEventListener('click',()=>this.closeRecipeModal());
+    document.getElementById('btn-save-recipe').addEventListener('click',()=>this.saveRecipe());
+    document.getElementById('btn-add-ingredient').addEventListener('click',()=>this.addIngredientRow());
+    document.getElementById('modal-recipe-add').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeRecipeAddModal();});
+    document.getElementById('btn-close-recipe-add').addEventListener('click',()=>this.closeRecipeAddModal());
+    document.getElementById('btn-confirm-recipe-add').addEventListener('click',()=>this.confirmRecipeAdd());
+    document.querySelectorAll('[data-srv]').forEach(btn=>btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-srv]').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('recipe-add-servings').value=btn.dataset.srv;
+      this.updateRecipeAddPreview();
+    }));
+    document.getElementById('recipe-add-servings').addEventListener('input',()=>{
+      document.querySelectorAll('[data-srv]').forEach(b=>b.classList.remove('selected'));
+      this.updateRecipeAddPreview();
+    });
+  },
+
+  renderRecipes() {
+    const recipes=DB.recipes(), list=document.getElementById('recipe-list');
+    if(!recipes.length){
+      list.innerHTML=`<p class="text-muted text-center" style="padding:16px">Sin recetas aún. Toca + para crear una.</p>`;
+      return;
+    }
+    list.innerHTML=recipes.map(r=>`
+      <div class="recipe-item">
+        <div class="recipe-icon">📖</div>
+        <div class="recipe-info">
+          <div class="recipe-name">${esc(r.name)}</div>
+          <div class="recipe-detail">${r.servings} porción${r.servings>1?'es':''} · ${r.perKcal} kcal c/u · P:${r.perProt}g C:${r.perCarbs}g G:${r.perFat}g</div>
+        </div>
+        <div class="recipe-actions">
+          <button class="food-add-btn" data-add="${r.id}" title="Añadir al registro"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button class="btn-task-action delete" data-del-recipe="${r.id}" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+      </div>`).join('');
+    list.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>this.openRecipeAddModal(btn.dataset.add)));
+    list.querySelectorAll('[data-del-recipe]').forEach(btn=>btn.addEventListener('click',()=>{
+      if(!confirm('¿Eliminar esta receta?')) return;
+      DB.saveRecipes(DB.recipes().filter(r=>r.id!==btn.dataset.delRecipe));
+      this.renderRecipes(); toast('Receta eliminada','info');
+    }));
+  },
+
+  openRecipeModal(id=null) {
+    this.editRecipeId=id;
+    document.getElementById('modal-recipe-title').textContent=id?'Editar Receta':'Nueva Receta';
+    document.getElementById('recipe-name').value='';
+    document.getElementById('recipe-servings').value='1';
+    document.getElementById('recipe-description').value='';
+    document.getElementById('ingredient-list').innerHTML='';
+    document.getElementById('recipe-total-preview').style.display='none';
+    if(!id) this.addIngredientRow();
+    // TODO: populate for edit
+    this.openModal('modal-recipe');
+    document.getElementById('recipe-name').focus();
+  },
+
+  closeRecipeModal() { this.closeModal('modal-recipe'); this.editRecipeId=null; },
+
+  addIngredientRow() {
+    const list=document.getElementById('ingredient-list');
+    // Header on first row
+    if(!list.children.length){
+      const hdr=document.createElement('div');
+      hdr.className='ingredient-header';
+      hdr.innerHTML='<span>Ingrediente</span><span>g</span><span>kcal/100g</span><span>P/100g</span><span>C/100g</span><span></span>';
+      list.appendChild(hdr);
+    }
+    const row=document.createElement('div');
+    row.className='ingredient-row';
+    row.innerHTML=`
+      <input type="text"   placeholder="Nombre..." class="ing-name">
+      <input type="number" placeholder="100" min="1" class="ing-qty" style="text-align:center">
+      <input type="number" placeholder="0" min="0" class="ing-kcal" style="text-align:center">
+      <input type="number" placeholder="0" min="0" class="ing-prot" style="text-align:center">
+      <input type="number" placeholder="0" min="0" class="ing-carbs" style="text-align:center">
+      <button class="btn-remove-ing" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    row.querySelector('.btn-remove-ing').addEventListener('click',()=>{row.remove();this.updateRecipeTotals();});
+    row.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>this.updateRecipeTotals()));
+    list.appendChild(row);
+  },
+
+  updateRecipeTotals() {
+    const rows=[...document.querySelectorAll('.ingredient-row')];
+    if(!rows.length){document.getElementById('recipe-total-preview').style.display='none';return;}
+    let totalKcal=0,totalProt=0,totalCarbs=0;
+    rows.forEach(row=>{
+      const qty=parseFloat(row.querySelector('.ing-qty')?.value)||0;
+      const k=parseFloat(row.querySelector('.ing-kcal')?.value)||0;
+      const p=parseFloat(row.querySelector('.ing-prot')?.value)||0;
+      const c=parseFloat(row.querySelector('.ing-carbs')?.value)||0;
+      const f=qty/100;
+      totalKcal+=Math.round(k*f); totalProt+=+(p*f).toFixed(1); totalCarbs+=+(c*f).toFixed(1);
+    });
+    const srv=parseInt(document.getElementById('recipe-servings')?.value)||1;
+    document.getElementById('recipe-total-preview').style.display='block';
+    document.getElementById('recipe-total-text').textContent=
+      `Total: ${totalKcal} kcal · Por porción: ${Math.round(totalKcal/srv)} kcal · P:${(totalProt/srv).toFixed(1)}g C:${(totalCarbs/srv).toFixed(1)}g`;
+  },
+
+  saveRecipe() {
+    const name=document.getElementById('recipe-name').value.trim();
+    if(!name){toast('El nombre es obligatorio','error');return;}
+    const servings=parseInt(document.getElementById('recipe-servings').value)||1;
+    const rows=[...document.querySelectorAll('.ingredient-row')];
+    if(!rows.length){toast('Añade al menos un ingrediente','error');return;}
+
+    const ingredients=rows.map(row=>({
+      name: row.querySelector('.ing-name')?.value.trim()||'Ingrediente',
+      qty:  parseFloat(row.querySelector('.ing-qty')?.value)||100,
+      kcal100: parseFloat(row.querySelector('.ing-kcal')?.value)||0,
+      prot100: parseFloat(row.querySelector('.ing-prot')?.value)||0,
+      carbs100: parseFloat(row.querySelector('.ing-carbs')?.value)||0,
+    })).map(i=>{
+      const f=i.qty/100;
+      return { name:i.name, qty:i.qty,
+               kcal:Math.round(i.kcal100*f), prot:+(i.prot100*f).toFixed(1),
+               carbs:+(i.carbs100*f).toFixed(1), fat:0 };
+    });
+
+    const totKcal=ingredients.reduce((a,i)=>a+i.kcal,0);
+    const totProt=ingredients.reduce((a,i)=>a+i.prot,0);
+    const totCarbs=ingredients.reduce((a,i)=>a+i.carbs,0);
+
+    const recipe={
+      id: this.editRecipeId||`r_${Date.now()}`,
+      name, servings,
+      description: document.getElementById('recipe-description').value.trim(),
+      ingredients,
+      totalKcal:totKcal, totalProt:+totProt.toFixed(1), totalCarbs:+totCarbs.toFixed(1), totalFat:0,
+      perKcal:Math.round(totKcal/servings), perProt:+(totProt/servings).toFixed(1),
+      perCarbs:+(totCarbs/servings).toFixed(1), perFat:0,
+      createdAt:new Date().toISOString()
+    };
+
+    const recipes=DB.recipes();
+    if(this.editRecipeId){ const i=recipes.findIndex(r=>r.id===this.editRecipeId); if(i!==-1)recipes[i]=recipe; }
+    else recipes.push(recipe);
+    DB.saveRecipes(recipes);
+    toast(`Receta "${name}" guardada ✓`,'success');
+    this.closeRecipeModal(); this.renderRecipes();
+  },
+
+  openRecipeAddModal(recipeId) {
+    const recipe=DB.recipes().find(r=>r.id===recipeId); if(!recipe) return;
+    this.pendingRecipe=recipe;
+    document.getElementById('recipe-add-name').textContent=recipe.name;
+    document.getElementById('recipe-add-info').textContent=`${recipe.perKcal} kcal · P:${recipe.perProt}g C:${recipe.perCarbs}g G:${recipe.perFat}g por porción`;
+    document.getElementById('recipe-add-servings').value='1';
+    document.querySelectorAll('[data-srv]').forEach(b=>b.classList.remove('selected'));
+    document.querySelector('[data-srv="1"]')?.classList.add('selected');
+    this.updateRecipeAddPreview();
+    this.openModal('modal-recipe-add');
+  },
+
+  closeRecipeAddModal() { this.closeModal('modal-recipe-add'); this.pendingRecipe=null; },
+
+  updateRecipeAddPreview() {
+    const r=this.pendingRecipe; if(!r) return;
+    const srv=parseFloat(document.getElementById('recipe-add-servings').value)||1;
+    document.getElementById('recipe-add-preview').textContent=
+      `${Math.round(r.perKcal*srv)} kcal · P:${(r.perProt*srv).toFixed(1)}g C:${(r.perCarbs*srv).toFixed(1)}g G:${(r.perFat*srv).toFixed(1)}g`;
+  },
+
+  confirmRecipeAdd() {
+    const r=this.pendingRecipe; if(!r) return;
+    const srv=parseFloat(document.getElementById('recipe-add-servings').value)||1;
+    const entry={
+      id:`f_${Date.now()}`, name:`${r.name} (×${srv})`,
+      qty:Math.round(srv*100), kcal:Math.round(r.perKcal*srv),
+      prot:+(r.perProt*srv).toFixed(1), carbs:+(r.perCarbs*srv).toFixed(1),
+      fat:+(r.perFat*srv).toFixed(1), isRecipe:true, recipeId:r.id
+    };
+    // Pasar micronutrientes de la receta al registro (escalado por porciones)
+    const MICRO_MAP = {
+      vitA:'perVitA', vitC:'perVitC', vitD:'perVitD', vitE:'perVitE',
+      vitK:'perVitK', vitB6:'perVitB6', vitB12:'perVitB12', folate:'perFolate',
+      iron:'perIron', calcium:'perCalcium', magnesium:'perMagnesium',
+      zinc:'perZinc', potassium:'perPotassium', sodium:'perSodium', fiber:'perFiber'
+    };
+    Object.entries(MICRO_MAP).forEach(([logKey, recipeKey]) => {
+      if (r[recipeKey] != null) entry[logKey] = +((r[recipeKey] * srv).toFixed(3));
+    });
+    DB.addFood(entry);
+    toast(`${r.name} añadido ✓`,'success');
+    this.closeRecipeAddModal();
+    this.renderFoodLog(); this.updateFoodBar();
+    if(this.view==='dashboard') this.renderDashboard();
+  },
+
+  // ================================================================
+  // PROGRESS — Water / Weight / Micros
+  // ================================================================
+  bindWater() {
+    // Progress view buttons
+    document.querySelectorAll('#view-progress .water-quick-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const ml=parseInt(btn.dataset.ml);
+        const total=DB.addWater(ml);
+        toast(`+${ml}ml 💧`,'info');
+        this.renderWater();
+        if(this.view==='dashboard') this.renderDashboard();
+      });
+    });
+    document.getElementById('btn-water-custom').addEventListener('click',()=>{
+      const wrap=document.getElementById('water-custom-wrap');
+      wrap.style.display=wrap.style.display==='none'?'block':'none';
+    });
+    document.getElementById('btn-water-add-custom').addEventListener('click',()=>{
+      const ml=parseInt(document.getElementById('water-custom-input').value)||0;
+      if(ml<10||ml>3000){toast('Cantidad inválida','error');return;}
+      DB.addWater(ml); toast(`+${ml}ml 💧`,'info');
+      document.getElementById('water-custom-input').value='';
+      document.getElementById('water-custom-wrap').style.display='none';
+      this.renderWater();
+      if(this.view==='dashboard') this.renderDashboard();
+    });
+  },
+
+  bindWeightModal() {
+    document.getElementById('btn-log-weight').addEventListener('click',()=>this.openWeightModal());
+    document.getElementById('dash-weight-card').addEventListener('click',()=>{ this.navigate('progress'); });
+    document.getElementById('modal-weight').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeWeightModal();});
+    document.getElementById('btn-close-weight').addEventListener('click',()=>this.closeWeightModal());
+    document.getElementById('btn-save-weight').addEventListener('click',()=>this.saveWeight());
+  },
+
+  openWeightModal() {
+    document.getElementById('weight-input').value='';
+    document.getElementById('weight-note').value='';
+    this.openModal('modal-weight');
+    document.getElementById('weight-input').focus();
+  },
+
+  closeWeightModal() { this.closeModal('modal-weight'); },
+
+  saveWeight() {
+    const kg=parseFloat(document.getElementById('weight-input').value);
+    if(!kg||kg<20||kg>300){toast('Ingresa un peso válido (20-300 kg)','error');return;}
+    const note=document.getElementById('weight-note').value.trim();
+    DB.logWeight(kg,note);
+    toast(`Peso ${kg} kg registrado ✓`,'success');
+    this.closeWeightModal(); this.renderProgress();
+    if(this.view==='dashboard') this.renderDashboard();
+  },
+
+  bindMicroDays() {
+    document.getElementById('micro-days')?.addEventListener('change',()=>this.renderMicros());
+  },
+
+  renderProgress() {
+    this.renderWellnessCard();
+    this.renderExercise();
+    this.renderWater();
+    this.renderWeight();
+    this.renderMicros();
+  },
+
+  renderWater() {
+    const water=DB.todayWater(), goal=DB.settings().waterGoal||2500;
+    const pct=Math.min(water/goal*100,100);
+    document.getElementById('water-total').textContent=water;
+    document.getElementById('water-goal-label').textContent=`/ ${goal} ml`;
+    document.getElementById('water-pct-label').textContent=`${Math.round(pct)}% de la meta`;
+    document.getElementById('water-fill').style.width=pct+'%';
+
+    // Glasses visual (each glass = goal/8)
+    const glasses=document.getElementById('water-glasses');
+    const glassSize=Math.round(goal/8);
+    const numFull=Math.floor(water/glassSize);
+    const partial=(water%glassSize)/glassSize;
+    glasses.innerHTML=Array.from({length:8},(_,i)=>{
+      const cls=i<numFull?'water-glass full':i===numFull&&partial>0?'water-glass filled':'water-glass';
+      return `<div class="${cls}" title="${(i+1)*glassSize}ml"></div>`;
+    }).join('');
+  },
+
+  renderWeight() {
+    const weights=DB.weightLog(), goal=DB.settings().weightGoal;
+    document.getElementById('weight-current-val').textContent=weights.length?weights[weights.length-1].kg.toFixed(1)+'':'—';
+    document.getElementById('weight-goal-val').textContent=goal?goal.toFixed(1)+'':'—';
+
+    // Trend label
+    if(weights.length>=2){
+      const diff=+(weights[weights.length-1].kg-weights[weights.length-2].kg).toFixed(1);
+      const el=document.getElementById('weight-trend-label');
+      el.textContent=diff>0?`▲ +${diff}kg esta semana`:diff<0?`▼ ${diff}kg esta semana`:'Sin cambio';
+      el.style.color=diff>0?'var(--warning)':diff<0?'var(--success)':'var(--text-muted)';
+    }
+
+    // Chart
+    const cv=document.getElementById('chart-weight');
+    if(weights.length>=2){
+      requestAnimationFrame(()=>Charts.line(cv,weights,'#6366f1',goal));
+    } else {
+      const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+    }
+
+    // Prediction
+    const pred=calcPrediction();
+    const predDiv=document.getElementById('weight-prediction');
+    const predText=document.getElementById('weight-pred-text');
+    if(pred){
+      predDiv.style.display='block';
+      const sign=pred.dailyDeficit>0?'déficit':'superávit';
+      const kgDir=pred.kgPerWeek>0?'perder':'ganar';
+      predText.innerHTML=`${sign} de <strong>${Math.abs(pred.dailyDeficit)}</strong> kcal/día → <strong>${Math.abs(pred.kgPerWeek)}</strong> kg/semana estimado` +
+        (pred.weeksToGoal&&pred.weeksToGoal>0?`<br>Meta de <strong>${pred.goalKg}kg</strong> en aprox. <strong>${pred.weeksToGoal} semanas</strong>`:'');
+    } else predDiv.style.display='none';
+  },
+
+  renderMicros() {
+    const days=parseInt(document.getElementById('micro-days')?.value||7);
+    const food=DB.foodLog();
+    const range=Array.from({length:days},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(days-1-i));return fmtDate(d);});
+
+    // Accumulate micros
+    const totals=Object.fromEntries(MICRO_KEYS.map(k=>[k,0]));
+    const hasData=Object.fromEntries(MICRO_KEYS.map(k=>[k,false]));
+    let count=0;
+
+    range.forEach(d=>{
+      (food[d]||[]).forEach(f=>{
+        count++;
+        MICRO_KEYS.forEach(k=>{ if(f[k]!=null){totals[k]+=f[k];hasData[k]=true;} });
+      });
+    });
+
+    const grid=document.getElementById('micro-grid');
+    const empty=document.getElementById('micro-empty');
+
+    if(count===0){
+      grid.innerHTML=''; empty.style.display='';
+      return;
+    }
+    empty.style.display='none';
+
+    // Legend
+    const legend=`<div class="micro-legend">
+      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--success)"></div>≥80% IDR</div>
+      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--warning)"></div>40-79%</div>
+      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--danger)"></div>&lt;40%</div>
+      <div class="micro-legend-item"><div class="micro-legend-dot" style="background:var(--border)"></div>Sin datos</div>
+    </div>`;
+
+    grid.innerHTML=legend+MICRO_KEYS.map(k=>{
+      const m=MICROS[k], total=totals[k], rda=m.rda*days;
+      if(!hasData[k]){
+        return `<div class="micro-item no-data">
+          <div class="micro-name">${m.label}</div>
+          <div class="micro-bar-wrap"><div class="micro-bar-fill" style="width:0%"></div></div>
+          <div class="micro-pct">—</div>
+          <div class="micro-status-dot"></div>
+        </div>`;
+      }
+      const pct=Math.min(Math.round((total/rda)*100),150);
+      const cls=m.limit?(pct>100?'limit':pct>70?'adequate':'low'):pct>=80?'adequate':pct>=40?'low':'deficient';
+      return `<div class="micro-item ${cls}" title="${m.label}: ${total.toFixed(1)}${m.unit} / ${rda}${m.unit}">
+        <div class="micro-name">${m.label}</div>
+        <div class="micro-bar-wrap"><div class="micro-bar-fill" style="width:${Math.min(pct,100)}%"></div></div>
+        <div class="micro-pct">${pct}%</div>
+        <div class="micro-status-dot"></div>
+      </div>`;
+    }).join('');
+  },
+
+  // ================================================================
+  // HISTORY
+  // ================================================================
+  // ================================================================
+  // EXERCISE
+  // ================================================================
+  calcExerciseKcal(met, durationMin) {
+    const kg = DB.weightLog().slice(-1)[0]?.kg || 80;
+    return Math.round(met * kg * (durationMin / 60));
+  },
+
+  bindExerciseModal() {
+    // Build activity grid
+    const grid = document.getElementById('activity-grid');
+    ACTIVITIES.forEach((act, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'activity-btn';
+      btn.type = 'button';
+      btn.dataset.idx = i;
+      btn.innerHTML = `<span class="activity-icon">${act.icon}</span><span class="activity-name">${act.name}</span>`;
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        this.selectedActivity = act;
+        document.getElementById('exercise-custom-wrap').style.display = act.name === 'Otro' ? '' : 'none';
+        this.updateExercisePreview();
+      });
+      grid.appendChild(btn);
+    });
+
+    document.getElementById('btn-add-exercise').addEventListener('click', () => this.openExerciseModal());
+    document.getElementById('modal-exercise').addEventListener('click', e => { if(e.target===e.currentTarget) this.closeExerciseModal(); });
+    document.getElementById('btn-close-exercise').addEventListener('click', () => this.closeExerciseModal());
+    document.getElementById('btn-save-exercise').addEventListener('click', () => this.saveExercise());
+
+    // Duration presets
+    document.querySelectorAll('[data-min]').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-min]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('exercise-duration').value = btn.dataset.min;
+      this.updateExercisePreview();
+    }));
+    document.getElementById('exercise-duration').addEventListener('input', () => {
+      document.querySelectorAll('[data-min]').forEach(b => b.classList.remove('selected'));
+      this.updateExercisePreview();
+    });
+
+    // Manual kcal toggle
+    document.getElementById('exercise-manual-toggle').addEventListener('change', e => {
+      document.getElementById('exercise-manual-wrap').style.display = e.target.checked ? '' : 'none';
+      this.updateExercisePreview();
+    });
+    document.getElementById('exercise-kcal-manual').addEventListener('input', () => this.updateExercisePreview());
+  },
+
+  updateExercisePreview() {
+    const act = this.selectedActivity; if (!act) return;
+    const dur = parseInt(document.getElementById('exercise-duration').value) || 30;
+    const manual = document.getElementById('exercise-manual-toggle').checked;
+    const manualKcal = parseInt(document.getElementById('exercise-kcal-manual').value);
+    const kcal = (manual && manualKcal) ? manualKcal : this.calcExerciseKcal(act.met, dur);
+    document.getElementById('exercise-kcal-preview').textContent = `${kcal} kcal`;
+  },
+
+  openExerciseModal() {
+    // Reset form
+    document.getElementById('exercise-duration').value = '30';
+    document.getElementById('exercise-note').value = '';
+    document.getElementById('exercise-manual-toggle').checked = false;
+    document.getElementById('exercise-manual-wrap').style.display = 'none';
+    document.getElementById('exercise-custom-wrap').style.display = 'none';
+    document.getElementById('exercise-kcal-manual').value = '';
+    document.querySelectorAll('[data-min]').forEach(b => b.classList.remove('selected'));
+    document.querySelector('[data-min="30"]')?.classList.add('selected');
+    // Select first activity
+    const grid = document.getElementById('activity-grid');
+    grid.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('selected'));
+    grid.querySelector('.activity-btn')?.classList.add('selected');
+    this.selectedActivity = ACTIVITIES[0];
+    this.updateExercisePreview();
+    this.openModal('modal-exercise');
+  },
+
+  closeExerciseModal() { this.closeModal('modal-exercise'); },
+
+  saveExercise() {
+    const act = this.selectedActivity;
+    if (!act) { toast('Selecciona una actividad', 'error'); return; }
+    const dur = parseInt(document.getElementById('exercise-duration').value);
+    if (!dur || dur < 1) { toast('Ingresa la duración', 'error'); return; }
+    const manual = document.getElementById('exercise-manual-toggle').checked;
+    const manualKcal = parseInt(document.getElementById('exercise-kcal-manual').value);
+    const kcalBurned = (manual && manualKcal) ? manualKcal : this.calcExerciseKcal(act.met, dur);
+    const name = act.name === 'Otro'
+      ? (document.getElementById('exercise-custom-name').value.trim() || 'Ejercicio')
+      : act.name;
+    DB.addExercise({
+      id: `e_${Date.now()}`, name, icon: act.icon, met: act.met,
+      duration: dur, kcalBurned,
+      note: document.getElementById('exercise-note').value.trim(),
+      ts: new Date().toISOString()
+    });
+    toast(`${act.icon} ${name} — ${kcalBurned} kcal quemadas`, 'success');
+    this.closeExerciseModal();
+    this.renderExercise();
+    this.renderDashboard();
+  },
+
+  renderExercise() {
+    const list = DB.todayExercise();
+    const totalBurned = list.reduce((a, e) => a + e.kcalBurned, 0);
+    document.getElementById('exercise-total-kcal').textContent = totalBurned;
+    document.getElementById('exercise-total-label').textContent =
+      totalBurned > 0 ? `${list.length} sesión${list.length>1?'es':''} · ${totalBurned} kcal quemadas` : 'Sin actividad hoy';
+    const logEl = document.getElementById('exercise-log');
+    if (!list.length) {
+      logEl.innerHTML = `<p class="text-muted text-center" style="padding:8px 0">Toca + para registrar tu actividad</p>`;
+      return;
+    }
+    logEl.innerHTML = list.map((e, i) => `
+      <div class="exercise-item">
+        <div class="exercise-item-icon">${e.icon}</div>
+        <div class="exercise-item-info">
+          <div class="exercise-item-name">${esc(e.name)}</div>
+          <div class="exercise-item-detail">${e.duration} min · ${e.kcalBurned} kcal${e.note ? ' · '+esc(e.note) : ''}</div>
+        </div>
+        <button class="btn-remove" data-ex-remove="${i}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`).join('');
+    logEl.querySelectorAll('[data-ex-remove]').forEach(btn => btn.addEventListener('click', () => {
+      DB.removeExercise(parseInt(btn.dataset.exRemove));
+      this.renderExercise();
+      this.renderDashboard();
+    }));
+  },
+
+  // ================================================================
+  // PLAN SEMANAL
+  // ================================================================
+  bindPlanModal() {
+    document.getElementById('btn-open-plan').addEventListener('click', () => this.openWeekPlan());
+    document.getElementById('modal-week-plan').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closeWeekPlan();
+    });
+    document.getElementById('btn-close-plan').addEventListener('click', () => this.closeWeekPlan());
+    document.getElementById('btn-back-from-picker').addEventListener('click', () => this.closeRecipePicker());
+    document.getElementById('btn-log-today-plan').addEventListener('click', () => this.logTodayPlan());
+    document.getElementById('picker-search').addEventListener('input', e => this.renderPickerList(e.target.value));
+  },
+
+  openWeekPlan() {
+    this.planCurrentDate = today();
+    this.buildPlanDayTabs();
+    this.renderWeekPlan();
+    this.openModal('modal-week-plan');
+  },
+
+  closeWeekPlan() {
+    this.closeModal('modal-week-plan');
+    this.closeRecipePicker(true);
+  },
+
+  buildPlanDayTabs() {
+    const tabsEl = document.getElementById('plan-day-tabs');
+    const mp = DB.mealPlan();
+    const now = new Date();
+    tabsEl.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + i);
+      const dateStr = fmtDate(d);
+      const isToday  = dateStr === today();
+      const isActive = dateStr === this.planCurrentDate;
+      const hasItems = (mp[dateStr]||[]).length > 0;
+      const btn = document.createElement('button');
+      btn.className = `plan-day-tab${isActive ? ' active' : ''}${hasItems ? ' has-plan' : ''}`;
+      btn.innerHTML = `<span class="tab-num">${d.getDate()}</span><span class="tab-name">${isToday ? 'Hoy' : DAYS_SHORT[d.getDay()]}</span>`;
+      btn.addEventListener('click', () => {
+        this.planCurrentDate = dateStr;
+        this.buildPlanDayTabs();
+        this.renderWeekPlan();
+      });
+      tabsEl.appendChild(btn);
+    }
+  },
+
+  renderWeekPlan() {
+    const date    = this.planCurrentDate;
+    const isToday = date === today();
+    const entries = DB.planForDate(date);
+    const totalKcal = entries.reduce((a, e) => a + e.kcal, 0);
+
+    // Total bar
+    const totalBar = document.getElementById('plan-total-bar');
+    if (totalKcal > 0) {
+      totalBar.style.display = 'flex';
+      document.getElementById('plan-total-kcal').textContent = `${totalKcal} kcal`;
+    } else {
+      totalBar.style.display = 'none';
+    }
+
+    // Meal slots
+    const slotsEl = document.getElementById('plan-slots');
+    slotsEl.innerHTML = MEAL_SLOTS.map(slot => {
+      const slotEntries = entries.filter(e => e.slot === slot.id);
+      const slotKcal    = slotEntries.reduce((a, e) => a + e.kcal, 0);
+      const itemsHtml   = slotEntries.map(e => `
+        <div class="plan-item">
+          <div class="plan-item-name">${esc(e.recipeName)}</div>
+          <div class="plan-item-kcal">${e.kcal} kcal</div>
+          <button class="btn-remove" data-plan-remove="${e.id}" style="margin-left:4px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>`).join('');
+      return `<div class="plan-slot">
+        <div class="plan-slot-header">
+          <div class="plan-slot-title">${slot.icon} ${slot.label}</div>
+          ${slotKcal ? `<span class="plan-slot-kcal">${slotKcal} kcal</span>` : ''}
+        </div>
+        ${itemsHtml}
+        <button class="plan-add-btn" data-add-slot="${slot.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir receta
+        </button>
+      </div>`;
+    }).join('');
+
+    // Log today button
+    const logBtn = document.getElementById('btn-log-today-plan');
+    logBtn.style.display = (isToday && entries.length) ? '' : 'none';
+
+    // Bind events
+    slotsEl.querySelectorAll('[data-add-slot]').forEach(btn => {
+      btn.addEventListener('click', () => this.openRecipePicker(btn.dataset.addSlot));
+    });
+    slotsEl.querySelectorAll('[data-plan-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        DB.removePlanEntry(date, btn.dataset.planRemove);
+        this.buildPlanDayTabs();
+        this.renderWeekPlan();
+        this.updatePlanBadge();
+      });
+    });
+  },
+
+  openRecipePicker(slot) {
+    this.planPickerSlot = slot;
+    const slotMeta = MEAL_SLOTS.find(s => s.id === slot);
+    document.getElementById('picker-slot-label').textContent =
+      slotMeta ? `${slotMeta.icon} ${slotMeta.label}` : '';
+    document.getElementById('picker-search').value = '';
+    this.renderPickerList('');
+    document.getElementById('plan-view').style.display        = 'none';
+    document.getElementById('plan-picker-view').style.display = '';
+    document.getElementById('plan-day-tabs').style.display    = 'none';
+    document.getElementById('picker-search').focus();
+  },
+
+  closeRecipePicker(silent = false) {
+    document.getElementById('plan-picker-view').style.display = 'none';
+    document.getElementById('plan-view').style.display        = '';
+    document.getElementById('plan-day-tabs').style.display    = '';
+    this.planPickerSlot = null;
+  },
+
+  renderPickerList(q) {
+    const recipes  = DB.recipes();
+    const filtered = q
+      ? recipes.filter(r => r.name.toLowerCase().includes(q.toLowerCase()))
+      : recipes;
+    const list = document.getElementById('picker-list');
+    if (!filtered.length) {
+      list.innerHTML = `<p class="text-muted text-center" style="padding:20px 0">${
+        recipes.length ? 'Sin coincidencias' : 'No tienes recetas guardadas aún'
+      }</p>`;
+      return;
+    }
+    list.innerHTML = filtered.map(r => `
+      <div class="picker-recipe-item" data-pick-id="${r.id}">
+        <div style="min-width:0;flex:1">
+          <div class="picker-recipe-name">${esc(r.name)}</div>
+          <div class="picker-recipe-info">${r.perKcal} kcal · P:${r.perProt}g · C:${r.perCarbs}g · G:${r.perFat}g</div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-left:8px">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>`).join('');
+    list.querySelectorAll('[data-pick-id]').forEach(el => {
+      el.addEventListener('click', () => this.addRecipeToPlan(el.dataset.pickId));
+    });
+  },
+
+  addRecipeToPlan(recipeId) {
+    const recipe = DB.recipes().find(r => r.id === recipeId);
+    if (!recipe || !this.planPickerSlot) return;
+    const entry = {
+      id:         `p_${Date.now()}`,
+      slot:       this.planPickerSlot,
+      recipeId:   recipe.id,
+      recipeName: recipe.name,
+      kcal:       recipe.perKcal,
+      prot:       recipe.perProt,
+      carbs:      recipe.perCarbs,
+      fat:        recipe.perFat,
+    };
+    // Carry micro data for later food-log registration
+    const MICRO_MAP = {
+      vitA:'perVitA', vitC:'perVitC', vitD:'perVitD', vitE:'perVitE',
+      vitK:'perVitK', vitB6:'perVitB6', vitB12:'perVitB12', folate:'perFolate',
+      iron:'perIron', calcium:'perCalcium', magnesium:'perMagnesium',
+      zinc:'perZinc', potassium:'perPotassium', sodium:'perSodium', fiber:'perFiber'
+    };
+    Object.entries(MICRO_MAP).forEach(([k, rk]) => { if (recipe[rk] != null) entry[k] = recipe[rk]; });
+
+    DB.addPlanEntry(this.planCurrentDate, entry);
+    const slotMeta = MEAL_SLOTS.find(s => s.id === this.planPickerSlot);
+    toast(`${slotMeta?.icon || ''} ${recipe.name} añadida al plan`, 'success');
+    this.closeRecipePicker();
+    this.buildPlanDayTabs();
+    this.renderWeekPlan();
+    this.updatePlanBadge();
+  },
+
+  logTodayPlan() {
+    const entries = DB.planForDate(today());
+    if (!entries.length) { toast('No hay recetas planificadas para hoy', 'error'); return; }
+    const now = Date.now();
+    entries.forEach((e, idx) => {
+      const entry = {
+        id:        `fp_${now}_${idx}`,
+        name:      e.recipeName,
+        qty:       100,
+        kcal:      e.kcal,
+        prot:      e.prot  || 0,
+        carbs:     e.carbs || 0,
+        fat:       e.fat   || 0,
+        isRecipe:  true,
+        fromPlan:  true,
+      };
+      MICRO_KEYS.forEach(k => { if (e[k] != null) entry[k] = e[k]; });
+      DB.addFood(entry);
+    });
+    const n = entries.length;
+    toast(`${n} comida${n > 1 ? 's' : ''} registrada${n > 1 ? 's' : ''} en el diario ✓`, 'success');
+    this.closeWeekPlan();
+    this.navigate('food');
+  },
+
+  // Badge on "Plan semanal" button showing tomorrow's planned kcal
+  updatePlanBadge() {
+    const badge = document.getElementById('plan-tomorrow-badge');
+    if (!badge) return;
+    const tomorrow = fmtDate(new Date(new Date().setDate(new Date().getDate() + 1)));
+    const entries  = DB.planForDate(tomorrow);
+    if (entries.length) {
+      const kcal = entries.reduce((a, e) => a + e.kcal, 0);
+      badge.textContent = `mañana ${kcal} kcal`;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  },
+
+  renderHistory() {
+    const food=DB.foodLog(), done=DB.completions(), tasks=DB.tasks(), water=DB.waterLog();
+    const goal=DB.settings().calorieGoal;
+    const now=new Date();
+    const days=Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(now.getDate()-(6-i));return fmtDate(d);});
+    const labels=days.map(d=>DAYS_SHORT[new Date(d+'T12:00:00').getDay()]);
+
+    const exercise=DB.exerciseLog();
+    const kcalData=days.map(d=>(food[d]||[]).reduce((a,f)=>a+f.kcal,0));
+    const exData=days.map(d=>(exercise[d]||[]).reduce((a,e)=>a+e.kcalBurned,0));
+    const waterData=days.map(d=>water[d]||0);
+    const taskData=days.map(d=>{
+      const dow=new Date(d+'T12:00:00').getDay();
+      const dayTasks=tasks.filter(t=>!t.days?.length||t.days.includes(dow));
+      if(!dayTasks.length) return 0;
+      const dayDone=done[d]||{};
+      return Math.round((dayTasks.filter(t=>dayDone[t.id]).length/dayTasks.length)*100);
+    });
+
+    requestAnimationFrame(()=>{
+      Charts.bars(document.getElementById('chart-kcal'),kcalData,labels,'#f59e0b',goal);
+      Charts.bars(document.getElementById('chart-exercise'),exData,labels,'#d97706');
+      Charts.bars(document.getElementById('chart-water'),waterData,labels,'#3b82f6',DB.settings().waterGoal||2500);
+      Charts.bars(document.getElementById('chart-tasks'),taskData,labels,'#6366f1');
+    });
+
+    const avgKcal=Math.round(kcalData.reduce((a,v)=>a+v,0)/7);
+    const avgWater=Math.round(waterData.reduce((a,v)=>a+v,0)/7);
+    const avgTask=Math.round(taskData.reduce((a,v)=>a+v,0)/7);
+    const daysGoal=kcalData.filter(v=>v>0&&v<=goal).length;
+
+    document.getElementById('hist-avg-kcal').textContent=avgKcal;
+    document.getElementById('hist-task-pct').textContent=avgTask+'%';
+    document.getElementById('hist-avg-water').textContent=Math.round(avgWater/100)/10+'L';
+    document.getElementById('hist-goal-hit').textContent=daysGoal+'/7';
+
+    // Breakdown
+    const breakdown=document.getElementById('food-breakdown');
+    breakdown.innerHTML=days.slice().reverse().map(d=>{
+      const dayFood=food[d]||[], kcal=dayFood.reduce((a,f)=>a+f.kcal,0);
+      const date=new Date(d+'T12:00:00');
+      const label=d===today()?'Hoy':d===fmtDate(new Date(now.getTime()-86400000))?'Ayer':
+        date.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'});
+      return `<div class="log-item" ${!dayFood.length?'style="opacity:.5"':''}>
+        <div class="log-item-info">
+          <div class="log-item-name">${label}</div>
+          <div class="log-item-detail">${dayFood.length?`${dayFood.length} alimentos · ${water[d]||0}ml agua`:'Sin registro'}</div>
+        </div>
+        <span class="log-item-kcal">${kcal||'—'}</span>
+      </div>`;
+    }).join('');
+
+    // Wellness history
+    this.renderWellnessHistory(days, labels);
+  },
+
+  // ================================================================
+  // DIARIO DE BIENESTAR
+  // ================================================================
+  bindWellnessModal() {
+    // Open from Progreso btn
+    document.getElementById('btn-log-wellness').addEventListener('click', () => this.openWellnessModal());
+    // Open from dashboard chip
+    document.getElementById('dash-wellness').addEventListener('click', () => this.openWellnessModal());
+    // Close
+    document.getElementById('modal-wellness').addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closeWellnessModal();
+    });
+    document.getElementById('btn-close-wellness').addEventListener('click', () => this.closeWellnessModal());
+    // Save
+    document.getElementById('btn-save-wellness').addEventListener('click', () => this.saveWellnessEntry());
+
+    // Mood picker
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        this.wellnessMood = parseInt(btn.dataset.score);
+      });
+    });
+
+    // Energy stars
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = parseInt(btn.dataset.star);
+        this.wellnessEnergy = val;
+        this.updateEnergyStars(val);
+      });
+    });
+  },
+
+  updateEnergyStars(val) {
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.classList.toggle('filled', parseInt(btn.dataset.star) <= val);
+    });
+  },
+
+  openWellnessModal() {
+    // Pre-fill with today's entry if exists
+    const entry = DB.todayWellness();
+    this.wellnessMood   = entry?.mood ?? null;
+    this.wellnessEnergy = entry?.energy ?? 3;
+
+    // Reset mood buttons
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.classList.toggle('selected', parseInt(btn.dataset.score) === this.wellnessMood);
+    });
+    // Set energy
+    this.updateEnergyStars(this.wellnessEnergy);
+    // Sleep + note
+    document.getElementById('wellness-sleep').value = entry?.sleep ?? '';
+    document.getElementById('wellness-note').value  = entry?.note  ?? '';
+
+    this.openModal('modal-wellness');
+  },
+
+  closeWellnessModal() { this.closeModal('modal-wellness'); },
+
+  saveWellnessEntry() {
+    if (!this.wellnessMood) { toast('Selecciona cómo te sientes', 'error'); return; }
+    const sleep = parseFloat(document.getElementById('wellness-sleep').value) || null;
+    const note  = document.getElementById('wellness-note').value.trim();
+    DB.logWellness({ mood: this.wellnessMood, energy: this.wellnessEnergy, sleep, note });
+    const moodMeta = MOODS.find(m => m.score === this.wellnessMood);
+    toast(`${moodMeta.emoji} Bienestar registrado ✓`, 'success');
+    this.closeWellnessModal();
+    this.renderWellnessDash();
+    if (this.view === 'progress')  this.renderWellnessCard();
+    if (this.view === 'history')   this.renderHistory();
+  },
+
+  // Small chip on dashboard
+  renderWellnessDash() {
+    const entry    = DB.todayWellness();
+    const emojiEl  = document.getElementById('dash-wellness-emoji');
+    const moodEl   = document.getElementById('dash-wellness-mood');
+    const subEl    = document.getElementById('dash-wellness-sub');
+    if (!emojiEl) return;
+    if (entry) {
+      const m = MOODS.find(x => x.score === entry.mood) || MOODS[2];
+      emojiEl.textContent = m.emoji;
+      moodEl.textContent  = `${m.label}  ${'⚡'.repeat(entry.energy)}`;
+      subEl.textContent   = [
+        entry.sleep ? `💤 ${entry.sleep}h sueño` : '',
+        entry.note  ? `"${entry.note.slice(0, 40)}"` : ''
+      ].filter(Boolean).join(' · ') || 'Toca para editar';
+    } else {
+      emojiEl.textContent = '📝';
+      moodEl.textContent  = '¿Cómo estás hoy?';
+      subEl.textContent   = 'Toca para registrar tu bienestar';
+    }
+  },
+
+  // Full card in Progreso view
+  renderWellnessCard() {
+    const entry   = DB.todayWellness();
+    const subEl   = document.getElementById('wellness-card-sub');
+    const bodyEl  = document.getElementById('wellness-card-body');
+    const addBtn  = document.getElementById('btn-log-wellness');
+    if (!subEl) return;
+    if (!entry) {
+      subEl.textContent = 'Sin registro hoy';
+      bodyEl.innerHTML  = `<p class="text-muted" style="padding:8px 0 4px">Toca <strong>+</strong> para registrar cómo te sientes</p>`;
+      addBtn.innerHTML  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+      return;
+    }
+    const m = MOODS.find(x => x.score === entry.mood) || MOODS[2];
+    subEl.textContent = `${m.emoji} ${m.label}  ·  ⚡ ${entry.energy}/5`;
+    addBtn.innerHTML  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+
+    const energyPips = Array.from({length:5},(_,i)=>
+      `<div class="e-pip${i < entry.energy ? ' on':''}"></div>`).join('');
+
+    bodyEl.innerHTML = `
+      <div class="wellness-today-grid">
+        <div class="wellness-today-stat">
+          <div class="wellness-today-stat-label">Estado</div>
+          <div class="wellness-today-stat-val">${m.emoji}</div>
+        </div>
+        <div class="wellness-today-stat">
+          <div class="wellness-today-stat-label">Energía</div>
+          <div style="display:flex;gap:3px;margin-top:4px">${energyPips}</div>
+        </div>
+        ${entry.sleep ? `<div class="wellness-today-stat">
+          <div class="wellness-today-stat-label">Sueño</div>
+          <div class="wellness-today-stat-val">${entry.sleep}<span style="font-size:13px;font-weight:500">h</span></div>
+        </div>` : ''}
+      </div>
+      ${entry.note ? `<div class="wellness-today-note">"${esc(entry.note)}"</div>` : ''}`;
+  },
+
+  // 7-day wellness history in Historial tab
+  renderWellnessHistory(days, labels) {
+    const wLog = DB.wellness();
+    const listEl = document.getElementById('wellness-history-list');
+    if (!listEl) return;
+    listEl.innerHTML = days.slice().reverse().map((d, i) => {
+      const dayIdx  = days.length - 1 - i;
+      const label   = labels[dayIdx];
+      const entry   = wLog[d];
+      if (!entry) {
+        return `<div class="wellness-hist-row">
+          <span class="wellness-hist-date">${label}</span>
+          <div class="wellness-hist-dot w-dot-0">—</div>
+          <div class="wellness-hist-energy">${Array.from({length:5},()=>'<div class="e-pip"></div>').join('')}</div>
+          <span class="wellness-hist-sleep">—</span>
+          <span class="wellness-hist-note" style="color:var(--border)">Sin registro</span>
+        </div>`;
+      }
+      const m = MOODS.find(x => x.score === entry.mood) || MOODS[2];
+      const pips = Array.from({length:5},(_,idx)=>
+        `<div class="e-pip${idx < entry.energy ? ' on':''}"></div>`).join('');
+      return `<div class="wellness-hist-row">
+        <span class="wellness-hist-date">${label}</span>
+        <div class="wellness-hist-dot ${m.dotClass}">${m.emoji}</div>
+        <div class="wellness-hist-energy">${pips}</div>
+        <span class="wellness-hist-sleep">${entry.sleep ? entry.sleep+'h' : '—'}</span>
+        <span class="wellness-hist-note">${entry.note ? esc(entry.note) : ''}</span>
+      </div>`;
+    }).join('');
+  },
+};
+
+// ================================================================
+// START
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => App.init());

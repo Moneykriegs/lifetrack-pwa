@@ -1,0 +1,46 @@
+# LifeTrack — Netlify configuration
+# Deploy: connect repo, set SUPABASE_URL + SUPABASE_ANON_KEY as env vars, deploy.
+
+[build]
+  command   = "bash generate-config.sh"
+  publish   = "."
+
+# ── Cache headers ─────────────────────────────────────────────
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# PWA: service worker must be able to claim all paths
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+
+# SPA fallback (all routes → index.html)
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
