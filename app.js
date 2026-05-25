@@ -2520,7 +2520,7 @@ const App = {
     const listEl = document.getElementById('prep-food-list');
     if (!listEl) return;
     const activeTab = document.querySelector('.prep-tab-btn.active')?.dataset.tab || 'prep';
-    q = (q||'').toLowerCase();
+    q = (q || '').toLowerCase().trim();
 
     if (activeTab === 'prep') {
       // Group PREP_FOODS by category
