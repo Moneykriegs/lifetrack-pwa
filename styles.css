@@ -821,6 +821,15 @@ svg { display: block; flex-shrink: 0; }
 }
 .rec-match-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
 
+.rec-micro-row {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+}
+.rec-micro-chip {
+  font-size: 10px; background: #f0fdf4; color: #166534;
+  border: 1px solid #bbf7d0; border-radius: 99px;
+  padding: 2px 7px; white-space: nowrap;
+}
+
 /* ── Ingredient preference chips ─────────────────────────── */
 .pref-cat-header {
   font-size: 12px; font-weight: 700; color: var(--text-muted);

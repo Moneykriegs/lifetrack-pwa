@@ -218,6 +218,72 @@ const RECIPE_DB = [
     ingredients:['banana','almonds'],                                      kcal:200, prot:5,  carbs:34, fat:7  },
 ];
 
+// ================================================================
+// INGREDIENT → MICRONUTRIENT CONTRIBUTIONS
+// Keys match MICROS object (vitA,vitC,vitD,vitE,vitK,vitB6,vitB12,
+// folate,iron,calcium,magnesium,zinc,potassium,fiber)
+// Values are approximate per typical serving used in RECIPE_DB
+// ================================================================
+const INGREDIENT_MICROS = {
+  // 🥩 Proteínas
+  chicken:      { vitB6:0.6,  vitB12:0.3,  iron:1.1, zinc:2.1, potassium:340 },
+  beef:         { vitB12:2.1, vitB6:0.4,   iron:2.8, zinc:4.5, potassium:300 },
+  pork:         { vitB12:0.7, vitB6:0.5,   iron:0.9, zinc:2.5, potassium:280 },
+  salmon:       { vitD:11,    vitB12:3.2,  vitB6:0.8, vitE:1.3, iron:0.4, potassium:380 },
+  tuna:         { vitD:4.0,   vitB12:2.5,  vitB6:0.9, iron:1.0, potassium:280 },
+  shrimp:       { vitB12:1.1, zinc:1.1,    iron:0.5,  potassium:220 },
+  turkey:       { vitB6:0.7,  vitB12:0.3,  iron:1.4,  zinc:2.3, potassium:290 },
+  eggs:         { vitD:2.0,   vitA:80,     vitB12:0.9, vitE:1.0, iron:1.8, folate:47 },
+  tofu:         { calcium:350, iron:2.7,   magnesium:30, zinc:1.0 },
+  // 🥦 Verduras
+  broccoli:     { vitC:90,  vitK:101, vitA:31,  folate:57, iron:0.7, fiber:2.6, magnesium:21 },
+  spinach:      { vitK:400, vitA:280, vitC:28,  folate:58, iron:2.7, magnesium:79, calcium:99 },
+  tomato:       { vitC:23,  vitA:42,  vitK:7,   potassium:237, folate:15 },
+  onion:        { vitC:7,   vitB6:0.1, folate:19, fiber:1.7, potassium:146 },
+  garlic:       { vitC:3,   vitB6:0.1, magnesium:7, calcium:18 },
+  peppers:      { vitC:180, vitA:157, vitB6:0.3, folate:46, vitK:8 },
+  zucchini:     { vitC:17,  vitK:4,   folate:24, potassium:261, magnesium:18 },
+  mushrooms:    { vitD:0.4, vitB12:0.04, zinc:0.9, iron:0.5, potassium:318, fiber:1.0 },
+  carrot:       { vitA:835, vitK:13,  vitC:6,   potassium:320, fiber:2.8, magnesium:12 },
+  lettuce:      { vitK:102, vitA:36,  folate:38, vitC:9,  iron:0.5, calcium:36 },
+  cucumber:     { vitK:16,  vitC:3,   potassium:147, magnesium:13 },
+  // 🍚 Carbohidratos
+  rice:         { magnesium:12, potassium:35,  iron:0.4, fiber:0.4 },
+  pasta:        { iron:1.3,  magnesium:18, folate:7,  fiber:1.8 },
+  bread:        { iron:2.3,  calcium:77,   magnesium:24, fiber:6.0, folate:40 },
+  oats:         { magnesium:56, iron:2.1,  zinc:1.9, fiber:4.0, vitB6:0.1, folate:14 },
+  potato:       { vitC:19,  vitB6:0.4, potassium:544, magnesium:30, fiber:2.2, iron:0.8 },
+  sweet_potato: { vitA:961, vitC:22,   potassium:475, magnesium:27, fiber:3.0, vitB6:0.3 },
+  quinoa:       { magnesium:64, iron:1.5, zinc:1.1, fiber:2.8, folate:42, potassium:318, calcium:17 },
+  tortilla:     { calcium:46, iron:1.2, fiber:2.0, magnesium:16 },
+  banana:       { vitB6:0.4, vitC:10,  potassium:422, magnesium:32, fiber:3.1, folate:20 },
+  // 🥑 Grasas
+  avocado:      { vitK:21,  vitE:2.1, folate:81, potassium:485, fiber:6.7, magnesium:29 },
+  olive_oil:    { vitE:1.9, vitK:8 },
+  almonds:      { vitE:7.4, magnesium:77, calcium:76, fiber:3.5, zinc:0.9, iron:1.0 },
+  nuts:         { vitE:1.0, magnesium:45, potassium:125, fiber:1.9, zinc:0.8 },
+  // 🥛 Lácteos
+  milk:         { calcium:300, vitD:2.9, vitB12:1.2, potassium:380, vitA:50 },
+  yogurt:       { calcium:200, vitB12:0.8, potassium:240, zinc:1.5, vitD:0.5 },
+  cheese:       { calcium:700, vitB12:0.8, zinc:3.1, vitA:75, vitK:3 },
+  cottage:      { calcium:83,  vitB12:0.4, potassium:137, zinc:0.6, vitD:0.2 },
+  // 🫘 Legumbres
+  beans:        { iron:3.7, folate:130, potassium:600, magnesium:60, fiber:10, zinc:1.8, calcium:50 },
+  lentils:      { iron:3.3, folate:179, potassium:369, magnesium:36, fiber:8.0, zinc:2.5, vitB6:0.2 },
+  chickpeas:    { iron:2.9, folate:172, potassium:477, magnesium:79, fiber:7.6, zinc:2.5, calcium:80 },
+};
+
+// Compute total micronutrients for a RECIPE_DB recipe from its ingredient tags
+function calcRecipeMicros(recipe) {
+  const totals = {};
+  recipe.ingredients.forEach(ingId => {
+    const m = INGREDIENT_MICROS[ingId];
+    if (!m) return;
+    Object.entries(m).forEach(([k, v]) => { totals[k] = (totals[k] || 0) + v; });
+  });
+  return totals;
+}
+
 const ACTIVITIES = [
   { name:'Correr',        icon:'🏃', met:9.8  },
   { name:'Caminar',       icon:'🚶', met:3.5  },
@@ -1654,37 +1720,64 @@ const App = {
     return 'snack';
   },
 
-  _scoreRecipe(recipe, likedSet, remaining, cuttingStyle) {
+  _scoreRecipe(recipe, likedSet, remaining, cuttingStyle, todayMicros) {
     const matches = recipe.ingredients.filter(i => likedSet.has(i)).length;
     if (matches === 0) return -1;
     let score = 0;
-    // Ingredient overlap score (max 50)
+
+    // 1. Ingredient overlap (max 50)
     score += Math.min(matches * 12, 50);
-    // Calorie fit score (max 25): how close kcal is to the expected portion of remaining
+
+    // 2. Calorie fit (max 25): how close kcal is to the expected portion of remaining
     const targetKcal = recipe.mealType === 'snack'
       ? Math.min(remaining * 0.2, 220)
       : remaining * 0.4;
     const diff = Math.abs(recipe.kcal - targetKcal);
     score += Math.max(0, 25 - Math.round(diff / 20));
-    // Protein quality (max 25): always good, especially during cut
+
+    // 3. Protein quality (max 25): higher during cut/maintenance
     const protRatio = (recipe.prot * 4) / recipe.kcal;
     const protWeight = (cuttingStyle?.includes('cut') || cuttingStyle === 'maintenance') ? 25 : 15;
     score += Math.round(protRatio * protWeight);
+
+    // 4. Micronutrient gap bonus (max 20): reward recipes that cover what's still deficient today
+    if (todayMicros) {
+      const recipeMicros = calcRecipeMicros(recipe);
+      let bonus = 0; let counted = 0;
+      Object.entries(recipeMicros).forEach(([k, v]) => {
+        const m = MICROS[k];
+        if (!m) return;
+        const covered = todayMicros[k] || 0;
+        if (covered / m.rda < 0.6) { // still deficient
+          bonus += Math.min(v / m.rda, 0.5); // recipe contributes up to 50% RDA
+          counted++;
+        }
+      });
+      if (counted > 0) score += Math.min(Math.round((bonus / counted) * 40), 20);
+    }
+
     return score;
+  },
+
+  _getTodayMicros() {
+    const totals = Object.fromEntries(MICRO_KEYS.map(k => [k, 0]));
+    DB.todayFood().forEach(f => MICRO_KEYS.forEach(k => { if (f[k] != null) totals[k] += f[k]; }));
+    return totals;
   },
 
   _getRecommendations(mealType) {
     const prefs = DB.foodPrefs();
     if (!prefs || !prefs.liked || prefs.liked.length < 3) return null;
-    const likedSet = new Set(prefs.liked);
-    const consumed = DB.todayFood().reduce((a, f) => a + f.kcal, 0);
-    const burned   = DB.todayExercise().reduce((a, e) => a + (e.kcalBurned || 0), 0);
-    const goal     = DB.settings().calorieGoal;
-    const style    = DB.settings().cuttingStyle;
+    const likedSet  = new Set(prefs.liked);
+    const consumed  = DB.todayFood().reduce((a, f) => a + f.kcal, 0);
+    const burned    = DB.todayExercise().reduce((a, e) => a + (e.kcalBurned || 0), 0);
+    const goal      = DB.settings().calorieGoal;
+    const style     = DB.settings().cuttingStyle;
     const remaining = Math.max((goal + burned) - consumed, 0);
+    const todayMicros = this._getTodayMicros();
     const candidates = RECIPE_DB
       .filter(r => r.mealType === mealType || (remaining < 350 && r.mealType === 'snack'))
-      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remaining, style) }))
+      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remaining, style, todayMicros) }))
       .filter(r => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
@@ -1736,6 +1829,14 @@ const App = {
         ${rec.recommendations.map(r => {
           const matchCount = r.ingredients.filter(i => likedSet.has(i)).length;
           const fitPct = Math.round((r.score / maxScore) * 100);
+          // Top 3 micronutrients this recipe covers most
+          const rMicros = calcRecipeMicros(r);
+          const microHighlights = Object.entries(rMicros)
+            .filter(([k]) => MICROS[k])
+            .map(([k, v]) => ({ key:k, label:MICROS[k].label, pct: Math.round((v/MICROS[k].rda)*100) }))
+            .filter(m => m.pct >= 10)
+            .sort((a,b) => b.pct - a.pct)
+            .slice(0, 3);
           return `<div class="rec-card">
             <div class="rec-card-header">
               <span class="rec-card-emoji">${r.emoji}</span>
@@ -1751,9 +1852,12 @@ const App = {
               <span class="rec-macro-chip carbs">C ${r.carbs}g</span>
               <span class="rec-macro-chip fat">G ${r.fat}g</span>
             </div>
+            ${microHighlights.length ? `<div class="rec-micro-row">${microHighlights.map(m =>
+              `<span class="rec-micro-chip">🧬 ${m.label} ${m.pct}% IDR</span>`
+            ).join('')}</div>` : ''}
             <div class="rec-match-row">
               <div class="rec-match-bar-wrap"><div class="rec-match-bar-fill" style="width:${fitPct}%"></div></div>
-              <span class="rec-match-label">${matchCount} de tus ingredientes</span>
+              <span class="rec-match-label">${matchCount} ingredientes favoritos</span>
             </div>
           </div>`;
         }).join('')}
@@ -2747,10 +2851,76 @@ const App = {
   // ================================================================
   // MEAL PREP SEMANAL
   // ================================================================
+
+  // Rellena toda la semana con recomendaciones IA por tipo de comida + micros
+  autoFillWeekWithAI() {
+    const prefs = DB.foodPrefs();
+    if (!prefs || !prefs.liked || prefs.liked.length < 3) {
+      toast('Primero configura tus ingredientes favoritos', 'error');
+      this.openIngredientPrefs();
+      return;
+    }
+    const likedSet = new Set(prefs.liked);
+    const goal  = DB.settings().calorieGoal;
+    const style = DB.settings().cuttingStyle;
+    const days7 = Array.from({length:7}, (_,i) => {
+      const d = new Date(); d.setDate(d.getDate()+i); return fmtDate(d);
+    });
+
+    let totalAdded = 0;
+    days7.forEach(date => {
+      const existing = DB.planForDate(date);
+      const usedIds  = new Set(existing.map(e => e.recipeDbId).filter(Boolean));
+      let dayKcal = existing.reduce((a,e) => a+e.kcal, 0);
+      // Simulate cumulative micros for the day
+      const dayMicros = Object.fromEntries(MICRO_KEYS.map(k => [k,0]));
+      existing.forEach(e => MICRO_KEYS.forEach(k => { if (e[k] != null) dayMicros[k] += e[k]; }));
+
+      MEAL_SLOTS.forEach(slot => {
+        if (existing.some(e => e.slot === slot.id)) return; // already has entries
+        const remainingKcal = Math.max(goal - dayKcal, 0);
+        if (remainingKcal < 50) return; // day is full
+
+        const candidates = RECIPE_DB
+          .filter(r => r.mealType === slot.id && !usedIds.has(r.id))
+          .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, remainingKcal, style, dayMicros) }))
+          .filter(r => r.score > 0)
+          .sort((a,b) => b.score - a.score);
+
+        if (!candidates.length) return;
+        // Pick from top 3 with slight randomness to vary the week
+        const pool = candidates.slice(0, Math.min(3, candidates.length));
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+
+        DB.addPlanEntry(date, {
+          id: Date.now() + Math.random(),
+          slot: slot.id,
+          recipeName: pick.name,
+          kcal: pick.kcal, prot: pick.prot, carbs: pick.carbs, fat: pick.fat,
+          qty: 100, recipeDbId: pick.id, isRecipeDb: true,
+        });
+
+        // Update simulation state for next slot in same day
+        usedIds.add(pick.id);
+        dayKcal += pick.kcal;
+        const rm = calcRecipeMicros(pick);
+        Object.entries(rm).forEach(([k,v]) => { if (dayMicros[k] !== undefined) dayMicros[k] += v; });
+        totalAdded++;
+      });
+    });
+
+    CloudSync.schedulePush();
+    this.renderPrepOverview();
+    this.renderPrepDaySlots();
+    this.updatePlanBadge();
+    toast(`✨ ${totalAdded} comidas añadidas a la semana`, 'success');
+  },
+
   bindPrepModal() {
     document.getElementById('btn-open-prep')?.addEventListener('click', () => this.openMealPrep());
     document.getElementById('btn-close-prep')?.addEventListener('click', () => this.closeMealPrep());
     document.getElementById('modal-meal-prep')?.addEventListener('click', e => { if (e.target === e.currentTarget) this.closeMealPrep(); });
+    document.getElementById('btn-auto-fill-prep')?.addEventListener('click', () => this.autoFillWeekWithAI());
     document.getElementById('btn-close-prep-picker')?.addEventListener('click', () => this.closePrepPicker());
     document.getElementById('prep-search')?.addEventListener('input', e => this.renderPrepFoodList(e.target.value));
     document.getElementById('prep-apply-all-days')?.addEventListener('change', () => {

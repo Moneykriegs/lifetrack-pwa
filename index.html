@@ -925,10 +925,18 @@
   <div class="modal-sheet" style="max-height:95vh;display:flex;flex-direction:column">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <h2 class="modal-title">🥗 Meal Prep semanal</h2>
-      <button class="btn-icon" id="btn-close-prep" aria-label="Cerrar">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div>
+        <h2 class="modal-title" style="margin-bottom:2px">🥗 Meal Prep semanal</h2>
+        <p style="font-size:11px;color:var(--text-muted);margin:0">Slots vacíos se rellenan automáticamente</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="btn-auto-fill-prep" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+          ✨ Auto-completar IA
+        </button>
+        <button class="btn-icon" id="btn-close-prep" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- 7-day overview strip -->
