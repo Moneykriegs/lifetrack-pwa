@@ -369,7 +369,7 @@ const DB = {
   saveMealPlan(v)          { this._s('lt_meal_plan', v); },
   planForDate(date)        { return (this.mealPlan())[date] || []; },
   addPlanEntry(date, entry){ const mp=this.mealPlan(); if(!mp[date])mp[date]=[]; mp[date].push(entry); this.saveMealPlan(mp); },
-  removePlanEntry(date, id){ const mp=this.mealPlan(); if(mp[date]){mp[date]=mp[date].filter(e=>e.id!==id); this.saveMealPlan(mp);} },
+  removePlanEntry(date, id){ const mp=this.mealPlan(); if(mp[date]){mp[date]=mp[date].filter(e=>String(e.id)!==String(id)); this.saveMealPlan(mp);} },
 };
 
 // ================================================================
