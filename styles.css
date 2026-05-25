@@ -821,6 +821,12 @@ svg { display: block; flex-shrink: 0; }
 }
 .rec-match-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
 
+.rec-serving-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff;
+  padding: 1px 6px; border-radius: 99px; vertical-align: middle; margin-left: 4px;
+}
+
 .rec-micro-row {
   display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
 }

@@ -1729,22 +1729,35 @@ const App = {
     return 'snack';
   },
 
+  // Returns the serving multiplier (0.5–3×) that best fits targetKcal
+  _bestServing(recipeKcal, targetKcal) {
+    const opts = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+    let best = 1.0, bestDiff = Infinity;
+    opts.forEach(m => {
+      const diff = Math.abs(recipeKcal * m - targetKcal);
+      if (diff < bestDiff) { bestDiff = diff; best = m; }
+    });
+    return best;
+  },
+
   // targetKcal: ideal kcal for this specific meal slot (goal × SLOT_FRACTIONS)
   // remaining:  kcal still available today (to avoid going over budget)
   _scoreRecipe(recipe, likedSet, targetKcal, remaining, cuttingStyle, todayMicros) {
     const matches = recipe.ingredients.filter(i => likedSet.has(i)).length;
     if (matches === 0) return -1;
-    // Hard filter: don't recommend if recipe alone exceeds remaining by >20%
-    if (remaining > 0 && recipe.kcal > remaining * 1.2) return -1;
+    // Find best serving multiplier to match the slot target
+    const mult = this._bestServing(recipe.kcal, targetKcal);
+    const scaledKcal = Math.round(recipe.kcal * mult);
+    // Hard filter: scaled portion can't exceed remaining budget by >15%
+    if (remaining > 0 && scaledKcal > remaining * 1.15) return -1;
     let score = 0;
 
     // 1. Ingredient overlap (max 50)
     score += Math.min(matches * 12, 50);
 
-    // 2. Calorie fit vs slot target (max 25)
-    // Use slot-fraction target, capped at remaining so we don't overshoot
+    // 2. Calorie fit with best serving size (max 25)
     const effectiveTarget = remaining > 0 ? Math.min(targetKcal, remaining) : targetKcal;
-    const diff = Math.abs(recipe.kcal - effectiveTarget);
+    const diff = Math.abs(scaledKcal - effectiveTarget);
     score += Math.max(0, 25 - Math.round(diff / 20));
 
     // 3. Protein quality (max 25): higher weight during cut/maintenance
@@ -1791,11 +1804,21 @@ const App = {
     const slotTarget  = Math.round(goal * (SLOT_FRACTIONS[mealType] || 0.25));
     const candidates = RECIPE_DB
       .filter(r => r.mealType === mealType || (remaining < slotTarget * 0.6 && r.mealType === 'snack'))
-      .map(r => ({ ...r, score: this._scoreRecipe(r, likedSet, slotTarget, remaining, style, todayMicros) }))
+      .map(r => {
+        const score = this._scoreRecipe(r, likedSet, slotTarget, remaining, style, todayMicros);
+        const mult  = this._bestServing(r.kcal, slotTarget);
+        return {
+          ...r, score, mult,
+          scaledKcal:  Math.round(r.kcal  * mult),
+          scaledProt:  +(r.prot  * mult).toFixed(1),
+          scaledCarbs: +(r.carbs * mult).toFixed(1),
+          scaledFat:   +(r.fat   * mult).toFixed(1),
+        };
+      })
       .filter(r => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
-    return { recommendations: candidates, remaining, mealType };
+    return { recommendations: candidates, remaining, mealType, slotTarget };
   },
 
   renderRecommendations() {
@@ -1843,11 +1866,14 @@ const App = {
         ${rec.recommendations.map(r => {
           const matchCount = r.ingredients.filter(i => likedSet.has(i)).length;
           const fitPct = Math.round((r.score / maxScore) * 100);
-          // Top 3 micronutrients this recipe covers most
+          const multLabel = r.mult !== 1
+            ? `<span class="rec-serving-badge">${r.mult}× porción</span>`
+            : '';
+          // Top 3 micronutrients (scaled by serving multiplier)
           const rMicros = calcRecipeMicros(r);
           const microHighlights = Object.entries(rMicros)
             .filter(([k]) => MICROS[k])
-            .map(([k, v]) => ({ key:k, label:MICROS[k].label, pct: Math.round((v/MICROS[k].rda)*100) }))
+            .map(([k, v]) => ({ label:MICROS[k].label, pct: Math.round((v * r.mult / MICROS[k].rda)*100) }))
             .filter(m => m.pct >= 10)
             .sort((a,b) => b.pct - a.pct)
             .slice(0, 3);
@@ -1855,16 +1881,16 @@ const App = {
             <div class="rec-card-header">
               <span class="rec-card-emoji">${r.emoji}</span>
               <div class="rec-card-info">
-                <div class="rec-card-name">${r.name}</div>
+                <div class="rec-card-name">${r.name} ${multLabel}</div>
                 <div class="rec-card-meta">⏱ ${r.prepTime} min · ${r.servingDesc}</div>
               </div>
-              <button class="rec-add-btn" data-rec-add="${r.id}" title="Añadir al registro">+</button>
+              <button class="rec-add-btn" data-rec-add="${r.id}" data-rec-mult="${r.mult}" title="Añadir al registro">+</button>
             </div>
             <div class="rec-macros">
-              <span class="rec-macro-chip kcal">${r.kcal} kcal</span>
-              <span class="rec-macro-chip prot">P ${r.prot}g</span>
-              <span class="rec-macro-chip carbs">C ${r.carbs}g</span>
-              <span class="rec-macro-chip fat">G ${r.fat}g</span>
+              <span class="rec-macro-chip kcal">${r.scaledKcal} kcal</span>
+              <span class="rec-macro-chip prot">P ${r.scaledProt}g</span>
+              <span class="rec-macro-chip carbs">C ${r.scaledCarbs}g</span>
+              <span class="rec-macro-chip fat">G ${r.scaledFat}g</span>
             </div>
             ${microHighlights.length ? `<div class="rec-micro-row">${microHighlights.map(m =>
               `<span class="rec-micro-chip">🧬 ${m.label} ${m.pct}% IDR</span>`
@@ -1877,23 +1903,27 @@ const App = {
         }).join('')}
       </div>`;
     panel.querySelectorAll('[data-rec-add]').forEach(btn =>
-      btn.addEventListener('click', () => this.addRecipeDbEntry(btn.dataset.recAdd))
+      btn.addEventListener('click', () => this.addRecipeDbEntry(btn.dataset.recAdd, parseFloat(btn.dataset.recMult) || 1))
     );
     document.getElementById('btn-edit-prefs')?.addEventListener('click', () => this.openIngredientPrefs());
   },
 
-  addRecipeDbEntry(recipeId) {
+  addRecipeDbEntry(recipeId, mult = 1) {
     const r = RECIPE_DB.find(x => x.id === recipeId);
     if (!r) return;
+    const name = mult !== 1 ? `${r.name} (×${mult})` : r.name;
     DB.addFood({
       id: `fd_${Date.now()}`,
-      name: r.name, qty: 1,
-      kcal: r.kcal, prot: r.prot, carbs: r.carbs, fat: r.fat,
+      name, qty: mult,
+      kcal:  Math.round(r.kcal  * mult),
+      prot:  +(r.prot  * mult).toFixed(1),
+      carbs: +(r.carbs * mult).toFixed(1),
+      fat:   +(r.fat   * mult).toFixed(1),
       source: 'recipe_db', recipeDbId: r.id,
     });
     this.renderFoodLog();
     this.updateFoodBar();
-    toast(`${r.emoji} ${r.name} añadida al registro`, 'success');
+    toast(`${r.emoji} ${name} añadida al registro`, 'success');
   },
 
   // ── INGREDIENT PREFERENCES MODAL ─────────────────────────
@@ -2909,19 +2939,27 @@ const App = {
         const pool = candidates.slice(0, Math.min(3, candidates.length));
         const pick = pool[Math.floor(Math.random() * pool.length)];
 
+        // Scale serving to match slot target
+        const mult = this._bestServing(pick.kcal, slotTarget);
+        const scaledKcal  = Math.round(pick.kcal  * mult);
+        const scaledProt  = +(pick.prot  * mult).toFixed(1);
+        const scaledCarbs = +(pick.carbs * mult).toFixed(1);
+        const scaledFat   = +(pick.fat   * mult).toFixed(1);
+        const displayName = mult !== 1 ? `${pick.name} (×${mult})` : pick.name;
+
         DB.addPlanEntry(date, {
           id: Date.now() + Math.random(),
           slot: slot.id,
-          recipeName: pick.name,
-          kcal: pick.kcal, prot: pick.prot, carbs: pick.carbs, fat: pick.fat,
-          qty: 100, recipeDbId: pick.id, isRecipeDb: true,
+          recipeName: displayName,
+          kcal: scaledKcal, prot: scaledProt, carbs: scaledCarbs, fat: scaledFat,
+          qty: mult, recipeDbId: pick.id, isRecipeDb: true,
         });
 
         // Update simulation state for next slot in same day
         usedIds.add(pick.id);
-        dayKcal += pick.kcal;
+        dayKcal += scaledKcal;
         const rm = calcRecipeMicros(pick);
-        Object.entries(rm).forEach(([k,v]) => { if (dayMicros[k] !== undefined) dayMicros[k] += v; });
+        Object.entries(rm).forEach(([k,v]) => { if (dayMicros[k] !== undefined) dayMicros[k] += v * mult; });
         totalAdded++;
       });
     });
