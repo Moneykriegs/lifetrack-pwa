@@ -1434,6 +1434,14 @@ const App = {
 
     await Notif.init();
 
+    // Overdue task reminders
+    this.bindOverdueBanner();
+    setTimeout(() => this.checkOverdueTasks(), 1500); // after first render
+    setInterval(() => this.checkOverdueTasks(), 60_000); // every minute
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) this.checkOverdueTasks();
+    });
+
     // Sync button (works with both CloudSync and MCPSync)
     document.getElementById('btn-sync').addEventListener('click', async () => {
       toast('Sincronizando...', 'info');
@@ -1972,17 +1980,27 @@ const App = {
       list.innerHTML=`<div class="empty-state"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>No tienes tareas aún</p><p style="font-size:12px">Toca <strong>+</strong> para agregar</p></div>`;
       return;
     }
+    const nowTime = new Date();
+    const todayDow = nowTime.getDay();
     list.innerHTML=tasks.map(task=>{
       const isDone=!!done[task.id];
       const dayL=task.days?.length?task.days.map(d=>DAYS_SHORT[d]).join(' · '):'Cada día';
-      return `<div class="task-item ${isDone?'done':''}" data-id="${task.id}">
+      // Overdue = has a time, not done, valid day, time already passed
+      const validDay = !task.days?.length || task.days.includes(todayDow);
+      const isOverdue = !isDone && task.notifTime && validDay && (() => {
+        const [h,m]=task.notifTime.split(':').map(Number);
+        const t=new Date(); t.setHours(h,m,0,0);
+        return nowTime >= t;
+      })();
+      return `<div class="task-item ${isDone?'done':''} ${isOverdue?'task-overdue':''}" data-id="${task.id}">
         <button class="task-check ${isDone?'checked':''}" data-toggle="${task.id}">${isDone?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>
         <div class="task-info">
           <div class="task-name">${esc(task.title)}</div>
           <div class="task-meta">
-            ${task.notifTime?`<span class="task-time"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${task.notifTime}</span>`:''}
+            ${task.notifTime?`<span class="task-time" style="${isOverdue?'color:#dc2626;font-weight:700':''}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${isOverdue?'#dc2626':'currentColor'}" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${task.notifTime}</span>`:''}
+            ${isOverdue?'<span class="task-overdue-badge">⏰ Atrasada</span>':''}
             <span class="task-days">${dayL}</span>
-            ${task.notifEnabled&&task.notifTime?'<span class="task-notif">🔔</span>':''}
+            ${task.notifEnabled&&task.notifTime&&!isOverdue?'<span class="task-notif">🔔</span>':''}
           </div>
         </div>
         <div class="task-actions">
@@ -2001,6 +2019,7 @@ const App = {
     if(done) toast('Tarea completada ✓','success');
     this.renderTasks();
     if(this.view==='dashboard') this.renderDashboard();
+    this.checkOverdueTasks();
   },
 
   deleteTask(id) {
@@ -2033,6 +2052,97 @@ const App = {
   },
 
   closeTaskModal() { this.closeModal('modal-task'); this.editTaskId=null; },
+
+  // ── OVERDUE TASKS REMINDER ────────────────────────────────
+
+  /** Returns tasks with a past notifTime today that are still pending */
+  _getOverdueTasks() {
+    const done    = DB.todayDone();
+    const now     = new Date();
+    const todayDow = now.getDay();
+    return DB.tasks().filter(task => {
+      if (!task.notifTime) return false;
+      if (done[task.id])   return false;
+      if (task.days && task.days.length > 0 && !task.days.includes(todayDow)) return false;
+      const [h, m] = task.notifTime.split(':').map(Number);
+      const t = new Date(); t.setHours(h, m, 0, 0);
+      return now >= t;
+    }).sort((a, b) => a.notifTime.localeCompare(b.notifTime));
+  },
+
+  checkOverdueTasks() {
+    const overdue = this._getOverdueTasks();
+    const banner  = document.getElementById('overdue-banner');
+    if (!banner) return;
+
+    if (!overdue.length) { banner.style.display = 'none'; return; }
+
+    // Suppress if user dismissed this exact set within 15 min
+    const ids = overdue.map(t => t.id).sort().join(',');
+    const d   = this._overdueLastDismiss;
+    if (d && d.ids === ids && Date.now() - d.ts < 15 * 60 * 1000) return;
+
+    // Populate list
+    const listEl = document.getElementById('overdue-task-list');
+    listEl.innerHTML = overdue.slice(0, 3).map(task => `
+      <div class="overdue-task-row">
+        <span class="overdue-task-time">${task.notifTime}</span>
+        <span class="overdue-task-name">${esc(task.title)}</span>
+        <button class="overdue-check-btn" data-overdue-done="${task.id}" title="Marcar completada">✓</button>
+      </div>`).join('') +
+      (overdue.length > 3
+        ? `<p style="font-size:11px;color:var(--text-muted);text-align:center;padding:4px 0 2px">+${overdue.length - 3} más</p>`
+        : '');
+
+    listEl.querySelectorAll('[data-overdue-done]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        DB.toggleDone(btn.dataset.overdueDone);
+        toast('Tarea completada ✓', 'success');
+        this.renderTasks();
+        if (this.view === 'dashboard') this.renderDashboard();
+        this.checkOverdueTasks();
+      });
+    });
+
+    document.getElementById('overdue-count').textContent = overdue.length;
+    banner.style.display = '';
+
+    // Fire a native push notification once per session for missed tasks
+    if (!this._missedNotifFired) {
+      this._missedNotifFired = true;
+      this._fireOverduePushNotif(overdue);
+    }
+  },
+
+  async _fireOverduePushNotif(overdue) {
+    if (Notification.permission !== 'granted') return;
+    try {
+      const count = overdue.length;
+      const body  = count === 1
+        ? `${overdue[0].title} — programada a las ${overdue[0].notifTime}`
+        : overdue.slice(0, 2).map(t => `${t.notifTime} ${t.title}`).join(', ') +
+          (count > 2 ? ` y ${count - 2} más` : '');
+      const opts = { body, icon: './icons/icon.svg', tag: 'lt-overdue', renotify: true };
+      if ('serviceWorker' in navigator) {
+        const r = await navigator.serviceWorker.ready;
+        r.showNotification(`⏰ ${count} tarea${count > 1 ? 's' : ''} atrasada${count > 1 ? 's' : ''}`, opts);
+      } else {
+        new Notification(`⏰ ${count} tarea${count > 1 ? 's' : ''} atrasada${count > 1 ? 's' : ''}`, opts);
+      }
+    } catch(e) { console.warn(e); }
+  },
+
+  bindOverdueBanner() {
+    document.getElementById('btn-close-overdue')?.addEventListener('click', () => {
+      const ids = this._getOverdueTasks().map(t => t.id).sort().join(',');
+      this._overdueLastDismiss = { ids, ts: Date.now() };
+      document.getElementById('overdue-banner').style.display = 'none';
+    });
+    document.getElementById('btn-overdue-go-tasks')?.addEventListener('click', () => {
+      document.getElementById('overdue-banner').style.display = 'none';
+      this.navigate('tasks');
+    });
+  },
 
   saveTask() {
     const title=document.getElementById('task-title').value.trim();

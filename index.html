@@ -1065,6 +1065,22 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     OVERDUE TASKS BANNER (floating, above bottom nav)
+═══════════════════════════════════════════════════════════ -->
+<div id="overdue-banner" class="overdue-banner" style="display:none" role="alert" aria-live="assertive">
+  <div class="overdue-banner-hd">
+    <div class="overdue-banner-title">
+      <span class="overdue-banner-icon">⏰</span>
+      <span>Tareas atrasadas</span>
+      <span class="overdue-count-badge" id="overdue-count">0</span>
+    </div>
+    <button class="btn-close" id="btn-close-overdue" style="font-size:14px;color:var(--text-muted)" aria-label="Cerrar">✕</button>
+  </div>
+  <div id="overdue-task-list"></div>
+  <button class="btn overdue-goto-btn" id="btn-overdue-go-tasks">Ver tareas pendientes →</button>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
