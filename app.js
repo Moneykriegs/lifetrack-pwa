@@ -828,6 +828,10 @@ const DB = {
   addPlanEntry(date, entry){ const mp=this.mealPlan(); if(!mp[date])mp[date]=[]; mp[date].push(entry); this.saveMealPlan(mp); },
   removePlanEntry(date, id){ const mp=this.mealPlan(); if(mp[date]){mp[date]=mp[date].filter(e=>String(e.id)!==String(id)); this.saveMealPlan(mp);} },
 
+  // Cycle tracking
+  cycleLog()               { return this._g('lt_cycle', []); },
+  saveCycleLog(v)          { this._s('lt_cycle', v); },
+
   // Supplements / medications
   supplements()            { return this._g('lt_supplements', []); },
   saveSupplements(v)       { this._s('lt_supplements', v); },
@@ -1635,6 +1639,118 @@ function calcWellnessCorrelations() {
 }
 
 // ================================================================
+// WEEKLY INSIGHTS
+// ================================================================
+function generateWeeklyInsights() {
+  const s        = DB.settings();
+  const food     = DB.foodLog();
+  const water    = DB.waterLog();
+  const exercise = DB.exerciseLog();
+  const wellness = DB.wellness();
+  const tasks    = DB.tasks();
+  const done     = DB.completions();
+  const now      = new Date();
+  const days     = Array.from({length:7},(_,i)=>{ const d=new Date(now); d.setDate(now.getDate()-(6-i)); return fmtDate(d); });
+  const kcalGoal = s.calorieGoal || 2000;
+  const waterGoal= s.waterGoal   || 2500;
+
+  const kcals     = days.map(d=>(food[d]||[]).reduce((a,f)=>a+f.kcal,0));
+  const waters    = days.map(d=>water[d]||0);
+  const exKcals   = days.map(d=>(exercise[d]||[]).reduce((a,e)=>a+e.kcalBurned,0));
+  const taskPcts  = days.map(d=>{
+    const dow = new Date(d+'T12:00:00').getDay();
+    const dt  = tasks.filter(t=>!t.days?.length||t.days.includes(dow));
+    if (!dt.length) return null;
+    const dd  = done[d]||{};
+    return Math.round(dt.filter(t=>dd[t.id]).length/dt.length*100);
+  });
+
+  const daysWithKcal = days.filter((_,i)=>kcals[i]>0);
+  const avgKcal   = daysWithKcal.length
+    ? Math.round(daysWithKcal.map((_,j)=>kcals[days.indexOf(daysWithKcal[j])]).reduce((a,v)=>a+v,0) / daysWithKcal.length)
+    : 0;
+  const avgKcalAll= Math.round(kcals.reduce((a,v)=>a+v,0)/7);
+  const daysGoal  = kcals.filter(v=>v>0&&v<=kcalGoal).length;
+  const daysWater = waters.filter(v=>v>=waterGoal).length;
+  const exDays    = days.filter((_,i)=>exKcals[i]>0).length;
+  const totalExKcal=exKcals.reduce((a,v)=>a+v,0);
+
+  const sleepArr  = days.filter(d=>wellness[d]?.sleep!=null).map(d=>wellness[d].sleep);
+  const avgSleep  = sleepArr.length ? (sleepArr.reduce((a,v)=>a+v,0)/sleepArr.length).toFixed(1) : null;
+  const moodArr   = days.filter(d=>wellness[d]?.mood!=null).map(d=>wellness[d].mood);
+  const avgMood   = moodArr.length ? (moodArr.reduce((a,v)=>a+v,0)/moodArr.length).toFixed(1) : null;
+  const taskArr   = taskPcts.filter(v=>v!=null);
+  const avgTask   = taskArr.length ? Math.round(taskArr.reduce((a,v)=>a+v,0)/taskArr.length) : null;
+
+  // Best and worst kcal day
+  const kcalPairs = days.map((d,i)=>({d,k:kcals[i]})).filter(p=>p.k>0);
+  const bestKcalDay  = kcalPairs.length ? kcalPairs.reduce((b,p)=>Math.abs(p.k-kcalGoal)<Math.abs(b.k-kcalGoal)?p:b) : null;
+
+  // Weight change this week
+  const wLog = DB.weightLog();
+  const weekAgoStr = fmtDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()-7));
+  const weekAgo = [...wLog].reverse().find(w=>w.date<=weekAgoStr);
+  const current = wLog[wLog.length-1];
+  const weightDiff = (current && weekAgo && current.date !== weekAgo.date)
+    ? +(current.kg - weekAgo.kg).toFixed(1) : null;
+
+  const insights = [];
+
+  // Calories
+  if (avgKcalAll > 0) {
+    const kcalDiff = avgKcalAll - kcalGoal;
+    const kcalColor = daysGoal >= 5 ? '#10b981' : daysGoal >= 3 ? '#f59e0b' : '#ef4444';
+    insights.push({ icon:'🍽', text:`Prom. ${avgKcalAll} kcal/día`,
+      sub: `Meta cumplida ${daysGoal}/7 días`, color: kcalColor });
+  }
+
+  // Water
+  insights.push({ icon:'💧', text:`Agua: ${daysWater}/7 días meta cumplida`,
+    sub: daysWater >= 5 ? '¡Excelente hidratación! 💪' : daysWater >= 3 ? 'Puedes mejorar tu hidratación' : 'Recuerda beber más agua',
+    color: daysWater >= 5 ? '#10b981' : daysWater >= 3 ? '#f59e0b' : '#ef4444' });
+
+  // Exercise
+  if (exDays > 0) {
+    insights.push({ icon:'🔥', text:`${exDays} día${exDays>1?'s':''} de ejercicio`,
+      sub: `~${totalExKcal} kcal quemadas en total`, color:'#d97706' });
+  } else {
+    insights.push({ icon:'🏋️', text:'Sin ejercicio esta semana',
+      sub:'Intenta al menos 3 sesiones la próxima semana', color:'var(--text-muted)' });
+  }
+
+  // Sleep
+  if (avgSleep) {
+    const sleepColor = parseFloat(avgSleep)>=7?'#10b981':parseFloat(avgSleep)>=6?'#f59e0b':'#ef4444';
+    insights.push({ icon:'😴', text:`Sueño promedio: ${avgSleep}h`,
+      sub: parseFloat(avgSleep)>=7?'Buen descanso 🌙':parseFloat(avgSleep)>=6?'Intenta dormir un poco más':'El descanso es clave para la salud',
+      color: sleepColor });
+  }
+
+  // Tasks
+  if (avgTask !== null) {
+    insights.push({ icon:'✅', text:`Tareas completadas: ${avgTask}%`,
+      sub: avgTask>=80?'¡Semana muy productiva!':avgTask>=50?'Buen progreso, sigue así':'Hay espacio para mejorar',
+      color: avgTask>=80?'#10b981':avgTask>=50?'#f59e0b':'#ef4444' });
+  }
+
+  // Weight
+  if (weightDiff !== null) {
+    insights.push({ icon:'⚖️', text:`Cambio de peso: ${weightDiff>0?'+':''}${weightDiff} kg esta semana`,
+      sub: weightDiff<-0.5?'Tendencia bajista':'Tendencia al alza',
+      color: weightDiff<0?'#10b981':'#f59e0b' });
+  }
+
+  // Best day highlight
+  if (bestKcalDay) {
+    const bd = new Date(bestKcalDay.d+'T12:00:00');
+    insights.push({ icon:'⭐', text:`Mejor día: ${DAYS_FULL[bd.getDay()]}`,
+      sub:`${bestKcalDay.k} kcal — más cerca de tu meta`, color:'#6366f1' });
+  }
+
+  return { insights, avgKcal: avgKcalAll, daysGoal, daysWater, exDays, avgSleep, avgTask, weightDiff };
+}
+
+// ================================================================
 // APP
 // ================================================================
 const App = {
@@ -1712,6 +1828,8 @@ const App = {
     this.bindPrepModal();
     this.bindFasting();
     this.bindSupplModal();
+    this.bindFoodPhoto();
+    this.bindCycleModal();
 
     // Web share
     document.getElementById('btn-share-progress')?.addEventListener('click', () => this.shareProgress());
@@ -3168,6 +3286,11 @@ const App = {
   },
 
   // ── FAVORITES / QUICK-ADD ────────────────────────────────
+  _currentMealSlot() {
+    const h = new Date().getHours();
+    return h < 10 ? 'breakfast' : h < 14 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+  },
+
   _getFavoriteFoods() {
     const log = DB.foodLog();
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
@@ -4141,6 +4264,7 @@ const App = {
     this.renderExercise();
     this.renderWater();
     this.renderWeight();
+    this.renderCycle();
     this.renderSupplements();
     this.renderMicros();
   },
@@ -4201,6 +4325,239 @@ const App = {
         (pred.weeksToGoal != null && pred.weeksToGoal > 0 && pred.weeksToGoal < 200
           ? `<br><span style="font-size:13px;color:var(--success)">Meta ${pred.goalKg} kg en ~<strong>${pred.weeksToGoal} sem.</strong></span>` : '');
     } else predDiv.style.display='none';
+  },
+
+  // ================================================================
+  // WEEKLY INSIGHTS
+  // ================================================================
+  renderWeeklyInsights() {
+    const el = document.getElementById('weekly-insights-body');
+    if (!el) return;
+    const { insights } = generateWeeklyInsights();
+    if (!insights.length) {
+      el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:8px 0">Registra datos durante la semana para ver insights</p>';
+      return;
+    }
+    el.innerHTML = insights.map(ins => `
+      <div class="insight-item">
+        <span class="insight-icon">${ins.icon}</span>
+        <div>
+          <div class="insight-text">${esc(ins.text)}</div>
+          <div class="insight-sub" style="color:${ins.color||'var(--text-muted)'}">${esc(ins.sub)}</div>
+        </div>
+      </div>`).join('');
+  },
+
+  // ================================================================
+  // FOOD PHOTO ESTIMATION
+  // ================================================================
+  bindFoodPhoto() {
+    document.getElementById('btn-photo-food')?.addEventListener('click', () => this.openModal('modal-food-photo'));
+    document.getElementById('btn-close-food-photo')?.addEventListener('click', () => this.closeModal('modal-food-photo'));
+    document.getElementById('modal-food-photo')?.addEventListener('click', e => { if(e.target===e.currentTarget) this.closeModal('modal-food-photo'); });
+
+    const handleFile = async (file) => {
+      if (!file) return;
+      // Show analyzing state
+      document.getElementById('food-photo-state-capture').style.display   = 'none';
+      document.getElementById('food-photo-state-analyzing').style.display = '';
+      document.getElementById('food-photo-state-results').style.display   = 'none';
+
+      // Show preview image
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const prev = document.getElementById('food-photo-preview');
+        if (prev) prev.innerHTML = `<img src="${e.target.result}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px">`;
+      };
+      reader.readAsDataURL(file);
+
+      // Simulate analysis + generate smart suggestions
+      await new Promise(r => setTimeout(r, 1800));
+
+      // Build suggestions from favorites + time-of-day typical foods
+      const hour = new Date().getHours();
+      const slot = hour < 11 ? 'breakfast' : hour < 15 ? 'lunch' : hour < 18 ? 'snack' : 'dinner';
+      const favs = this._getFavoriteFoods().slice(0, 3);
+      const recipeForSlot = RECIPE_DB.filter(r=>r.mealType===slot).slice(0,2);
+
+      document.getElementById('food-photo-state-analyzing').style.display = 'none';
+      document.getElementById('food-photo-state-results').style.display   = '';
+
+      const sugg = document.getElementById('food-photo-suggestions');
+      if (!sugg) return;
+
+      const favHtml = favs.map(f => {
+        const entry = f.last;
+        return `<div class="photo-suggestion-item" data-type="food" data-idx="${JSON.stringify({...entry,qty:entry.qty||100})}">
+          <span style="font-size:20px">🍽</span>
+          <div>
+            <div class="photo-suggestion-name">${esc(f.name)}${f.brand?` <span style="font-size:11px;color:var(--text-muted)">${esc(f.brand)}</span>`:''}</div>
+            <div class="photo-suggestion-kcal">${entry.qty||100}g · ${entry.kcal} kcal</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      const recHtml = recipeForSlot.map(r => `
+        <div class="photo-suggestion-item" data-type="recipe" data-id="${r.id}">
+          <span style="font-size:20px">${r.emoji}</span>
+          <div>
+            <div class="photo-suggestion-name">${esc(r.name)}</div>
+            <div class="photo-suggestion-kcal">${r.kcal} kcal · ${r.prot}g prot</div>
+          </div>
+        </div>`).join('');
+
+      sugg.innerHTML = `<p style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:8px">🌟 Tus favoritos / ${slot==='breakfast'?'Desayuno':slot==='lunch'?'Almuerzo':slot==='snack'?'Merienda':'Cena'}</p>`
+        + (favHtml || '') + recHtml;
+
+      sugg.querySelectorAll('.photo-suggestion-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const type = item.dataset.type;
+          if (type === 'food') {
+            try {
+              const entry = JSON.parse(item.dataset.idx);
+              const slot2 = this._currentMealSlot();
+              DB.addFood({...entry, slot: slot2, ts: new Date().toISOString()});
+              toast(`${entry.name} añadido ✓`, 'success');
+              CloudSync.schedulePush();
+              this.closeModal('modal-food-photo');
+              if (this.view==='food') this.renderFood();
+            } catch(e) { console.warn(e); }
+          } else if (type === 'recipe') {
+            this.closeModal('modal-food-photo');
+            this.openRecipeDetail(item.dataset.id);
+          }
+        });
+      });
+    };
+
+    document.getElementById('food-photo-input')?.addEventListener('change', e => handleFile(e.target.files[0]));
+    document.getElementById('food-gallery-input')?.addEventListener('change', e => handleFile(e.target.files[0]));
+    document.getElementById('btn-photo-manual')?.addEventListener('click', () => {
+      this.closeModal('modal-food-photo');
+      document.getElementById('food-search')?.focus();
+    });
+
+    // Reset state when modal opens
+    document.getElementById('btn-photo-food')?.addEventListener('click', () => {
+      document.getElementById('food-photo-state-capture').style.display   = '';
+      document.getElementById('food-photo-state-analyzing').style.display = 'none';
+      document.getElementById('food-photo-state-results').style.display   = 'none';
+      const prev = document.getElementById('food-photo-preview');
+      if (prev) prev.innerHTML = '';
+    });
+  },
+
+  // ================================================================
+  // CYCLE TRACKER
+  // ================================================================
+  bindCycleModal() {
+    document.getElementById('btn-log-cycle')?.addEventListener('click', () => {
+      document.getElementById('cycle-start-date').value = today();
+      this.openModal('modal-cycle');
+    });
+    document.getElementById('btn-close-cycle')?.addEventListener('click', () => this.closeModal('modal-cycle'));
+    document.getElementById('modal-cycle')?.addEventListener('click', e => { if(e.target===e.currentTarget) this.closeModal('modal-cycle'); });
+
+    // Period duration presets
+    document.querySelectorAll('#modal-cycle .qty-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#modal-cycle .qty-preset').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('cycle-period-days').value = btn.dataset.days;
+      });
+    });
+
+    // Symptom toggle
+    document.querySelectorAll('.symptom-btn').forEach(btn => {
+      btn.addEventListener('click', () => btn.classList.toggle('selected'));
+    });
+
+    document.getElementById('btn-save-cycle')?.addEventListener('click', () => {
+      const start = document.getElementById('cycle-start-date').value;
+      if (!start) { toast('Elige la fecha de inicio', 'error'); return; }
+      const days = parseInt(document.getElementById('cycle-period-days').value) || 5;
+      const symptoms = [...document.querySelectorAll('.symptom-btn.selected')].map(b=>b.dataset.sym);
+      const note = document.getElementById('cycle-note').value.trim();
+      const entry = { id: `cycle_${Date.now()}`, start, days, symptoms, note, ts: new Date().toISOString() };
+      DB.saveCycleLog([...DB.cycleLog(), entry]);
+      this.closeModal('modal-cycle');
+      // Reset
+      document.querySelectorAll('.symptom-btn').forEach(b=>b.classList.remove('selected'));
+      document.getElementById('cycle-note').value = '';
+      toast('Ciclo registrado 🌸', 'success');
+      CloudSync.schedulePush();
+      if (this.view === 'progress') this.renderCycle();
+    });
+  },
+
+  renderCycle() {
+    const card = document.getElementById('cycle-card');
+    if (!card) return;
+    const s = DB.settings();
+    // Only show for female users
+    if (s.gender !== 'female') { card.style.display = 'none'; return; }
+    card.style.display = '';
+
+    const log = DB.cycleLog().sort((a,b)=>a.start.localeCompare(b.start));
+    const body = document.getElementById('cycle-body');
+    const sub  = document.getElementById('cycle-sub');
+    if (!body) return;
+
+    if (!log.length) {
+      body.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">Toca + para registrar tu primer ciclo</p>';
+      sub.textContent = 'Sin registro';
+      return;
+    }
+
+    // Estimate average cycle length from last 3 entries
+    const avgCycleLen = log.length >= 2
+      ? Math.round(log.slice(-3).reduce((acc, e, i, arr) => {
+          if (i === 0) return acc;
+          const prev = arr[i-1];
+          const d1 = new Date(prev.start+'T12:00:00'), d2 = new Date(e.start+'T12:00:00');
+          return acc + Math.round((d2-d1)/86400000);
+        }, 0) / (Math.min(log.length,3)-1))
+      : 28;
+
+    // Predict next period
+    const last = log[log.length-1];
+    const lastStart = new Date(last.start+'T12:00:00');
+    const nextStart = new Date(lastStart); nextStart.setDate(nextStart.getDate() + avgCycleLen);
+    const ovulation = new Date(lastStart); ovulation.setDate(ovulation.getDate() + avgCycleLen - 14);
+    const daysUntilNext = Math.round((nextStart - new Date()) / 86400000);
+
+    sub.textContent = `Próximo ~${nextStart.toLocaleDateString('es',{day:'numeric',month:'short'})}`;
+
+    // Build 35-day mini calendar
+    const startCal = new Date(); startCal.setDate(startCal.getDate()-7);
+    const days35 = Array.from({length:35},(_,i)=>{
+      const d=new Date(startCal); d.setDate(startCal.getDate()+i); return d;
+    });
+
+    const isPeriod = (d) => log.some(e=>{
+      const s=new Date(e.start+'T12:00:00'), end=new Date(s); end.setDate(end.getDate()+e.days-1);
+      return d>=s && d<=end;
+    });
+    const isFertile = (d) => {
+      const ferStart = new Date(ovulation); ferStart.setDate(ferStart.getDate()-5);
+      return d>=ferStart && d<=ovulation;
+    };
+
+    body.innerHTML = `
+      <div class="cycle-timeline">${days35.map(d=>{
+        const cls = isPeriod(d)?'period':d.toDateString()===ovulation.toDateString()?'ovulation':isFertile(d)?'fertile':'other';
+        return `<div class="cycle-day-dot ${cls}" title="${d.toLocaleDateString('es')}"></div>`;
+      }).join('')}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0;font-size:11px">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#db2777;margin-right:3px"></span>Período</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6366f1;margin-right:3px"></span>Ovulación</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:3px"></span>Fértil</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:6px">
+        Ciclo promedio: <strong>${avgCycleLen} días</strong> ·
+        Próximo período en: <strong style="color:#db2777">${daysUntilNext} día${daysUntilNext!==1?'s':''}</strong>
+      </div>
+      ${last.symptoms?.length?`<div style="font-size:12px;color:var(--text-muted);margin-top:6px">Síntomas: ${last.symptoms.join(', ')}</div>`:''}`;
   },
 
   // ================================================================
@@ -4911,6 +5268,8 @@ const App = {
     this.renderWellnessHistory(days, labels);
     // Correlations
     this.renderCorrelations();
+    // Weekly insights
+    this.renderWeeklyInsights();
   },
 
   // ================================================================

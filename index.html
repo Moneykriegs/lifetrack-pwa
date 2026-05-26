@@ -336,13 +336,16 @@
         <div id="food-favorites-list" class="fav-row"></div>
       </div>
 
-      <!-- Food search + barcode scanner -->
+      <!-- Food search + barcode scanner + photo -->
       <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:8px">
         <div class="search-bar" style="flex:1;margin-bottom:0">
           <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" id="food-search" placeholder="Buscar alimento (ej: pollo, arroz...)" autocomplete="off">
           <div class="search-spinner" id="search-spinner"></div>
         </div>
+        <button class="btn-scan-barcode" id="btn-photo-food" aria-label="Foto de comida" title="Estimar calorías por foto" style="background:#db2777">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
         <button class="btn-scan-barcode" id="btn-scan-barcode" aria-label="Escanear código de barras" title="Escanear código de barras">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 7V5a1 1 0 011-1h2M20 7V5a1 1 0 00-1-1h-2M4 17v2a1 1 0 001 1h2M20 17v2a1 1 0 01-1 1h-2"/>
@@ -472,6 +475,23 @@
         </div>
       </div>
 
+      <!-- Cycle tracker (female users only) -->
+      <div class="card" id="cycle-card" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="icon-badge" style="background:#fce7f3;color:#db2777">🌸</div>
+            <div>
+              <div style="font-weight:700;font-size:15px">Ciclo menstrual</div>
+              <div style="font-size:12px;color:var(--text-muted)" id="cycle-sub">Sin registro</div>
+            </div>
+          </div>
+          <button class="btn-icon" id="btn-log-cycle" aria-label="Registrar ciclo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div id="cycle-body"></div>
+      </div>
+
       <!-- Supplements / Medications card -->
       <div class="card" id="suppl-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -524,6 +544,18 @@
         <div class="week-stat"><div class="week-stat-value" id="hist-avg-water">—</div><div class="week-stat-label">Agua prom.</div></div>
         <div class="week-stat"><div class="week-stat-value" id="hist-goal-hit">—</div><div class="week-stat-label">Meta cal. ✓</div></div>
       </div>
+      <!-- Weekly insights card -->
+      <div class="card" id="weekly-insights-card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <div class="icon-badge" style="background:#f0fdf4;color:#15803d">💡</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Resumen semanal</div>
+            <div style="font-size:12px;color:var(--text-muted)">Últimos 7 días</div>
+          </div>
+        </div>
+        <div id="weekly-insights-body"></div>
+      </div>
+
       <div class="chart-card"><div class="card-title">Calorías — 7 días</div><div class="chart-wrap"><canvas id="chart-kcal"></canvas></div></div>
       <div class="chart-card"><div class="card-title">Ejercicio (kcal quemadas) — 7 días</div><div class="chart-wrap"><canvas id="chart-exercise"></canvas></div></div>
       <div class="chart-card"><div class="card-title">Agua (ml) — 7 días</div><div class="chart-wrap"><canvas id="chart-water"></canvas></div></div>
@@ -1247,6 +1279,93 @@
   </div>
   <div id="overdue-task-list"></div>
   <button class="btn overdue-goto-btn" id="btn-overdue-go-tasks">Ver tareas pendientes →</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: FOTO DE COMIDA — estimación IA
+═══════════════════════════════════════════════════════════ -->
+<div id="modal-food-photo" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 class="modal-title">📸 Foto de comida</h2>
+      <button class="btn-close" id="btn-close-food-photo" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="food-photo-state-capture">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Toma una foto o selecciona una imagen para que LifeTrack estime las calorías.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label class="btn btn-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Tomar foto con cámara
+            <input type="file" id="food-photo-input" accept="image/*" capture="environment" style="display:none">
+          </label>
+          <label class="btn btn-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:var(--surface);color:var(--text);border:1.5px solid var(--border);box-shadow:none">
+            📁 Elegir de galería
+            <input type="file" id="food-gallery-input" accept="image/*" style="display:none">
+          </label>
+        </div>
+      </div>
+      <div id="food-photo-state-analyzing" style="display:none;text-align:center;padding:24px 0">
+        <div style="font-size:48px;margin-bottom:12px">🔬</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">Analizando imagen...</div>
+        <div style="font-size:13px;color:var(--text-muted)">LifeTrack está estimando los alimentos</div>
+        <div class="search-spinner" style="margin:16px auto;display:block;position:relative;width:28px;height:28px"></div>
+      </div>
+      <div id="food-photo-state-results" style="display:none">
+        <div id="food-photo-preview" style="border-radius:12px;overflow:hidden;margin-bottom:12px;max-height:200px"></div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">✨ Sugerencias basadas en tu historial y horario:</p>
+        <div id="food-photo-suggestions"></div>
+        <button class="btn btn-primary" id="btn-photo-manual" style="width:100%;margin-top:10px;background:var(--surface);color:var(--text);border:1.5px solid var(--border);box-shadow:none;font-size:13px">
+          🔍 Buscar manualmente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: CICLO MENSTRUAL
+═══════════════════════════════════════════════════════════ -->
+<div id="modal-cycle" class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 class="modal-title">🌸 Registrar ciclo</h2>
+      <button class="btn-close" id="btn-close-cycle" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Fecha de inicio del período *</label>
+        <input class="form-input" type="date" id="cycle-start-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duración del período (días)</label>
+        <div class="qty-presets">
+          <button class="qty-preset" data-days="3">3</button>
+          <button class="qty-preset selected" data-days="5">5</button>
+          <button class="qty-preset" data-days="7">7</button>
+        </div>
+        <input class="form-input" type="number" id="cycle-period-days" value="5" min="1" max="14" style="margin-top:8px">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Síntomas (opcional)</label>
+        <div id="cycle-symptoms-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <button class="symptom-btn" data-sym="cramps" type="button">😖 Cólicos</button>
+          <button class="symptom-btn" data-sym="headache" type="button">🤕 Jaqueca</button>
+          <button class="symptom-btn" data-sym="bloating" type="button">🫧 Hinchazón</button>
+          <button class="symptom-btn" data-sym="fatigue" type="button">😴 Fatiga</button>
+          <button class="symptom-btn" data-sym="mood" type="button">😤 Cambios ánimo</button>
+          <button class="symptom-btn" data-sym="acne" type="button">😶 Acné</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nota (opcional)</label>
+        <input class="form-input" type="text" id="cycle-note" placeholder="Ej: flujo abundante..." maxlength="100">
+      </div>
+      <button class="btn btn-primary" id="btn-save-cycle" style="background:#db2777;width:100%">🌸 Guardar</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════

@@ -2074,6 +2074,59 @@ svg { display: block; flex-shrink: 0; }
 .fasting-btn-reset { background: rgba(255,255,255,.15); color: #fff; flex: 0; padding: 10px 14px; }
 
 /* ================================================================
+   WEEKLY INSIGHTS
+   ================================================================ */
+.insight-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.insight-item:last-child { border-bottom: none; }
+.insight-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.insight-text { font-size: 14px; font-weight: 600; color: var(--text); }
+.insight-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.insight-score-row {
+  display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0;
+}
+.insight-score-chip {
+  font-size: 12px; padding: 3px 10px; border-radius: 99px;
+  font-weight: 600; white-space: nowrap;
+}
+
+/* ================================================================
+   CYCLE TRACKER
+   ================================================================ */
+.symptom-btn {
+  padding: 6px 12px; border-radius: 99px; border: 1.5px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  background: var(--surface); cursor: pointer; transition: all .15s;
+}
+.symptom-btn.selected {
+  background: #fce7f3; color: #db2777; border-color: #db2777;
+}
+.cycle-timeline {
+  display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0;
+}
+.cycle-day-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.cycle-day-dot.period  { background: #db2777; }
+.cycle-day-dot.fertile { background: #10b981; }
+.cycle-day-dot.ovulation{ background: #6366f1; }
+.cycle-day-dot.other   { background: var(--border); }
+
+/* ================================================================
+   FOOD PHOTO SUGGESTIONS
+   ================================================================ */
+.photo-suggestion-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--bg); border-radius: 10px;
+  margin-bottom: 8px; cursor: pointer; transition: background .15s;
+}
+.photo-suggestion-item:hover { background: var(--primary-light); }
+.photo-suggestion-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.photo-suggestion-kcal { font-size: 12px; color: var(--text-muted); }
+
+/* ================================================================
    SUPPLEMENTS / MEDICATIONS
    ================================================================ */
 .suppl-emoji-grid {
