@@ -2625,7 +2625,7 @@ const App = {
       <div class="log-item">
         <div class="log-item-info">
           <div class="log-item-name">${esc(f.name)}</div>
-          <div class="log-item-detail">${f.qty}g · P:${f.prot||0}g C:${f.carbs||0}g G:${f.fat||0}g${f.isRecipe?' 📖':''}</div>
+          <div class="log-item-detail">${f.source==='recipe_db' ? `×${f.qty} porción` : `${f.qty}g`} · P:${f.prot||0}g C:${f.carbs||0}g G:${f.fat||0}g${(f.isRecipe||f.isRecipeDb)?' 📖':''}</div>
         </div>
         <span class="log-item-kcal">${f.kcal}</span>
         <button class="btn-remove" data-remove="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -3569,9 +3569,13 @@ const App = {
     slotsEl.innerHTML = MEAL_SLOTS.map(slot => {
       const slotEntries = entries.filter(e => e.slot === slot.id);
       const slotKcal    = slotEntries.reduce((a, e) => a + e.kcal, 0);
-      const itemsHtml   = slotEntries.map(e => `
+      const itemsHtml   = slotEntries.map(e => {
+        const recMult = e.recipeDbId
+          ? (e.qty > 0 ? e.qty : parseFloat((e.recipeName || '').match(/×([\d.]+)/)?.[1] || '1'))
+          : 1;
+        return `
         <div class="plan-item${e.recipeDbId ? ' plan-item-tappable' : ''}"
-          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${e.qty || 1}"` : ''}>
+          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${recMult}"` : ''}>
           <div class="plan-item-name">${esc(e.recipeName)}</div>
           <div class="plan-item-kcal">${e.kcal} kcal</div>
           <button class="btn-remove" data-plan-remove="${e.id}" style="margin-left:4px">
@@ -3579,7 +3583,8 @@ const App = {
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       return `<div class="plan-slot">
         <div class="plan-slot-header">
           <div class="plan-slot-title">${slot.icon} ${slot.label}</div>
@@ -4084,15 +4089,20 @@ const App = {
     slotsEl.innerHTML = MEAL_SLOTS.map(slot => {
       const slotEntries = entries.filter(e => e.slot === slot.id);
       const slotKcal    = slotEntries.reduce((a,e) => a+e.kcal, 0);
-      const items = slotEntries.map(e => `
+      const items = slotEntries.map(e => {
+        const recMult = e.recipeDbId
+          ? (e.qty > 0 ? e.qty : parseFloat((e.recipeName || '').match(/×([\d.]+)/)?.[1] || '1'))
+          : 1;
+        return `
         <div class="prep-entry${e.recipeDbId ? ' prep-entry-tappable' : ''}"
-          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${e.qty || 1}"` : ''}>
+          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${recMult}"` : ''}>
           <span class="prep-entry-name">${esc(e.recipeName)}</span>
           <span class="prep-entry-kcal">${e.kcal}</span>
           <button class="btn-remove" data-prep-del="${e.id}" data-prep-date="${date}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       return `<div class="prep-slot-row">
         <div class="prep-slot-hd">
           <span class="prep-slot-label">${slot.icon} ${slot.label}</span>
@@ -4307,7 +4317,14 @@ const App = {
       : [this.prepCurrentDate];
 
     dates.forEach(date => {
-      DB.addPlanEntry(date, { id: Date.now() + Math.random(), slot, recipeName: food.name, kcal: food.kcal, prot: food.prot, carbs: food.carbs, fat: food.fat, qty: food.qty, isRecipe: food.isRecipe||false });
+      DB.addPlanEntry(date, {
+        id: Date.now() + Math.random(), slot,
+        recipeName: food.name,
+        kcal: food.kcal, prot: food.prot, carbs: food.carbs, fat: food.fat,
+        qty: food.qty,
+        isRecipe: food.isRecipe || false,
+        ...(food.recipeDbId ? { recipeDbId: food.recipeDbId, isRecipeDb: true } : {}),
+      });
     });
     CloudSync.schedulePush();
     const slotMeta = MEAL_SLOTS.find(s => s.id === slot);
