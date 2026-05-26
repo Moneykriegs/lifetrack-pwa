@@ -1189,6 +1189,17 @@ const App = {
 
     if (authStatus === 'online') {
       this._bindLoginScreen();
+
+      // If there's a cached user from a previous session, render the dashboard
+      // immediately with local data while the auth check is in progress.
+      // This eliminates the blank-screen delay while getSession() is awaited.
+      const cachedUser = CloudSync._loadCachedUser();
+      if (cachedUser) {
+        this.updateHeaderUser(cachedUser);
+        document.getElementById('btn-sync').style.display = '';
+        this.navigate(location.hash.replace('#', '') || 'dashboard');
+      }
+
       // Listen for OAuth redirect / sign-out events
       CloudSync.sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN'  && session) await this.onCloudSignIn(session);
@@ -1227,38 +1238,55 @@ const App = {
   },
 
   async onCloudSignIn(session) {
-    CloudSync.userId = session.user.id;
-    const meta = session.user.user_metadata || {};
-    const u = {
-      id:     session.user.id,
-      email:  session.user.email,
-      name:   meta.full_name || meta.name || session.user.email?.split('@')[0] || 'Usuario',
-      avatar: meta.avatar_url || meta.picture || null
-    };
-    CloudSync.user = u;
-    CloudSync._saveUser(u);
+    // Guard: Supabase can fire both onAuthStateChange(SIGNED_IN) AND the
+    // explicit getSession() path for the same session, causing this function
+    // to run twice concurrently. Skip the second invocation.
+    if (this._signInBusy) return;
+    this._signInBusy = true;
 
-    // Seed name from Google profile if still default
-    const s = DB.settings();
-    if (!s.name || s.name === 'Usuario') DB.saveSettings({ ...s, name: u.name });
+    try {
+      CloudSync.userId = session.user.id;
+      const meta = session.user.user_metadata || {};
+      const u = {
+        id:     session.user.id,
+        email:  session.user.email,
+        name:   meta.full_name || meta.name || session.user.email?.split('@')[0] || 'Usuario',
+        avatar: meta.avatar_url || meta.picture || null
+      };
+      CloudSync.user = u;
+      CloudSync._saveUser(u);
 
-    this.updateHeaderUser(u);
-    this.hideLoginScreen();
-    document.getElementById('btn-sync').style.display = '';
+      // Seed name from Google profile if still default
+      const s = DB.settings();
+      if (!s.name || s.name === 'Usuario') DB.saveSettings({ ...s, name: u.name });
 
-    // Show account section in settings
-    document.getElementById('settings-account-section').style.display = '';
-    document.getElementById('settings-user-name').textContent  = u.name;
-    document.getElementById('settings-user-email').textContent = u.email;
-    if (u.avatar) {
-      document.getElementById('settings-avatar').innerHTML =
-        `<img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
+      this.updateHeaderUser(u);
+      this.hideLoginScreen();
+      document.getElementById('btn-sync').style.display = '';
+
+      // Show account section in settings
+      document.getElementById('settings-account-section').style.display = '';
+      document.getElementById('settings-user-name').textContent  = u.name;
+      document.getElementById('settings-user-email').textContent = u.email;
+      if (u.avatar) {
+        document.getElementById('settings-avatar').innerHTML =
+          `<img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
+      }
+
+      // ── Render immediately with local cached data so the user sees
+      //    the dashboard right away, without waiting for the network sync.
+      this.navigate(location.hash.replace('#', '') || 'dashboard');
+
+      // ── Sync in the background, then silently refresh the view.
+      toast('Sincronizando...', 'info');
+      const ok = await CloudSync.syncFull();
+      if (ok) {
+        this.renderView();          // refresh with fresh cloud data
+        toast(`¡Hola, ${u.name}! ✓`, 'success');
+      }
+    } finally {
+      this._signInBusy = false;
     }
-
-    toast('Sincronizando datos...', 'info');
-    await CloudSync.syncFull();
-    this.navigate(location.hash.replace('#', '') || 'dashboard');
-    toast(`¡Hola, ${u.name}! ✓`, 'success');
   },
 
   onCloudSignOut() {
