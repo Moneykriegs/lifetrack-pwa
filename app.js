@@ -901,6 +901,40 @@ const FoodAPI = {
     return list;
   },
 
+  // Lookup product by barcode (EAN/UPC) — Open Food Facts v2
+  async lookupByBarcode(barcode) {
+    const code = String(barcode || '').trim();
+    if (!code) return null;
+    const cacheKey = `bc:${code}`;
+    if (this.cache[cacheKey]) return this.cache[cacheKey];
+
+    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json` +
+                `?fields=product_name,brands,nutriments`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    if (data.status !== 1 || !data.product) return null;
+
+    const p = data.product;
+    const n = p.nutriments || {};
+    if ((n['energy-kcal_100g'] ?? -1) < 0) return null; // no nutrition data
+
+    const item = {
+      name:    (p.product_name || '').slice(0, 55) || `Código ${code}`,
+      brand:   (p.brands || '').split(',')[0].trim(),
+      barcode: code,
+      kcal:    Math.round(n['energy-kcal_100g'] || 0),
+      prot:    +((n.proteins_100g     || 0).toFixed(1)),
+      carbs:   +((n.carbohydrates_100g || 0).toFixed(1)),
+      fat:     +((n.fat_100g          || 0).toFixed(1)),
+    };
+    MICRO_KEYS.forEach(k => {
+      item[k] = n[MICROS[k].apiKey] != null ? n[MICROS[k].apiKey] : null;
+    });
+    this.cache[cacheKey] = item;
+    return item;
+  },
+
   // Scale item to a given gram quantity
   scale(item, qty) {
     const f = qty / 100;
@@ -2568,6 +2602,13 @@ const App = {
     });
     document.getElementById('modal-food-detail').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeFoodModal();});
     document.getElementById('btn-close-food').addEventListener('click',()=>this.closeFoodModal());
+    // Barcode scanner bindings
+    document.getElementById('btn-scan-barcode')?.addEventListener('click', () => this.openBarcodeScanner());
+    document.getElementById('btn-close-scanner')?.addEventListener('click', () => this.closeBarcodeScanner());
+    document.getElementById('btn-manual-barcode')?.addEventListener('click', () => {
+      this.closeBarcodeScanner();
+      setTimeout(() => this._promptManualBarcode(), 200);
+    });
     document.getElementById('btn-add-food').addEventListener('click',()=>this.addFood());
     document.querySelectorAll('.qty-preset').forEach(btn=>btn.addEventListener('click',()=>{
       document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
@@ -2649,6 +2690,106 @@ const App = {
     } catch(e) {
       results.innerHTML=`<p class="text-muted text-center" style="padding:16px">Error al buscar. Comprueba tu conexión.</p>`;
     } finally { spinner.classList.remove('visible'); }
+  },
+
+  // ── BARCODE SCANNER ────────────────────────────────────────
+  async openBarcodeScanner() {
+    // No camera API → fallback to manual entry
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this._promptManualBarcode();
+      return;
+    }
+    // No BarcodeDetector → still useful: open camera + show manual button prominently
+    const hasDetector = 'BarcodeDetector' in window;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
+        audio: false,
+      });
+      this._scannerStream = stream;
+      const video = document.getElementById('scanner-video');
+      video.srcObject = stream;
+      await video.play().catch(() => {});
+
+      document.getElementById('modal-scanner').classList.add('open');
+      document.getElementById('scanner-hint').textContent = hasDetector
+        ? 'Centra el código en el recuadro'
+        : 'Escaneo no soportado — usa "Ingresar manual"';
+
+      if (hasDetector) {
+        try {
+          this._barcodeDetector = new BarcodeDetector({
+            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
+          });
+        } catch {
+          this._barcodeDetector = new BarcodeDetector();
+        }
+        this._scannerActive = true;
+        this._scanLoop();
+      }
+    } catch (e) {
+      console.warn('Camera error:', e);
+      toast('No se pudo acceder a la cámara. Usa entrada manual.', 'error');
+      this._promptManualBarcode();
+    }
+  },
+
+  async _scanLoop() {
+    if (!this._scannerActive) return;
+    const video = document.getElementById('scanner-video');
+    if (!video || video.readyState < 2) {
+      requestAnimationFrame(() => this._scanLoop());
+      return;
+    }
+    try {
+      const codes = await this._barcodeDetector.detect(video);
+      if (codes && codes.length > 0) {
+        const code = codes[0].rawValue;
+        if (code && code !== this._lastScannedCode) {
+          this._lastScannedCode = code;
+          if (navigator.vibrate) navigator.vibrate(80);
+          this.closeBarcodeScanner();
+          await this.lookupBarcode(code);
+          // allow re-scan of same code after 3s
+          setTimeout(() => { this._lastScannedCode = null; }, 3000);
+          return;
+        }
+      }
+    } catch (e) { /* ignore frame detection errors */ }
+    // Throttle to ~10 fps to save battery
+    setTimeout(() => this._scanLoop(), 100);
+  },
+
+  closeBarcodeScanner() {
+    this._scannerActive = false;
+    if (this._scannerStream) {
+      this._scannerStream.getTracks().forEach(t => t.stop());
+      this._scannerStream = null;
+    }
+    const video = document.getElementById('scanner-video');
+    if (video) video.srcObject = null;
+    document.getElementById('modal-scanner').classList.remove('open');
+  },
+
+  _promptManualBarcode() {
+    const code = prompt('Ingresa el código de barras del producto:');
+    if (code && code.trim()) this.lookupBarcode(code.trim());
+  },
+
+  async lookupBarcode(code) {
+    toast(`Buscando ${code}…`, 'info');
+    try {
+      const item = await FoodAPI.lookupByBarcode(code);
+      if (!item) {
+        toast('Producto no encontrado en Open Food Facts', 'error');
+        return;
+      }
+      this.openFoodModal(item);
+    } catch (e) {
+      console.error(e);
+      toast('Error al buscar el producto', 'error');
+    }
   },
 
   openFoodModal(food) {
