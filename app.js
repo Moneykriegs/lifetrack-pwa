@@ -775,7 +775,7 @@ const DB = {
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
 
-  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom' }); },
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
   foodLog()       { return this._g('lt_food', {}); },
@@ -1074,6 +1074,32 @@ function toast(msg, type='info') {
   c.appendChild(el);
   requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('visible')));
   setTimeout(()=>{ el.classList.remove('visible'); setTimeout(()=>el.remove(),300); },2800);
+}
+
+/** Toast with an "Undo" button. Calls onUndo() if user clicks within 5s. */
+function toastUndo(msg, onUndo, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type} toast-undo`;
+  const text = document.createElement('span'); text.textContent = msg; el.appendChild(text);
+  const btn = document.createElement('button');
+  btn.className = 'toast-undo-btn'; btn.textContent = 'Deshacer';
+  el.appendChild(btn);
+  c.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+  let consumed = false;
+  const dismiss = () => {
+    if (consumed) return;
+    consumed = true;
+    el.classList.remove('visible');
+    setTimeout(() => el.remove(), 300);
+  };
+  btn.addEventListener('click', () => {
+    if (consumed) return;
+    consumed = true;
+    try { onUndo(); } finally { dismiss(); }
+  });
+  setTimeout(dismiss, 5000);
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1735,6 +1761,26 @@ const App = {
         this._updateBodyFatPreview('bodyfat-preview-settings', _readSettingsForm())
       );
     });
+    // Macros: auto toggle + live preview
+    const macrosAuto = document.getElementById('setting-macros-auto');
+    macrosAuto?.addEventListener('change', e => {
+      document.getElementById('macros-manual').style.display = e.target.checked ? 'none' : '';
+      const tmp = _readSettingsForm();
+      tmp.macrosAuto = e.target.checked;
+      tmp.calorieGoal = parseInt(document.getElementById('setting-goal').value) || 2000;
+      this._updateMacrosPreview(tmp);
+    });
+    ['setting-goal','setting-cutting-style','setting-protein-goal','setting-carbs-goal','setting-fat-goal'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        const tmp = _readSettingsForm();
+        tmp.macrosAuto = macrosAuto?.checked !== false;
+        tmp.calorieGoal = parseInt(document.getElementById('setting-goal').value) || 2000;
+        tmp.proteinGoal = parseInt(document.getElementById('setting-protein-goal').value) || null;
+        tmp.carbsGoal   = parseInt(document.getElementById('setting-carbs-goal').value)   || null;
+        tmp.fatGoal     = parseInt(document.getElementById('setting-fat-goal').value)     || null;
+        this._updateMacrosPreview(tmp);
+      });
+    });
     // Measures section collapse toggle
     document.getElementById('btn-toggle-measures')?.addEventListener('click', () => {
       const sec = document.getElementById('section-measures');
@@ -1782,8 +1828,40 @@ const App = {
     }
     this._updateTDEEPreview(s);
     this._updateBodyFatPreview('bodyfat-preview-settings', s);
+
+    // Macros — auto/manual + values
+    const autoEl = document.getElementById('setting-macros-auto');
+    const manualEl = document.getElementById('macros-manual');
+    const previewEl = document.getElementById('macros-preview');
+    if (autoEl) {
+      const isAuto = s.macrosAuto !== false;
+      autoEl.checked = isAuto;
+      manualEl.style.display = isAuto ? 'none' : '';
+      _sv('setting-protein-goal', s.proteinGoal);
+      _sv('setting-carbs-goal', s.carbsGoal);
+      _sv('setting-fat-goal', s.fatGoal);
+      this._updateMacrosPreview(s);
+    }
+
     this.updateNotifBadge();
     this.openModal('modal-settings');
+  },
+
+  _updateMacrosPreview(s) {
+    const el = document.getElementById('macros-preview');
+    if (!el) return;
+    const kcal = s.calorieGoal || 2000;
+    const auto = s.macrosAuto !== false;
+    const t = auto ? this._calcMacroTargets(s, kcal) : { prot: s.proteinGoal, carbs: s.carbsGoal, fat: s.fatGoal };
+    el.style.display = '';
+    if (!t.prot || !t.carbs || !t.fat) {
+      el.textContent = auto
+        ? 'Registra tu peso para calcular metas automáticas'
+        : 'Define gramos de cada macro';
+      return;
+    }
+    const kcalSum = t.prot*4 + t.carbs*4 + t.fat*9;
+    el.innerHTML = `🎯 <strong>P:${t.prot}g</strong> · <strong>C:${t.carbs}g</strong> · <strong>G:${t.fat}g</strong> ≈ ${kcalSum} kcal`;
   },
 
   closeSettings() { this.closeModal('modal-settings'); },
@@ -1802,6 +1880,27 @@ const App = {
     const cs = CUTTING_STYLES.find(c=>c.id===style);
     if (!cs || cs.factor===null || !tdee) return null;
     return Math.round(tdee * (1 + cs.factor));
+  },
+
+  /** Compute auto macro targets in grams. Returns {prot, carbs, fat} or nulls. */
+  _calcMacroTargets(s, kcalGoal) {
+    const wLog = DB.weightLog();
+    const weight = wLog.length ? wLog[wLog.length - 1].kg : null;
+    if (!weight || !kcalGoal) return { prot: null, carbs: null, fat: null };
+
+    const style = s?.cuttingStyle || 'custom';
+    // Protein/fat g per kg of bodyweight depending on phase
+    let protPerKg, fatPerKg;
+    if (style === 'aggressive_cut') { protPerKg = 2.4; fatPerKg = 0.8; }
+    else if (style === 'moderate_cut') { protPerKg = 2.2; fatPerKg = 0.9; }
+    else if (style === 'lean_bulk' || style === 'bulk') { protPerKg = 1.8; fatPerKg = 1.0; }
+    else { protPerKg = 2.0; fatPerKg = 0.9; } // maintenance / custom
+
+    const prot = Math.round(weight * protPerKg);
+    const fat  = Math.round(weight * fatPerKg);
+    const remainingKcal = kcalGoal - (prot * 4) - (fat * 9);
+    const carbs = Math.max(50, Math.round(remainingKcal / 4));
+    return { prot, carbs, fat };
   },
   _updateTDEEPreview(s) {
     const el = document.getElementById('tdee-preview');
@@ -1881,6 +1980,11 @@ const App = {
       // Body measurements
       neck: _f('setting-neck'), waist: _f('setting-waist'), hip: _f('setting-hip'),
       chest: _f('setting-chest'), arm: _f('setting-arm'), thigh: _f('setting-thigh'), calf: _f('setting-calf'),
+      // Macro goals
+      macrosAuto: document.getElementById('setting-macros-auto')?.checked !== false,
+      proteinGoal: parseInt(document.getElementById('setting-protein-goal')?.value) || null,
+      carbsGoal:   parseInt(document.getElementById('setting-carbs-goal')?.value)   || null,
+      fatGoal:     parseInt(document.getElementById('setting-fat-goal')?.value)     || null,
     };
     // Auto-compute calorieGoal when style != custom
     if (style !== 'custom') {
@@ -2057,9 +2161,22 @@ const App = {
   },
 
   deleteTask(id) {
-    if(!confirm('¿Eliminar esta tarea?')) return;
-    DB.saveTasks(DB.tasks().filter(t=>t.id!==id));
-    Notif.cancel(id); toast('Tarea eliminada','info'); this.renderTasks();
+    const tasks = DB.tasks();
+    const task  = tasks.find(t => t.id === id);
+    const index = tasks.findIndex(t => t.id === id);
+    if (!task) return;
+    if (!confirm('¿Eliminar esta tarea?')) return;
+    DB.saveTasks(tasks.filter(t => t.id !== id));
+    Notif.cancel(id);
+    this.renderTasks();
+    toastUndo(`Tarea eliminada: ${task.title}`, () => {
+      const cur = DB.tasks();
+      cur.splice(Math.min(index, cur.length), 0, task);
+      DB.saveTasks(cur);
+      if (task.notifEnabled) Notif.schedule(task);
+      this.renderTasks();
+      toast('Restaurada ✓', 'success');
+    });
   },
 
   openTaskModal(id=null) {
@@ -2663,8 +2780,88 @@ const App = {
   renderFood() {
     this.renderFoodLog();
     this.updateFoodBar();
+    this.renderFavoriteFoods();
     if(this.recipesOpen) this.renderRecipes();
     this.updatePlanBadge();
+  },
+
+  // ── FAVORITES / QUICK-ADD ────────────────────────────────
+  _getFavoriteFoods() {
+    const log = DB.foodLog();
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffStr = fmtDate(cutoff);
+    const buckets = {};
+
+    Object.entries(log).forEach(([date, entries]) => {
+      if (date < cutoffStr) return;
+      const dDate  = new Date(date + 'T12:00:00');
+      const daysAgo = Math.max(0, Math.floor((Date.now() - dDate.getTime()) / 86400000));
+      const w = 1 / Math.sqrt(1 + daysAgo); // recency weight
+      entries.forEach(e => {
+        if (e.isRecipe || e.isRecipeDb || e.source === 'recipe_db' || e.fromPlan) return;
+        if (!e.qty || e.qty <= 0 || !e.name) return;
+        const key = `${e.name.trim().toLowerCase()}|${(e.brand||'').trim().toLowerCase()}`;
+        if (!buckets[key]) buckets[key] = { name: e.name, brand: e.brand, score: 0, count: 0, last: e, lastDate: date };
+        buckets[key].score += w;
+        buckets[key].count++;
+        if (date > buckets[key].lastDate) {
+          buckets[key].last = e;
+          buckets[key].lastDate = date;
+        }
+      });
+    });
+
+    return Object.values(buckets)
+      .filter(b => b.count >= 2)
+      .sort((a,b) => b.score - a.score)
+      .slice(0, 8);
+  },
+
+  renderFavoriteFoods() {
+    const favs    = this._getFavoriteFoods();
+    const section = document.getElementById('food-favorites');
+    if (!section) return;
+    if (!favs.length) { section.style.display = 'none'; return; }
+
+    section.style.display = '';
+    const listEl = document.getElementById('food-favorites-list');
+    listEl.innerHTML = favs.map((f, i) => `
+      <button class="fav-chip" data-fav-idx="${i}" title="${esc(f.name)}">
+        <span class="fav-name">${esc(f.name)}</span>
+        <span class="fav-meta">
+          <span class="fav-qty">${f.last.qty}g</span>
+          <span class="fav-kcal">${f.last.kcal} kcal</span>
+        </span>
+      </button>`).join('');
+    listEl.querySelectorAll('[data-fav-idx]').forEach((btn, i) => {
+      btn.addEventListener('click', () => this._addFavoriteFood(favs[i]));
+    });
+  },
+
+  _addFavoriteFood(fav) {
+    const e = fav.last;
+    const qty = e.qty || 100;
+    const factor = 100 / qty;
+    const item = {
+      name:  e.name,
+      brand: e.brand,
+      kcal:  Math.round(e.kcal  * factor),
+      prot:  +(((e.prot  || 0) * factor).toFixed(1)),
+      carbs: +(((e.carbs || 0) * factor).toFixed(1)),
+      fat:   +(((e.fat   || 0) * factor).toFixed(1)),
+    };
+    MICRO_KEYS.forEach(k => {
+      item[k] = e[k] != null ? +((e[k] * factor).toFixed(3)) : null;
+    });
+    this.openFoodModal(item);
+    // Pre-fill with last used quantity
+    setTimeout(() => {
+      const qtyInput = document.getElementById('food-qty');
+      if (qtyInput) { qtyInput.value = qty; this.updateFoodPreview(); }
+      document.querySelectorAll('.qty-preset').forEach(b => {
+        b.classList.toggle('selected', +b.dataset.qty === qty);
+      });
+    }, 50);
   },
 
   async searchFood(q) {
@@ -2861,9 +3058,36 @@ const App = {
     const fill = document.getElementById('food-progress-fill');
     fill.style.width = pct + '%';
     fill.style.background = kcal > netGoal ? 'var(--danger)' : pct > 85 ? 'var(--warning)' : 'var(--success)';
-    document.getElementById('macro-prot').textContent  = prot.toFixed(1)+'g';
-    document.getElementById('macro-carbs').textContent = carbs.toFixed(1)+'g';
-    document.getElementById('macro-fat').textContent   = fat.toFixed(1)+'g';
+
+    // Macro progress bars
+    const s = DB.settings();
+    const auto = s.macrosAuto !== false; // default true
+    let macroGoals;
+    if (auto || !s.proteinGoal) {
+      macroGoals = this._calcMacroTargets(s, netGoal);
+    } else {
+      macroGoals = { prot: s.proteinGoal, carbs: s.carbsGoal, fat: s.fatGoal };
+    }
+    const renderMacro = (id, val, goal, color) => {
+      const elVal = document.getElementById(`macro-${id}`);
+      const elBar = document.getElementById(`macro-${id}-bar`);
+      const elGoal = document.getElementById(`macro-${id}-goal`);
+      if (!elVal) return;
+      const v = Math.round(val * 10) / 10;
+      if (goal) {
+        const p = Math.min((val / goal) * 100, 100);
+        elVal.textContent = `${v.toFixed(0)}`;
+        if (elGoal) elGoal.textContent = `/ ${goal}g`;
+        if (elBar) { elBar.style.width = p + '%'; elBar.style.background = color; }
+      } else {
+        elVal.textContent = `${v.toFixed(1)}g`;
+        if (elGoal) elGoal.textContent = '';
+        if (elBar) elBar.style.width = '0%';
+      }
+    };
+    renderMacro('prot',  prot,  macroGoals.prot,  '#6366f1');
+    renderMacro('carbs', carbs, macroGoals.carbs, '#f59e0b');
+    renderMacro('fat',   fat,   macroGoals.fat,   '#10b981');
   },
 
   renderFoodLog() {
@@ -2882,9 +3106,21 @@ const App = {
         <button class="btn-remove" data-remove="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>`).join('');
     list.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{
-      DB.removeFood(parseInt(btn.dataset.remove));
+      const idx = parseInt(btn.dataset.remove);
+      const all = DB.foodLog();
+      const day = today();
+      const entry = (all[day] || [])[idx];
+      DB.removeFood(idx);
       this.renderFoodLog(); this.updateFoodBar();
       if(this.view==='dashboard') this.renderDashboard();
+      if (entry) toastUndo(`Eliminado: ${entry.name}`, () => {
+        const cur = DB.foodLog(); if (!cur[day]) cur[day] = [];
+        cur[day].splice(idx, 0, entry);
+        DB.saveFoodLog(cur);
+        this.renderFoodLog(); this.updateFoodBar();
+        if (this.view === 'dashboard') this.renderDashboard();
+        toast('Restaurado ✓', 'success');
+      });
     }));
   },
 
@@ -3744,9 +3980,19 @@ const App = {
         </button>
       </div>`).join('');
     logEl.querySelectorAll('[data-ex-remove]').forEach(btn => btn.addEventListener('click', () => {
-      DB.removeExercise(parseInt(btn.dataset.exRemove));
-      this.renderExercise();
-      this.renderDashboard();
+      const idx = parseInt(btn.dataset.exRemove);
+      const day = today();
+      const cur = DB.exerciseLog();
+      const entry = (cur[day] || [])[idx];
+      DB.removeExercise(idx);
+      this.renderExercise(); this.renderDashboard();
+      if (entry) toastUndo(`Eliminado: ${entry.activity || 'Ejercicio'}`, () => {
+        const lat = DB.exerciseLog(); if (!lat[day]) lat[day] = [];
+        lat[day].splice(idx, 0, entry);
+        DB.saveExerciseLog(lat);
+        this.renderExercise(); this.renderDashboard();
+        toast('Restaurado ✓', 'success');
+      });
     }));
   },
 

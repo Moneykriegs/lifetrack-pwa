@@ -238,9 +238,18 @@
           <div class="progress-fill" id="food-progress-fill" style="width:0%;background:var(--success)"></div>
         </div>
         <div class="macros-row">
-          <div class="macro-pill"><span class="macro-pill-label">Proteína</span><span class="macro-pill-value" id="macro-prot" style="color:#6366f1">0g</span></div>
-          <div class="macro-pill"><span class="macro-pill-label">Carbos</span><span class="macro-pill-value" id="macro-carbs" style="color:#f59e0b">0g</span></div>
-          <div class="macro-pill"><span class="macro-pill-label">Grasa</span><span class="macro-pill-value" id="macro-fat" style="color:#10b981">0g</span></div>
+          <div class="macro-bar-wrap">
+            <div class="macro-bar-hd"><span class="macro-bar-label">Proteína</span><span class="macro-bar-val"><span id="macro-prot">0</span><span id="macro-prot-goal" class="macro-bar-goal"></span></span></div>
+            <div class="macro-bar-track"><div id="macro-prot-bar" class="macro-bar-fill" style="background:#6366f1;width:0%"></div></div>
+          </div>
+          <div class="macro-bar-wrap">
+            <div class="macro-bar-hd"><span class="macro-bar-label">Carbos</span><span class="macro-bar-val"><span id="macro-carbs">0</span><span id="macro-carbs-goal" class="macro-bar-goal"></span></span></div>
+            <div class="macro-bar-track"><div id="macro-carbs-bar" class="macro-bar-fill" style="background:#f59e0b;width:0%"></div></div>
+          </div>
+          <div class="macro-bar-wrap">
+            <div class="macro-bar-hd"><span class="macro-bar-label">Grasa</span><span class="macro-bar-val"><span id="macro-fat">0</span><span id="macro-fat-goal" class="macro-bar-goal"></span></span></div>
+            <div class="macro-bar-track"><div id="macro-fat-bar" class="macro-bar-fill" style="background:#10b981;width:0%"></div></div>
+          </div>
         </div>
       </div>
 
@@ -278,6 +287,12 @@
         <!-- Divider before user's own recipes -->
         <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">📖 Mis recetas</div>
         <div id="recipe-list"></div>
+      </div>
+
+      <!-- Favoritos / quick-add (sólo si hay historial) -->
+      <div id="food-favorites" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:5px">⭐ Tus favoritos</div>
+        <div id="food-favorites-list" class="fav-row"></div>
       </div>
 
       <!-- Food search + barcode scanner -->
@@ -756,6 +771,20 @@
         <div class="form-group"><label class="form-label">Agua / día (ml)</label><input class="form-input" type="number" id="setting-water-goal" value="2500" min="500" max="6000" step="250"></div>
       </div>
       <div class="form-group"><label class="form-label">Peso meta (kg)</label><input class="form-input" type="number" id="setting-weight-goal" placeholder="ej: 70" min="30" max="250" step="0.5"></div>
+
+      <!-- Macro goals -->
+      <div class="macros-auto-row">
+        <span>🤖 Calcular macros automáticamente</span>
+        <label class="toggle"><input type="checkbox" id="setting-macros-auto" checked><span class="toggle-track"></span></label>
+      </div>
+      <div id="macros-preview" class="macros-preview" style="display:none">—</div>
+      <div id="macros-manual" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Proteína (g)</label><input class="form-input" type="number" id="setting-protein-goal" min="20" max="500" step="5"></div>
+          <div class="form-group"><label class="form-label">Carbos (g)</label><input class="form-input" type="number" id="setting-carbs-goal" min="20" max="800" step="5"></div>
+          <div class="form-group"><label class="form-label">Grasa (g)</label><input class="form-input" type="number" id="setting-fat-goal" min="10" max="300" step="5"></div>
+        </div>
+      </div>
 
       <!-- MCP Server -->
       <div class="settings-section-title" style="margin-top:8px">Servidor MCP</div>
