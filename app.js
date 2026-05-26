@@ -481,8 +481,18 @@ const ACTIVITIES = [
   { name:'Otro',          icon:'💪', met:5.0  },
 ];
 
-const today = () => new Date().toISOString().split('T')[0];
-const fmtDate = d => d.toISOString().split('T')[0];
+// Use local date (not UTC) so the date is correct in any timezone.
+// toISOString() returns UTC — for Santiago (UTC-3/-4) that rolls over
+// to the next day from ~21:00 local time, breaking all date-keyed data.
+const _localDateStr = d => {
+  const dt = d || new Date();
+  const y  = dt.getFullYear();
+  const m  = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+const today   = () => _localDateStr();
+const fmtDate = d  => _localDateStr(d);
 
 // ================================================================
 // STORAGE
