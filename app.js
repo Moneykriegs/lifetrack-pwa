@@ -3361,10 +3361,14 @@ const App = {
   },
 
   renderPrepFoodList(q) {
-    const listEl = document.getElementById('prep-food-list');
+    const listEl   = document.getElementById('prep-food-list');
+    const searchEl = document.getElementById('prep-search');
     if (!listEl) return;
     const activeTab = document.querySelector('.prep-tab-btn.active')?.dataset.tab || 'prep';
     q = (q || '').toLowerCase().trim();
+
+    // Hide search bar on AI tab (not useful there)
+    if (searchEl) searchEl.style.display = activeTab === 'ai' ? 'none' : '';
 
     if (activeTab === 'prep') {
       // Group PREP_FOODS by category
@@ -3393,7 +3397,8 @@ const App = {
           if (food) this.addPrepEntry({ name: food.name, kcal: food.kcal, prot: food.prot, carbs: food.carbs, fat: food.fat, qty: food.qty });
         });
       });
-    } else {
+
+    } else if (activeTab === 'recipes') {
       // My Recipes tab
       const recipes = DB.recipes().filter(r => !q || r.name.toLowerCase().includes(q));
       if (!recipes.length) { listEl.innerHTML = '<div class="empty-state" style="padding:20px">Sin recetas</div>'; return; }
@@ -3409,6 +3414,77 @@ const App = {
         btn.addEventListener('click', () => {
           const r = DB.recipes().find(r => r.id == btn.dataset.prepRecipe);
           if (r) this.addPrepEntry({ name: r.name, kcal: r.kcal, prot: r.prot||0, carbs: r.carbs||0, fat: r.fat||0, qty: r.servingSize||100, isRecipe: true });
+        });
+      });
+
+    } else {
+      // ── ✨ IA tab — preference-based RECIPE_DB recommendations ──
+      const prefs = DB.foodPrefs();
+      if (!prefs || !prefs.liked || prefs.liked.length < 3) {
+        listEl.innerHTML = `
+          <div class="empty-state" style="padding:20px;text-align:center">
+            <p style="margin-bottom:10px">Configura tus ingredientes favoritos primero</p>
+            <button class="btn btn-primary" id="btn-prefs-from-picker"
+              style="padding:8px 16px;font-size:13px">Configurar preferencias</button>
+          </div>`;
+        document.getElementById('btn-prefs-from-picker')?.addEventListener('click', () => this.openIngredientPrefs());
+        return;
+      }
+      const slot       = this.prepPickerSlot;
+      const likedSet   = new Set(prefs.liked);
+      const goal       = DB.settings().calorieGoal;
+      const style      = DB.settings().cuttingStyle;
+      const slotTarget = Math.round(goal * (SLOT_FRACTIONS[slot] || 0.25));
+      const todayMicros = this._getTodayMicros();
+
+      const candidates = RECIPE_DB
+        .filter(r => r.mealType === slot)
+        .map(r => {
+          const score = this._scoreRecipe(r, likedSet, slotTarget, 999999, style, todayMicros);
+          const mult  = this._bestServing(r.kcal, slotTarget);
+          return {
+            ...r, score, mult,
+            scaledKcal:  Math.round(r.kcal  * mult),
+            scaledProt:  +(r.prot  * mult).toFixed(1),
+            scaledCarbs: +(r.carbs * mult).toFixed(1),
+            scaledFat:   +(r.fat   * mult).toFixed(1),
+          };
+        })
+        .filter(r => r.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+      if (!candidates.length) {
+        listEl.innerHTML = '<div class="empty-state" style="padding:20px">Sin recomendaciones para tus preferencias</div>';
+        return;
+      }
+
+      listEl.innerHTML = candidates.map(r => {
+        const multBadge = r.mult !== 1
+          ? ` <span class="rec-serving-badge" style="font-size:10px;padding:1px 6px">${r.mult}×</span>` : '';
+        return `<button class="prep-food-item" data-prep-ai="${r.id}" data-prep-ai-mult="${r.mult}">
+          <div class="prep-food-info">
+            <div class="prep-food-name">${r.emoji} ${esc(r.name)}${multBadge}</div>
+            <div class="prep-food-macros">P:${r.scaledProt}g C:${r.scaledCarbs}g G:${r.scaledFat}g · ⏱ ${r.prepTime} min</div>
+          </div>
+          <span class="prep-food-kcal">${r.scaledKcal}</span>
+        </button>`;
+      }).join('');
+
+      listEl.querySelectorAll('[data-prep-ai]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r    = RECIPE_DB.find(x => x.id === btn.dataset.prepAi);
+          const mult = parseFloat(btn.dataset.prepAiMult) || 1;
+          if (!r) return;
+          this.addPrepEntry({
+            name:  mult !== 1 ? `${r.name} (×${mult})` : r.name,
+            qty:   mult,
+            kcal:  Math.round(r.kcal  * mult),
+            prot:  +(r.prot  * mult).toFixed(1),
+            carbs: +(r.carbs * mult).toFixed(1),
+            fat:   +(r.fat   * mult).toFixed(1),
+            recipeDbId: r.id, isRecipeDb: true,
+          });
         });
       });
     }
