@@ -1042,9 +1042,9 @@
      RECIPE DETAIL MODAL
 ═══════════════════════════════════════════════════════ -->
 <div id="modal-recipe-detail" class="modal-overlay" role="dialog" aria-modal="true">
-  <div class="modal-sheet">
+  <div class="modal-sheet" style="max-height:95vh;display:flex;flex-direction:column">
     <div class="modal-handle"></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-shrink:0;padding:0 4px">
       <span id="rd-emoji" style="font-size:36px;flex-shrink:0"></span>
       <div style="flex:1;min-width:0">
         <h2 id="rd-name" class="modal-title" style="margin-bottom:2px;font-size:16px"></h2>
@@ -1052,10 +1052,16 @@
       </div>
       <button class="btn-close" id="btn-close-recipe-detail">✕</button>
     </div>
-    <div id="rd-macros" class="rec-macros" style="margin-bottom:16px"></div>
-    <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🧾 Ingredientes</div>
-    <div id="rd-ingredients" style="margin-bottom:16px"></div>
-    <button class="btn btn-primary" id="rd-add-btn" style="width:100%">Añadir al registro del día</button>
+    <div id="rd-macros" class="rec-macros" style="margin-bottom:16px;flex-shrink:0"></div>
+    <div style="flex:1;overflow-y:auto;padding:0 2px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🧾 Ingredientes</div>
+      <div id="rd-ingredients" style="margin-bottom:20px"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">👨‍🍳 Preparación</div>
+      <div id="rd-steps" style="margin-bottom:8px"></div>
+    </div>
+    <div style="padding:12px 0 0;flex-shrink:0">
+      <button class="btn btn-primary" id="rd-add-btn" style="width:100%">Añadir al registro del día</button>
+    </div>
   </div>
 </div>
 

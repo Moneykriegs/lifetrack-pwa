@@ -849,6 +849,49 @@ svg { display: block; flex-shrink: 0; }
 .rd-ing-name { color: var(--text); }
 .rd-ing-qty  { color: var(--text-muted); font-weight: 600; font-size: 13px; }
 
+/* ── Recipe detail — step list ───────────────────────────── */
+.rd-step-list {
+  list-style: none;
+  counter-reset: step-counter;
+  padding: 0;
+  margin: 0;
+}
+.rd-step-item {
+  counter-increment: step-counter;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+}
+.rd-step-item:last-child { border-bottom: none; }
+.rd-step-item::before {
+  content: counter(step-counter);
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+/* ── Tappable plan / prep entries ────────────────────────── */
+.plan-item-tappable, .prep-entry-tappable {
+  cursor: pointer;
+  transition: background .15s;
+}
+.plan-item-tappable:hover  { background: var(--primary-light); border-radius: 8px; }
+.prep-entry-tappable:hover { background: var(--primary-light); border-radius: 8px; }
+
 /* ── Ingredient preference chips ─────────────────────────── */
 .pref-cat-header {
   font-size: 12px; font-weight: 700; color: var(--text-muted);

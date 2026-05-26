@@ -469,6 +469,277 @@ const RECIPE_AMOUNTS = {
                       { label:'Almendras o crema',   qty:20,  unit:'g'               }],
 };
 
+// ── Step-by-step cooking instructions ────────────────────────
+const RECIPE_STEPS = {
+  // ── Desayunos ──────────────────────────────────────────────
+  rdb_omelet: [
+    'Bate los huevos con sal, pimienta y una cucharada de agua hasta que estén espumosos.',
+    'Calienta una sartén antiadherente a fuego medio con un chorrito de aceite o mantequilla.',
+    'Vierte los huevos y, cuando el borde empiece a cuajar, distribuye la espinaca y el queso rallado sobre la mitad.',
+    'Dobla el omelette a la mitad, baja el fuego y deja 1 min más hasta que el queso se derrita.',
+    'Sirve inmediatamente con sal y pimienta al gusto.',
+  ],
+  rdb_oats_banana: [
+    'Mezcla la avena con la leche en un tazón o cacerola.',
+    'Cocina a fuego medio-bajo removiendo constantemente durante 5 min hasta que espese.',
+    'Retira del fuego y deja reposar 1 min.',
+    'Añade el plátano en rodajas y las almendras laminadas por encima.',
+    'Opcional: endulza con miel o canela al gusto.',
+  ],
+  rdb_eggs_tomato: [
+    'Pica el tomate y la cebolla en cubos pequeños.',
+    'Calienta aceite en una sartén y sofríe la cebolla 2 min a fuego medio.',
+    'Añade el tomate y cocina 3 min hasta que suelte su jugo.',
+    'Bate los huevos con sal, vierte sobre la sartén y revuelve suavemente a fuego bajo.',
+    'Retira antes de que cuajen del todo; el calor residual termina la cocción.',
+  ],
+  rdb_avo_toast: [
+    'Tuesta el pan integral hasta que esté dorado y crujiente.',
+    'Aplasta el aguacate con un tenedor, añade sal, pimienta y jugo de limón.',
+    'Unta el aguacate sobre el pan.',
+    'Fríe o pocha el huevo a tu gusto (3-4 min) y colócalo encima.',
+    'Finaliza con una pizca de sal en escamas o chile en hojuelas si deseas.',
+  ],
+  rdb_yogurt_banana: [
+    'Vierte el yogur griego en un tazón.',
+    'Corta el plátano en rodajas y dispón sobre el yogur.',
+    'Agrega las nueces picadas por encima.',
+    'Opcional: añade una cucharadita de miel y canela.',
+    'Consume de inmediato o refrigera hasta 2 h.',
+  ],
+  rdb_burrito_egg: [
+    'Calienta la tortilla 30 s en sartén seca por cada lado.',
+    'Bate los huevos con sal; cocínalos revueltos en sartén con aceite a fuego medio.',
+    'Calienta las lonchas de pavo en la misma sartén 1 min.',
+    'Coloca en la tortilla: espinaca fresca, pavo, huevos revueltos y queso rallado.',
+    'Enrolla firmemente, dobla los extremos y sirve.',
+  ],
+  rdb_cottage_fruit: [
+    'Vierte el cottage en un tazón.',
+    'Corta el plátano en rodajas y coloca encima.',
+    'Añade las almendras o la crema de almendras.',
+    'Opcional: agrega canela, miel o bayas.',
+    'Sirve frío, recién preparado.',
+  ],
+
+  // ── Almuerzos ─────────────────────────────────────────────
+  rdb_chicken_rice: [
+    'Sazona la pechuga con sal, pimienta, ajo en polvo y orégano.',
+    'Cocina el arroz según las instrucciones del paquete.',
+    'En sartén con aceite a fuego medio-alto, sella la pechuga 5 min por lado hasta que el interior esté blanco.',
+    'Corta el brócoli en floretes y cuece al vapor 5-7 min (o en microondas 3 min).',
+    'Sirve el pollo laminado sobre el arroz con el brócoli al lado.',
+  ],
+  rdb_turkey_sweet: [
+    'Pela el camote, córtalo en cubos y cocina al vapor o microondas 8-10 min.',
+    'Sazona el pavo molido con sal, pimienta y comino.',
+    'Saltea el pavo en sartén con aceite a fuego medio hasta dorar (6-8 min).',
+    'Añade la espinaca al pavo, remueve hasta que se marchite (1-2 min).',
+    'Sirve el pavo con la espinaca sobre el camote.',
+  ],
+  rdb_salmon_quinoa: [
+    'Enjuaga la quinoa; cocina con doble cantidad de agua 15 min a fuego bajo, tapa.',
+    'Sazona el salmón con sal, pimienta, limón y aceite de oliva.',
+    'Cocina el salmón en sartén caliente 3-4 min por lado o al horno 12 min a 200°C.',
+    'Rebana el aguacate y exprime limón sobre él para evitar que oxide.',
+    'Sirve el salmón sobre la quinoa con el aguacate al lado.',
+  ],
+  rdb_beef_veggies: [
+    'Corta la carne en tiras delgadas y sazona con sal, pimienta y salsa de soya.',
+    'Cocina el arroz con 2 partes de agua, 15-18 min.',
+    'En wok o sartén muy caliente con aceite, saltea la carne 2-3 min hasta dorar.',
+    'Agrega las verduras (zanahoria, pimiento, cebolla) y saltea 4 min más.',
+    'Sirve el salteado de carne sobre el arroz.',
+  ],
+  rdb_tuna_pasta: [
+    'Cuece la pasta en agua con sal según las instrucciones del paquete.',
+    'Escurre el atún y reserva.',
+    'Pica el tomate en cubos y la cebolla finamente.',
+    'Mezcla la pasta escurrida con el atún, tomate, cebolla, aceite de oliva, sal y pimienta.',
+    'Sirve tibio o frío como ensalada de pasta.',
+  ],
+  rdb_chicken_salad: [
+    'Hierve o cocina la pechuga a la plancha con sal y ajo; deja enfriar y desmenuza.',
+    'Rebana el aguacate y exprime limón para preservar el color.',
+    'Pica la lechuga, el tomate y el pepino.',
+    'Mezcla todo en un tazón grande.',
+    'Aliña con aceite de oliva, limón, sal, pimienta y orégano.',
+  ],
+  rdb_lentil_stew: [
+    'Enjuaga las lentejas y ponlas a remojar 30 min (opcional).',
+    'Sofríe cebolla, ajo y zanahoria picados en aceite 4 min.',
+    'Añade las lentejas, tomate triturado, comino, pimentón y 400 ml de agua o caldo.',
+    'Cocina a fuego medio 25-30 min hasta que las lentejas estén tiernas.',
+    'Ajusta sal y pimienta; sirve con pan integral si deseas.',
+  ],
+  rdb_egg_rice: [
+    'Cocina el arroz con sal.',
+    'Pica las verduras (zanahoria, pimiento, guisantes) en cubos pequeños.',
+    'Saltea las verduras en wok con aceite 3 min a fuego alto.',
+    'Empuja las verduras a un lado, rompe los huevos en el centro y revuelve.',
+    'Mezcla todo, añade salsa de soya, sal y pimienta; sirve caliente.',
+  ],
+  rdb_tilapia_rice: [
+    'Sazona la tilapia con sal, pimienta, ajo y jugo de limón.',
+    'Cocina el arroz con sal.',
+    'Calienta aceite en sartén y cocina la tilapia 3 min por lado a fuego medio-alto.',
+    'Cuece las verduras al vapor 5 min.',
+    'Sirve la tilapia sobre el arroz con las verduras y gajos de limón.',
+  ],
+
+  // ── Meriendas ─────────────────────────────────────────────
+  rdb_apple_pb: [
+    'Lava y corta la manzana en gajos.',
+    'Pon la mantequilla de maní en un tazón pequeño.',
+    'Moja cada gajo de manzana en la mantequilla de maní.',
+    'Consume de inmediato o guarda en recipiente hermético.',
+  ],
+  rdb_nuts_fruit: [
+    'Mide las porciones de nueces, almendras y maní.',
+    'Mezcla con los trozos de fruta seca (dátiles, arándanos, pasas) si lo deseas.',
+    'Distribuye en un tazón o bolsita snack.',
+    'Consume como está; no requiere preparación.',
+  ],
+  rdb_hummus_veggies: [
+    'Pela y corta la zanahoria en bastones.',
+    'Corta el pimiento y el apio en tiras si los usas.',
+    'Sirve el hummus en un tazón pequeño.',
+    'Dispón los bastones alrededor para mojar.',
+    'Opcional: añade un chorrito de aceite de oliva y paprika sobre el hummus.',
+  ],
+  rdb_protein_smoothie: [
+    'Pela el plátano (puede estar congelado para textura más cremosa).',
+    'Coloca en la licuadora: plátano, leche, proteína en polvo y hielo al gusto.',
+    'Licúa 30-45 s hasta obtener una mezcla homogénea.',
+    'Sirve inmediatamente en un vaso alto.',
+  ],
+  rdb_cheese_crackers: [
+    'Selecciona un queso bajo en grasas (gouda, mozzarella o cottage).',
+    'Corta el queso en cubos o lonchas.',
+    'Dispón las galletas integrales en un plato.',
+    'Coloca el queso sobre las galletas o a un lado para mojar.',
+    'Opcional: añade unas rodajas de tomate o pepino.',
+  ],
+  rdb_cottage_cuke: [
+    'Lava el pepino y el tomate.',
+    'Corta en rodajas o cubos.',
+    'Vierte el cottage en un tazón.',
+    'Añade las verduras encima.',
+    'Aliña con sal, pimienta y un chorrito de aceite de oliva.',
+  ],
+  rdb_yogurt_nuts: [
+    'Vierte el yogur griego en un tazón.',
+    'Pica las nueces groseramente si son muy grandes.',
+    'Añade las nueces sobre el yogur.',
+    'Opcional: agrega una cucharadita de miel o semillas de chía.',
+  ],
+  rdb_banana_alm: [
+    'Pela el plátano.',
+    'Sirve en un tazón o plato con la crema de almendras al lado.',
+    'Come el plátano a mordidas untándolo en la crema o córtalo en rodajas.',
+  ],
+
+  // ── Cenas ─────────────────────────────────────────────────
+  rdb_chicken_veg: [
+    'Sazona la pechuga con sal, pimienta, ajo y hierbas (orégano, tomillo).',
+    'Precalienta el horno a 190°C o calienta una sartén con aceite.',
+    'Cocina la pechuga 6-7 min por lado en sartén o 20 min en horno.',
+    'Lava y corta las verduras (brócoli, zanahoria, calabacín) en piezas similares.',
+    'Cuece las verduras al vapor 6-8 min; sirve junto al pollo.',
+  ],
+  rdb_salmon_asparagus: [
+    'Precalienta el horno a 200°C.',
+    'Coloca el salmón en una bandeja; sazona con sal, pimienta, limón y eneldo.',
+    'Limpia los espárragos, corta las puntas duras y coloca alrededor del salmón.',
+    'Rocía aceite de oliva sobre todo y hornea 12-15 min.',
+    'Sirve con rodajas de limón.',
+  ],
+  rdb_turkey_broccoli: [
+    'Divide el brócoli en floretes medianos.',
+    'Hierve o cocina al vapor el brócoli 5-6 min hasta que esté tierno pero firme.',
+    'Cocina las lonchas de pavo en sartén sin aceite 1-2 min por lado.',
+    'Mezcla el brócoli escurrido con aceite de oliva, sal y ajo.',
+    'Sirve el pavo junto al brócoli.',
+  ],
+  rdb_beef_stir: [
+    'Corta la carne en tiras finas y marina 10 min con salsa de soya, ajo y jengibre.',
+    'Corta los pimientos, cebolla y zanahoria en juliana.',
+    'Calienta el wok o sartén a fuego muy alto con aceite.',
+    'Saltea la carne 2 min, retira. Saltea las verduras 3 min.',
+    'Regresa la carne, mezcla todo 1 min más; sirve sobre arroz o con pan pita.',
+  ],
+  rdb_egg_spinach: [
+    'Lava y escurre la espinaca.',
+    'Calienta aceite en sartén y sofríe ajo picado 1 min.',
+    'Añade la espinaca y cocina 2 min hasta marchitar.',
+    'Haz un hueco en el centro y añade los huevos; cocina como tortilla o huevos rotos.',
+    'Sazona con sal, pimienta y queso rallado opcional; sirve directo de la sartén.',
+  ],
+  rdb_chickpea_stew: [
+    'Sofríe cebolla y ajo picados en aceite de oliva 3 min.',
+    'Añade tomate triturado, comino, pimentón y pizca de cayena.',
+    'Incorpora los garbanzos cocidos (o de lata, enjuagados) y 150 ml de caldo.',
+    'Cocina a fuego medio 10-12 min removiendo ocasionalmente.',
+    'Sirve con perejil fresco y pan integral.',
+  ],
+  rdb_chicken_mushroom: [
+    'Corta la pechuga en trozos medianos y sazona con sal y pimienta.',
+    'Lamina los champiñones; pica la cebolla en juliana.',
+    'Calienta aceite en sartén y sella el pollo 4-5 min hasta dorar.',
+    'Añade la cebolla y los champiñones; cocina 5 min más.',
+    'Opcional: agrega un chorrito de vino blanco o caldo y deja reducir 2 min.',
+  ],
+  rdb_tuna_salad: [
+    'Escurre el atún y desmenúzalo.',
+    'Rebana el aguacate y la cebolla morada finamente.',
+    'Corta el tomate en cubos y la lechuga en tiras.',
+    'Mezcla todo en un tazón grande con el atún.',
+    'Aliña con aceite de oliva, limón, sal y pimienta negra.',
+  ],
+  rdb_bean_soup: [
+    'Sofríe cebolla, ajo y zanahoria picados en aceite 4 min.',
+    'Añade los frijoles negros cocidos (o de lata), tomate, comino y orégano.',
+    'Agrega 500 ml de caldo de pollo o agua; lleva a hervor.',
+    'Reduce el fuego y cocina 15 min; tritura un tercio de la sopa con cuchara para espesar.',
+    'Sirve con cilantro fresco, un chorrito de limón y arroz si deseas.',
+  ],
+  rdb_salmon_sweet_potato: [
+    'Pela el camote, córtalo en cubos y rocía con aceite, sal y pimentón.',
+    'Precalienta el horno a 200°C; hornea el camote 20 min.',
+    'A los 20 min, coloca el salmón sazonado junto al camote.',
+    'Hornea 12-14 min más hasta que el salmón esté cocido en el centro.',
+    'Sirve con unas gotas de limón y hierbas frescas.',
+  ],
+  rdb_zucchini_chicken: [
+    'Corta el calabacín en medias lunas y la pechuga en tiras.',
+    'Sazona el pollo con sal, pimienta, ajo y orégano.',
+    'Calienta aceite en sartén a fuego alto y sella el pollo 3-4 min.',
+    'Añade el calabacín y la cebolla; saltea 4 min hasta que estén tiernos.',
+    'Termina con un chorrito de limón; sirve solo o sobre arroz.',
+  ],
+  rdb_shrimp_rice: [
+    'Cocina el arroz integral (requiere ~40 min o usa arroz cocido rápido).',
+    'Pela y desveína los camarones; sazona con sal, pimienta y ajo.',
+    'Saltea los camarones en sartén con aceite 2 min por lado hasta rosados.',
+    'Añade verduras (pimiento, zanahoria) y saltea 3 min más.',
+    'Sirve sobre el arroz con salsa de soya y limón.',
+  ],
+  rdb_tofu_stir_fry: [
+    'Escurre el tofu firme y córtalo en cubos; presiona con papel de cocina para quitar humedad.',
+    'Saltea el tofu en aceite caliente a fuego alto 5 min hasta dorar, sin mover demasiado.',
+    'Retira el tofu; saltea las verduras (pimiento, brócoli, zanahoria) 4 min.',
+    'Devuelve el tofu, añade salsa de soya, jengibre y ajo; cocina 1 min.',
+    'Sirve sobre arroz o fideos con semillas de ajonjolí.',
+  ],
+  rdb_chicken_broth: [
+    'Pon el pollo (huesos o pechuga) en una olla con agua fría, cebolla, ajo, zanahoria y apio.',
+    'Lleva a hervor y elimina la espuma que sube.',
+    'Reduce a fuego bajo, tapa parcialmente y cocina 45-60 min.',
+    'Cuela el caldo; desmenuza el pollo y regrésa al caldo.',
+    'Añade sal, pimienta y cilantro o perejil fresco al servir.',
+  ],
+};
+
 const ACTIVITIES = [
   { name:'Correr',        icon:'🏃', met:9.8  },
   { name:'Caminar',       icon:'🚶', met:3.5  },
@@ -2668,6 +2939,12 @@ const App = {
         }).join('')
       : '<p style="color:var(--text-muted);font-size:13px;text-align:center">Sin datos de cantidades</p>';
 
+    // Steps
+    const steps = RECIPE_STEPS[recipeId] || [];
+    document.getElementById('rd-steps').innerHTML = steps.length
+      ? `<ol class="rd-step-list">${steps.map(s => `<li class="rd-step-item">${s}</li>`).join('')}</ol>`
+      : '<p style="color:var(--text-muted);font-size:13px">Sin instrucciones disponibles</p>';
+
     document.getElementById('rd-add-btn').onclick = () => {
       this.addRecipeDbEntry(recipeId, mult);
       this.closeModal('modal-recipe-detail');
@@ -3293,7 +3570,8 @@ const App = {
       const slotEntries = entries.filter(e => e.slot === slot.id);
       const slotKcal    = slotEntries.reduce((a, e) => a + e.kcal, 0);
       const itemsHtml   = slotEntries.map(e => `
-        <div class="plan-item">
+        <div class="plan-item${e.recipeDbId ? ' plan-item-tappable' : ''}"
+          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${e.qty || 1}"` : ''}>
           <div class="plan-item-name">${esc(e.recipeName)}</div>
           <div class="plan-item-kcal">${e.kcal} kcal</div>
           <button class="btn-remove" data-plan-remove="${e.id}" style="margin-left:4px">
@@ -3324,11 +3602,17 @@ const App = {
       btn.addEventListener('click', () => this.openRecipePicker(btn.dataset.addSlot));
     });
     slotsEl.querySelectorAll('[data-plan-remove]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
         DB.removePlanEntry(date, btn.dataset.planRemove);
         this.buildPlanDayTabs();
         this.renderWeekPlan();
         this.updatePlanBadge();
+      });
+    });
+    slotsEl.querySelectorAll('.plan-item-tappable').forEach(item => {
+      item.addEventListener('click', () => {
+        this.openRecipeDetail(item.dataset.recipeId, parseFloat(item.dataset.recipeMult) || 1);
       });
     });
   },
@@ -3801,7 +4085,8 @@ const App = {
       const slotEntries = entries.filter(e => e.slot === slot.id);
       const slotKcal    = slotEntries.reduce((a,e) => a+e.kcal, 0);
       const items = slotEntries.map(e => `
-        <div class="prep-entry">
+        <div class="prep-entry${e.recipeDbId ? ' prep-entry-tappable' : ''}"
+          ${e.recipeDbId ? `data-recipe-id="${e.recipeDbId}" data-recipe-mult="${e.qty || 1}"` : ''}>
           <span class="prep-entry-name">${esc(e.recipeName)}</span>
           <span class="prep-entry-kcal">${e.kcal}</span>
           <button class="btn-remove" data-prep-del="${e.id}" data-prep-date="${date}">
@@ -3845,12 +4130,19 @@ const App = {
     });
     // Bind remove
     slotsEl.querySelectorAll('[data-prep-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
         DB.removePlanEntry(btn.dataset.prepDate, btn.dataset.prepDel);
         CloudSync.schedulePush();
         this.renderPrepOverview();
         this.renderPrepDaySlots();
         this.updatePlanBadge();
+      });
+    });
+    // Bind recipe detail tap
+    slotsEl.querySelectorAll('.prep-entry-tappable').forEach(item => {
+      item.addEventListener('click', () => {
+        this.openRecipeDetail(item.dataset.recipeId, parseFloat(item.dataset.recipeMult) || 1);
       });
     });
   },
