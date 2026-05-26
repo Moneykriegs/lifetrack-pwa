@@ -293,6 +293,182 @@ function calcRecipeMicros(recipe) {
   return totals;
 }
 
+// Ingredient quantities per recipe (for the detail modal)
+// qty=0 means "al gusto". Multiply by serving multiplier for scaled amounts.
+const RECIPE_AMOUNTS = {
+  // ── Desayunos ──────────────────────────────────────────────
+  rdb_omelet:        [{ label:'Huevos',             qty:3,   unit:'unidades'        },
+                      { label:'Espinaca',            qty:60,  unit:'g'               },
+                      { label:'Queso rallado',       qty:30,  unit:'g'               },
+                      { label:'Cebolla',             qty:30,  unit:'g'               },
+                      { label:'Sal y pimienta',      qty:0,   unit:'al gusto'        }],
+  rdb_oats_banana:   [{ label:'Avena',               qty:80,  unit:'g'               },
+                      { label:'Leche',               qty:200, unit:'ml'              },
+                      { label:'Plátano',             qty:1,   unit:'pieza (120 g)'   },
+                      { label:'Almendras',           qty:20,  unit:'g'               }],
+  rdb_eggs_tomato:   [{ label:'Huevos',             qty:2,   unit:'unidades'        },
+                      { label:'Tomate',              qty:1,   unit:'pieza (150 g)'   },
+                      { label:'Cebolla',             qty:50,  unit:'g'               },
+                      { label:'Aceite de oliva',     qty:8,   unit:'ml'              }],
+  rdb_avo_toast:     [{ label:'Pan integral',        qty:2,   unit:'rebanadas (80 g)'},
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Huevo',               qty:1,   unit:'unidad'          },
+                      { label:'Sal y limón',         qty:0,   unit:'al gusto'        }],
+  rdb_yogurt_banana: [{ label:'Yogur griego',        qty:200, unit:'g'               },
+                      { label:'Plátano',             qty:1,   unit:'pieza (120 g)'   },
+                      { label:'Nueces',              qty:20,  unit:'g'               }],
+  rdb_burrito_egg:   [{ label:'Tortilla de trigo',   qty:1,   unit:'pieza grande (60 g)'},
+                      { label:'Huevos',             qty:2,   unit:'unidades'        },
+                      { label:'Pechuga de pavo',    qty:60,  unit:'g'               },
+                      { label:'Espinaca',            qty:30,  unit:'g'               },
+                      { label:'Queso rallado',       qty:20,  unit:'g'               }],
+  rdb_cottage_fruit: [{ label:'Cottage / requesón',  qty:150, unit:'g'               },
+                      { label:'Plátano',             qty:1,   unit:'pieza (120 g)'   },
+                      { label:'Almendras',           qty:15,  unit:'g'               }],
+  rdb_oats_eggs:     [{ label:'Avena',               qty:80,  unit:'g'               },
+                      { label:'Leche',               qty:200, unit:'ml'              },
+                      { label:'Huevo',               qty:1,   unit:'unidad'          },
+                      { label:'Plátano',             qty:60,  unit:'g (½ pieza)'     }],
+  // ── Almuerzos ──────────────────────────────────────────────
+  rdb_chicken_rice:  [{ label:'Pechuga de pollo',   qty:150, unit:'g'               },
+                      { label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Brócoli',             qty:100, unit:'g'               },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  rdb_tuna_salad:    [{ label:'Atún en agua',        qty:140, unit:'g (1 lata)'      },
+                      { label:'Lechuga mixta',       qty:100, unit:'g'               },
+                      { label:'Tomate',              qty:1,   unit:'pieza (150 g)'   },
+                      { label:'Cebolla',             qty:30,  unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Pepino',              qty:80,  unit:'g'               }],
+  rdb_pasta_meat:    [{ label:'Pasta cocida',        qty:150, unit:'g'               },
+                      { label:'Carne molida de res', qty:120, unit:'g'               },
+                      { label:'Tomate triturado',    qty:200, unit:'g'               },
+                      { label:'Cebolla',             qty:60,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  rdb_turkey_wrap:   [{ label:'Tortilla de trigo',   qty:1,   unit:'pieza (60 g)'    },
+                      { label:'Pechuga de pavo',    qty:120, unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Lechuga',             qty:50,  unit:'g'               },
+                      { label:'Tomate',              qty:75,  unit:'g (½ pieza)'     }],
+  rdb_salmon_quinoa: [{ label:'Salmón al horno',     qty:150, unit:'g'               },
+                      { label:'Quinoa cocida',       qty:120, unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     }],
+  rdb_rice_beans:    [{ label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Frijoles cocidos',    qty:120, unit:'g'               },
+                      { label:'Carne molida',        qty:100, unit:'g'               },
+                      { label:'Cebolla',             qty:60,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         },
+                      { label:'Tomate',              qty:100, unit:'g'               }],
+  rdb_grill_salad:   [{ label:'Pechuga de pollo',   qty:150, unit:'g'               },
+                      { label:'Lechuga mixta',       qty:100, unit:'g'               },
+                      { label:'Tomate',              qty:1,   unit:'pieza (150 g)'   },
+                      { label:'Pepino',              qty:80,  unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              }],
+  rdb_lentil_soup:   [{ label:'Lentejas secas',      qty:100, unit:'g'               },
+                      { label:'Zanahoria',           qty:100, unit:'g'               },
+                      { label:'Cebolla',             qty:80,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         },
+                      { label:'Tomate',              qty:100, unit:'g'               },
+                      { label:'Espinaca',            qty:50,  unit:'g'               }],
+  rdb_shrimp_tacos:  [{ label:'Camarón',             qty:150, unit:'g'               },
+                      { label:'Tortilla de maíz',    qty:3,   unit:'piezas'          },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Tomate',              qty:100, unit:'g'               },
+                      { label:'Cebolla',             qty:40,  unit:'g'               }],
+  rdb_poke:          [{ label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Salmón fresco',       qty:120, unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Pepino',              qty:80,  unit:'g'               },
+                      { label:'Cebolla morada',      qty:30,  unit:'g'               }],
+  rdb_mushroom_pasta:[{ label:'Pasta cocida',        qty:150, unit:'g'               },
+                      { label:'Champiñones',         qty:150, unit:'g'               },
+                      { label:'Ajo',                 qty:3,   unit:'dientes'         },
+                      { label:'Aceite de oliva',     qty:15,  unit:'ml'              },
+                      { label:'Espinaca',            qty:60,  unit:'g'               },
+                      { label:'Queso parmesano',     qty:20,  unit:'g'               }],
+  rdb_chickpea_curry:[{ label:'Garbanzos cocidos',   qty:150, unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Tomate triturado',    qty:200, unit:'g'               },
+                      { label:'Cebolla',             qty:80,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         },
+                      { label:'Arroz cocido',        qty:100, unit:'g'               }],
+  // ── Cenas ──────────────────────────────────────────────────
+  rdb_salmon_swetp:  [{ label:'Salmón',              qty:150, unit:'g'               },
+                      { label:'Camote / batata',     qty:180, unit:'g'               },
+                      { label:'Brócoli',             qty:100, unit:'g'               },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              }],
+  rdb_chicken_grill: [{ label:'Pechuga de pollo',   qty:160, unit:'g'               },
+                      { label:'Lechuga',             qty:100, unit:'g'               },
+                      { label:'Tomate',              qty:1,   unit:'pieza (150 g)'   },
+                      { label:'Pepino',              qty:80,  unit:'g'               },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              }],
+  rdb_beef_potato:   [{ label:'Filete de res',       qty:150, unit:'g'               },
+                      { label:'Papa',                qty:200, unit:'g'               },
+                      { label:'Pimiento',            qty:100, unit:'g'               },
+                      { label:'Cebolla',             qty:60,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  rdb_turkey_veggies:[{ label:'Pechuga de pavo',    qty:150, unit:'g'               },
+                      { label:'Calabacita',          qty:150, unit:'g'               },
+                      { label:'Pimiento',            qty:100, unit:'g'               },
+                      { label:'Zanahoria',           qty:80,  unit:'g'               },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              }],
+  rdb_tofu_rice:     [{ label:'Tofu firme',          qty:150, unit:'g'               },
+                      { label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Brócoli',             qty:100, unit:'g'               },
+                      { label:'Pimiento',            qty:80,  unit:'g'               },
+                      { label:'Cebolla',             qty:50,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  rdb_shrimp_garlic: [{ label:'Camarón',             qty:150, unit:'g'               },
+                      { label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Ajo',                 qty:4,   unit:'dientes'         },
+                      { label:'Cebolla',             qty:50,  unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              }],
+  rdb_chicken_pasta: [{ label:'Pasta integral cocida',qty:150,unit:'g'               },
+                      { label:'Pechuga de pollo',   qty:120, unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         },
+                      { label:'Queso parmesano',     qty:25,  unit:'g'               }],
+  rdb_beef_swetp:    [{ label:'Carne molida de res', qty:150, unit:'g'               },
+                      { label:'Camote / batata',     qty:180, unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Cebolla',             qty:60,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  rdb_mushroom_quin: [{ label:'Quinoa cocida',       qty:150, unit:'g'               },
+                      { label:'Champiñones',         qty:150, unit:'g'               },
+                      { label:'Espinaca',            qty:80,  unit:'g'               },
+                      { label:'Ajo',                 qty:3,   unit:'dientes'         },
+                      { label:'Aceite de oliva',     qty:10,  unit:'ml'              },
+                      { label:'Queso parmesano',     qty:20,  unit:'g'               }],
+  rdb_pork_stir:     [{ label:'Cerdo en tiras',      qty:150, unit:'g'               },
+                      { label:'Brócoli',             qty:150, unit:'g'               },
+                      { label:'Arroz cocido',        qty:150, unit:'g'               },
+                      { label:'Cebolla',             qty:60,  unit:'g'               },
+                      { label:'Ajo',                 qty:2,   unit:'dientes'         }],
+  // ── Snacks ─────────────────────────────────────────────────
+  rdb_egg_avo:       [{ label:'Huevos duros',        qty:2,   unit:'unidades'        },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     },
+                      { label:'Sal y pimienta',      qty:0,   unit:'al gusto'        }],
+  rdb_alm_yogurt:    [{ label:'Almendras',           qty:30,  unit:'g'               },
+                      { label:'Yogur griego',        qty:150, unit:'g'               }],
+  rdb_cottage_cuke:  [{ label:'Cottage / requesón',  qty:150, unit:'g'               },
+                      { label:'Pepino',              qty:100, unit:'g'               },
+                      { label:'Tomate',              qty:75,  unit:'g (½ pieza)'     }],
+  rdb_tuna_roll:     [{ label:'Hojas de lechuga',    qty:4,   unit:'hojas grandes'   },
+                      { label:'Atún en agua',        qty:100, unit:'g'               },
+                      { label:'Aguacate',            qty:75,  unit:'g (½ pieza)'     }],
+  rdb_cheese_nuts:   [{ label:'Queso',               qty:40,  unit:'g'               },
+                      { label:'Nueces',              qty:30,  unit:'g'               }],
+  rdb_roasted_chick: [{ label:'Garbanzos cocidos',   qty:200, unit:'g'               },
+                      { label:'Aceite de oliva',     qty:5,   unit:'ml'              },
+                      { label:'Sal y especias',      qty:0,   unit:'al gusto'        }],
+  rdb_banana_alm:    [{ label:'Plátano',             qty:1,   unit:'pieza (120 g)'   },
+                      { label:'Almendras o crema',   qty:20,  unit:'g'               }],
+};
+
 const ACTIVITIES = [
   { name:'Correr',        icon:'🏃', met:9.8  },
   { name:'Caminar',       icon:'🚶', met:3.5  },
@@ -1540,6 +1716,9 @@ const App = {
     document.getElementById('modal-food-prefs').addEventListener('click', e => { if(e.target===e.currentTarget) this.closeIngredientPrefs(); });
     document.getElementById('btn-close-prefs').addEventListener('click', () => this.closeIngredientPrefs());
     document.getElementById('btn-save-prefs').addEventListener('click',  () => this.saveIngredientPrefs());
+    // Recipe detail modal
+    document.getElementById('modal-recipe-detail').addEventListener('click', e => { if(e.target===e.currentTarget) this.closeModal('modal-recipe-detail'); });
+    document.getElementById('btn-close-recipe-detail').addEventListener('click', () => this.closeModal('modal-recipe-detail'));
   },
 
   renderFood() {
@@ -1877,7 +2056,7 @@ const App = {
             .filter(m => m.pct >= 10)
             .sort((a,b) => b.pct - a.pct)
             .slice(0, 3);
-          return `<div class="rec-card">
+          return `<div class="rec-card" data-rec-detail="${r.id}" data-rec-mult="${r.mult}" style="cursor:pointer">
             <div class="rec-card-header">
               <span class="rec-card-emoji">${r.emoji}</span>
               <div class="rec-card-info">
@@ -1903,7 +2082,15 @@ const App = {
         }).join('')}
       </div>`;
     panel.querySelectorAll('[data-rec-add]').forEach(btn =>
-      btn.addEventListener('click', () => this.addRecipeDbEntry(btn.dataset.recAdd, parseFloat(btn.dataset.recMult) || 1))
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        this.addRecipeDbEntry(btn.dataset.recAdd, parseFloat(btn.dataset.recMult) || 1);
+      })
+    );
+    panel.querySelectorAll('[data-rec-detail]').forEach(card =>
+      card.addEventListener('click', () =>
+        this.openRecipeDetail(card.dataset.recDetail, parseFloat(card.dataset.recMult) || 1)
+      )
     );
     document.getElementById('btn-edit-prefs')?.addEventListener('click', () => this.openIngredientPrefs());
   },
@@ -1924,6 +2111,52 @@ const App = {
     this.renderFoodLog();
     this.updateFoodBar();
     toast(`${r.emoji} ${name} añadida al registro`, 'success');
+  },
+
+  // ── RECIPE DETAIL MODAL ───────────────────────────────────
+  openRecipeDetail(recipeId, mult = 1) {
+    const r = RECIPE_DB.find(x => x.id === recipeId);
+    if (!r) return;
+
+    document.getElementById('rd-emoji').textContent = r.emoji;
+    document.getElementById('rd-name').textContent  = mult !== 1 ? `${r.name} (×${mult})` : r.name;
+    document.getElementById('rd-meta').textContent  = `⏱ ${r.prepTime} min · ${r.servingDesc}`;
+
+    const scaledKcal  = Math.round(r.kcal  * mult);
+    const scaledProt  = +(r.prot  * mult).toFixed(1);
+    const scaledCarbs = +(r.carbs * mult).toFixed(1);
+    const scaledFat   = +(r.fat   * mult).toFixed(1);
+
+    document.getElementById('rd-macros').innerHTML = `
+      <span class="rec-macro-chip kcal">${scaledKcal} kcal</span>
+      <span class="rec-macro-chip prot">P ${scaledProt}g</span>
+      <span class="rec-macro-chip carbs">C ${scaledCarbs}g</span>
+      <span class="rec-macro-chip fat">G ${scaledFat}g</span>`;
+
+    const amounts = RECIPE_AMOUNTS[recipeId] || [];
+    document.getElementById('rd-ingredients').innerHTML = amounts.length
+      ? amounts.map(item => {
+          let qtyText;
+          if (item.qty === 0) {
+            qtyText = item.unit; // "al gusto"
+          } else {
+            const scaled = item.qty * mult;
+            const display = scaled % 1 === 0 ? scaled.toFixed(0) : scaled.toFixed(1);
+            qtyText = `${display} ${item.unit}`;
+          }
+          return `<div class="rd-ing-row">
+            <span class="rd-ing-name">${item.label}</span>
+            <span class="rd-ing-qty">${qtyText}</span>
+          </div>`;
+        }).join('')
+      : '<p style="color:var(--text-muted);font-size:13px;text-align:center">Sin datos de cantidades</p>';
+
+    document.getElementById('rd-add-btn').onclick = () => {
+      this.addRecipeDbEntry(recipeId, mult);
+      this.closeModal('modal-recipe-detail');
+    };
+
+    this.openModal('modal-recipe-detail');
   },
 
   // ── INGREDIENT PREFERENCES MODAL ─────────────────────────

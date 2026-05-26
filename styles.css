@@ -836,6 +836,19 @@ svg { display: block; flex-shrink: 0; }
   padding: 2px 7px; white-space: nowrap;
 }
 
+/* ── Recipe detail modal ingredient rows ─────────────────── */
+.rd-ing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.rd-ing-row:last-child { border-bottom: none; }
+.rd-ing-name { color: var(--text); }
+.rd-ing-qty  { color: var(--text-muted); font-weight: 600; font-size: 13px; }
+
 /* ── Ingredient preference chips ─────────────────────────── */
 .pref-cat-header {
   font-size: 12px; font-weight: 700; color: var(--text-muted);
