@@ -1355,24 +1355,43 @@ const App = {
       await CloudSync.signOut();
     });
     // Live TDEE preview when any body-param or cutting style changes
+    const _readSettingsForm = () => ({
+      age:          parseInt(document.getElementById('setting-age').value)||null,
+      height:       parseInt(document.getElementById('setting-height').value)||null,
+      gender:       document.getElementById('setting-gender').value,
+      activityLevel:document.getElementById('setting-activity').value,
+      calorieGoal:  parseInt(document.getElementById('setting-goal').value)||2000,
+      cuttingStyle: document.getElementById('setting-cutting-style').value,
+      neck:  parseFloat(document.getElementById('setting-neck')?.value)||null,
+      waist: parseFloat(document.getElementById('setting-waist')?.value)||null,
+      hip:   parseFloat(document.getElementById('setting-hip')?.value)||null,
+    });
     ['setting-age','setting-height','setting-gender','setting-activity','setting-cutting-style'].forEach(id => {
       document.getElementById(id)?.addEventListener('change', () => {
-        const tmp = {
-          age: parseInt(document.getElementById('setting-age').value)||null,
-          height: parseInt(document.getElementById('setting-height').value)||null,
-          gender: document.getElementById('setting-gender').value,
-          activityLevel: document.getElementById('setting-activity').value,
-          calorieGoal: parseInt(document.getElementById('setting-goal').value)||2000,
-          cuttingStyle: document.getElementById('setting-cutting-style').value,
-        };
+        const tmp = _readSettingsForm();
         this._updateTDEEPreview(tmp);
-        // Auto-fill calorieGoal field if style is not custom
+        this._updateBodyFatPreview('bodyfat-preview-settings', tmp);
         if (tmp.cuttingStyle !== 'custom') {
           const tdee = this._calcTDEE(tmp);
           const computed = this._calcGoalFromStyle(tdee, tmp.cuttingStyle);
           if (computed) document.getElementById('setting-goal').value = computed;
         }
       });
+    });
+    // Live body fat update from measurement inputs
+    ['setting-neck','setting-waist','setting-hip'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () =>
+        this._updateBodyFatPreview('bodyfat-preview-settings', _readSettingsForm())
+      );
+    });
+    // Measures section collapse toggle
+    document.getElementById('btn-toggle-measures')?.addEventListener('click', () => {
+      const sec = document.getElementById('section-measures');
+      const btn = document.getElementById('btn-toggle-measures');
+      const open = sec.style.display === '';
+      sec.style.display = open ? 'none' : '';
+      btn.textContent = open ? '▼' : '▲';
+      btn.setAttribute('aria-expanded', String(!open));
     });
   },
 
@@ -1400,7 +1419,18 @@ const App = {
     document.getElementById('setting-weight-goal').value=s.weightGoal||'';
     document.getElementById('setting-mcp-url').value=s.mcpUrl||'';
     document.getElementById('setting-cutting-style').value=s.cuttingStyle||'custom';
+    // Measurements
+    const _sv = (id, v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
+    _sv('setting-neck', s.neck); _sv('setting-waist', s.waist); _sv('setting-hip', s.hip);
+    _sv('setting-chest', s.chest); _sv('setting-arm', s.arm); _sv('setting-thigh', s.thigh); _sv('setting-calf', s.calf);
+    // Auto-open measures section if any measurement is already set
+    if (s.neck || s.waist || s.hip || s.chest || s.arm || s.thigh || s.calf) {
+      document.getElementById('section-measures').style.display = '';
+      document.getElementById('btn-toggle-measures').setAttribute('aria-expanded','true');
+      document.getElementById('btn-toggle-measures').textContent = '▲';
+    }
     this._updateTDEEPreview(s);
+    this._updateBodyFatPreview('bodyfat-preview-settings', s);
     this.updateNotifBadge();
     this.openModal('modal-settings');
   },
@@ -1434,8 +1464,58 @@ const App = {
     el.style.color='var(--text-muted)';
   },
 
+  // ── Body fat (US Navy Method) ─────────────────────────────
+  _calcBodyFat(s) {
+    const h = parseFloat(s.height), neck = parseFloat(s.neck), waist = parseFloat(s.waist);
+    if (!h || !neck || !waist || waist <= neck) return null;
+    let bf;
+    if (s.gender === 'female') {
+      const hip = parseFloat(s.hip);
+      if (!hip) return null;
+      const denom = waist + hip - neck;
+      if (denom <= 0) return null;
+      bf = 495 / (1.29579 - 0.35004 * Math.log10(denom) + 0.22100 * Math.log10(h)) - 450;
+    } else {
+      bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(h)) - 450;
+    }
+    return isNaN(bf) ? null : Math.max(2, Math.min(60, Math.round(bf * 10) / 10));
+  },
+
+  _bodyFatCategory(bf, gender) {
+    if (bf == null) return null;
+    const cats = gender === 'female'
+      ? [ [14,'Atlética','#6366f1'], [21,'En forma','#10b981'], [25,'Aceptable','#f59e0b'], [32,'Alta','#f97316'], [Infinity,'Muy alta','#ef4444'] ]
+      : [ [6,'Esencial','#6366f1'], [14,'Atlético','#10b981'], [18,'En forma','#10b981'], [25,'Aceptable','#f59e0b'], [32,'Alta','#f97316'], [Infinity,'Muy alta','#ef4444'] ];
+    const cat = cats.find(([limit]) => bf < limit);
+    return cat ? { label: cat[1], color: cat[2] } : null;
+  },
+
+  _updateBodyFatPreview(elId, s) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const bf  = this._calcBodyFat(s);
+    if (bf == null) {
+      const need = s.gender === 'female' ? 'cuello, cintura y cadera' : 'cuello y cintura';
+      el.innerHTML = `<span style="color:var(--text-muted);font-size:13px">Añade ${need} para estimar tu % grasa (Método Navy)</span>`;
+      return;
+    }
+    const cat  = this._bodyFatCategory(bf, s.gender);
+    const lastW = DB.weightLog().slice(-1)[0];
+    const kg = lastW?.kg || parseFloat(s.weight) || null;
+    const fatKg  = kg ? +(kg * bf / 100).toFixed(1) : null;
+    const leanKg = kg && fatKg ? +(kg - fatKg).toFixed(1) : null;
+    el.innerHTML = `
+      <div class="bodyfat-result">
+        <span class="bodyfat-pct">${bf}%</span>
+        <span class="bodyfat-cat" style="background:${cat?.color}20;color:${cat?.color};border-color:${cat?.color}40">${cat?.label || ''}</span>
+      </div>
+      ${fatKg != null ? `<div class="bodyfat-detail">Masa grasa: <strong>${fatKg} kg</strong> · Masa magra: <strong>${leanKg} kg</strong></div>` : ''}
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Fórmula US Navy · estimación</div>`;
+  },
+
   saveSettings() {
     const style = document.getElementById('setting-cutting-style').value;
+    const _f = id => parseFloat(document.getElementById(id)?.value) || null;
     const rawS = {
       name: document.getElementById('setting-name').value.trim()||'Usuario',
       age:  parseInt(document.getElementById('setting-age').value)||null,
@@ -1447,6 +1527,9 @@ const App = {
       weightGoal: parseFloat(document.getElementById('setting-weight-goal').value)||null,
       mcpUrl: document.getElementById('setting-mcp-url').value.trim().replace(/\/$/,''),
       cuttingStyle: style,
+      // Body measurements
+      neck: _f('setting-neck'), waist: _f('setting-waist'), hip: _f('setting-hip'),
+      chest: _f('setting-chest'), arm: _f('setting-arm'), thigh: _f('setting-thigh'), calf: _f('setting-calf'),
     };
     // Auto-compute calorieGoal when style != custom
     if (style !== 'custom') {
@@ -1697,6 +1780,9 @@ const App = {
       cuttingStyle:     s.cuttingStyle !== 'custom' ? s.cuttingStyle : 'maintenance',
       calorieGoal:      s.calorieGoal || 2000,
       likedIngredients: prefs?.liked ? [...prefs.liked] : [],
+      // body measurements
+      neck:  s.neck  || '', waist: s.waist || '', hip:   s.hip   || '',
+      chest: s.chest || '', arm:   s.arm   || '', thigh: s.thigh || '', calf: s.calf || '',
     };
     this._renderObStep();
     document.getElementById('modal-onboarding').classList.add('open');
@@ -1775,6 +1861,41 @@ const App = {
             </button>`).join('')}
           </div>
         </div>
+
+        <!-- Advanced measurements -->
+        <button class="ob-advanced-toggle" id="ob-adv-toggle">
+          📏 Medidas corporales <span id="ob-adv-arrow">▼</span>
+        </button>
+        <div id="ob-advanced" style="display:none">
+          <div id="ob-bodyfat-preview" class="bodyfat-preview-box" style="margin-bottom:10px">
+            Añade cuello y cintura para estimar tu % grasa
+          </div>
+          <p class="measures-hint">Para mujeres también se necesita la cadera.</p>
+          <div class="ob-row2">
+            <div class="form-group"><label class="form-label">Cuello (cm)</label>
+              <input class="form-input" id="ob-neck"  type="number" placeholder="37"  min="20" max="70"  step="0.5" value="${d.neck||''}"></div>
+            <div class="form-group"><label class="form-label">Cintura (cm)</label>
+              <input class="form-input" id="ob-waist" type="number" placeholder="82"  min="40" max="200" step="0.5" value="${d.waist||''}"></div>
+          </div>
+          <div class="ob-row2">
+            <div class="form-group"><label class="form-label">Cadera (cm)</label>
+              <input class="form-input" id="ob-hip"   type="number" placeholder="95"  min="40" max="200" step="0.5" value="${d.hip||''}"></div>
+            <div class="form-group"><label class="form-label">Pecho (cm)</label>
+              <input class="form-input" id="ob-chest" type="number" placeholder="95"  min="40" max="200" step="0.5" value="${d.chest||''}"></div>
+          </div>
+          <div class="ob-row2">
+            <div class="form-group"><label class="form-label">Brazo (cm)</label>
+              <input class="form-input" id="ob-arm"   type="number" placeholder="35"  min="15" max="80"  step="0.5" value="${d.arm||''}"></div>
+            <div class="form-group"><label class="form-label">Muslo (cm)</label>
+              <input class="form-input" id="ob-thigh" type="number" placeholder="55"  min="20" max="120" step="0.5" value="${d.thigh||''}"></div>
+          </div>
+          <div class="ob-row2">
+            <div class="form-group"><label class="form-label">Pantorrilla (cm)</label>
+              <input class="form-input" id="ob-calf"  type="number" placeholder="38"  min="15" max="80"  step="0.5" value="${d.calf||''}"></div>
+            <div></div>
+          </div>
+        </div>
+
         <div class="ob-nav-row">
           <button class="btn ob-btn-back" id="ob-back">← Atrás</button>
           <button class="btn btn-primary ob-btn-next" id="ob-next">Siguiente →</button>
@@ -1848,6 +1969,33 @@ const App = {
           d.activityLevel = btn.dataset.activity;
         });
       });
+      // Advanced section toggle
+      document.getElementById('ob-adv-toggle')?.addEventListener('click', () => {
+        const sec  = document.getElementById('ob-advanced');
+        const arr  = document.getElementById('ob-adv-arrow');
+        const open = sec.style.display === '';
+        sec.style.display = open ? 'none' : '';
+        if (arr) arr.textContent = open ? '▼' : '▲';
+      });
+      // Live body fat preview from measure inputs
+      const _obMeasureSnap = () => ({
+        gender: document.getElementById('ob-gender')?.value || d.gender,
+        height: parseFloat(document.getElementById('ob-height')?.value) || d.height,
+        neck:   parseFloat(document.getElementById('ob-neck')?.value)  || null,
+        waist:  parseFloat(document.getElementById('ob-waist')?.value) || null,
+        hip:    parseFloat(document.getElementById('ob-hip')?.value)   || null,
+        weight: parseFloat(document.getElementById('ob-weight')?.value) || null,
+      });
+      ['ob-neck','ob-waist','ob-hip','ob-height','ob-gender'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => {
+          const snap = _obMeasureSnap();
+          this._updateBodyFatPreview('ob-bodyfat-preview', snap);
+        });
+        document.getElementById(id)?.addEventListener('change', () => {
+          const snap = _obMeasureSnap();
+          this._updateBodyFatPreview('ob-bodyfat-preview', snap);
+        });
+      });
     }
 
     if (step === 3) {
@@ -1899,6 +2047,10 @@ const App = {
       d.age    = parseInt(document.getElementById('ob-age')?.value)      || null;
       d.gender = document.getElementById('ob-gender')?.value || 'male';
       if (!d.height || !d.age) { toast('Completa la altura y edad', 'error'); return; }
+      // Capture measurements (optional)
+      const _mf = id => parseFloat(document.getElementById(id)?.value) || null;
+      d.neck  = _mf('ob-neck');  d.waist = _mf('ob-waist'); d.hip   = _mf('ob-hip');
+      d.chest = _mf('ob-chest'); d.arm   = _mf('ob-arm');   d.thigh = _mf('ob-thigh'); d.calf = _mf('ob-calf');
       // Recalculate goal when moving to step 3
       const tdee = this._calcTDEE(d);
       if (tdee) d.calorieGoal = this._calcGoalFromStyle(tdee, d.cuttingStyle) || d.calorieGoal;
@@ -1925,6 +2077,14 @@ const App = {
         activityLevel:d.activityLevel,
         cuttingStyle: d.cuttingStyle,
         calorieGoal:  d.calorieGoal,
+        // measurements (only overwrite if user entered something)
+        neck:  d.neck  || cur.neck  || null,
+        waist: d.waist || cur.waist || null,
+        hip:   d.hip   || cur.hip   || null,
+        chest: d.chest || cur.chest || null,
+        arm:   d.arm   || cur.arm   || null,
+        thigh: d.thigh || cur.thigh || null,
+        calf:  d.calf  || cur.calf  || null,
       });
       if (d.weight) DB.logWeight(d.weight);
       if (d.likedIngredients.length >= 3) DB.saveFoodPrefs({ liked: d.likedIngredients });

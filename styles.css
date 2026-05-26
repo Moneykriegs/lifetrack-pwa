@@ -1529,6 +1529,64 @@ svg { display: block; flex-shrink: 0; }
   font-size: 13px; cursor: pointer; text-decoration: underline;
 }
 
+/* ── Body measurements & body fat ───────────────────────── */
+.bodyfat-preview-box {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+  font-size: 13px;
+}
+.bodyfat-result {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+}
+.bodyfat-pct {
+  font-size: 28px; font-weight: 900; color: var(--primary);
+  line-height: 1;
+}
+.bodyfat-cat {
+  font-size: 12px; font-weight: 700; border-radius: 99px;
+  padding: 3px 10px; border: 1.5px solid;
+}
+.bodyfat-detail {
+  font-size: 12px; color: var(--text-muted);
+}
+
+/* Settings section collapse toggle */
+.settings-collapse-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; color: var(--text-muted); padding: 2px 6px;
+  border-radius: 6px; transition: background .15s;
+}
+.settings-collapse-btn:hover { background: var(--border); }
+
+/* Measures hints & subtitles */
+.measures-hint {
+  font-size: 12px; color: var(--text-muted); margin: 0 0 10px;
+}
+.measures-sub-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--text-muted);
+  margin: 12px 0 8px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Onboarding advanced toggle */
+.ob-advanced-toggle {
+  width: 100%; padding: 10px 14px; margin: 10px 0 0;
+  background: var(--bg); border: 1.5px dashed var(--border);
+  border-radius: 12px; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); cursor: pointer; text-align: left;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: all .15s;
+}
+.ob-advanced-toggle:hover {
+  border-color: var(--primary); color: var(--primary);
+  background: var(--primary-light);
+}
+#ob-advanced {
+  padding: 12px 0 0;
+  animation: ob-slide .2s ease;
+}
+
 /* ── Dashboard setup nudge card ─────────────────────────── */
 .setup-card {
   background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);

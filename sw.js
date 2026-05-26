@@ -1,4 +1,4 @@
-const CACHE = 'lifetrack-v16';
+const CACHE = 'lifetrack-v17';
 const SHELL = [
   './index.html',
   './styles.css',
