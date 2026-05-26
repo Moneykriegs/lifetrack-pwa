@@ -918,6 +918,68 @@ const Hydration = {
 };
 
 // ================================================================
+// DARK MODE
+// ================================================================
+const DarkMode = {
+  _key: 'lt_dark_mode',
+  init() {
+    const stored = localStorage.getItem(this._key);
+    let dark;
+    if (stored === 'dark')        dark = true;
+    else if (stored === 'light')  dark = false;
+    else                          dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    this._apply(dark);
+    // Follow system changes only when user hasn't overridden
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem(this._key)) this._apply(e.matches);
+    });
+  },
+  _apply(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+    const icon = document.getElementById('dark-mode-icon');
+    if (icon) {
+      icon.innerHTML = dark
+        ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+        : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+    }
+    const toggle = document.getElementById('setting-dark-mode');
+    if (toggle) toggle.checked = dark;
+  },
+  toggle() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = !dark;
+    localStorage.setItem(this._key, next ? 'dark' : 'light');
+    this._apply(next);
+    toast(next ? '🌙 Modo oscuro activado' : '☀️ Modo claro activado', 'info');
+  },
+  isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; },
+};
+
+// ================================================================
+// FASTING TIMER
+// ================================================================
+const Fasting = {
+  _key:  'lt_fasting',
+  _timer: null,
+  get()        { return DB._g(this._key, { running: false, start: null, target: 16 }); },
+  save(v)      { DB._s(this._key, v); },
+  start(h)     {
+    const t = h || this.get().target || 16;
+    this.save({ running: true, start: Date.now(), target: t });
+  },
+  stop() {
+    const s = this.get();
+    this.save({ running: false, start: null, target: s.target,
+                lastDur: s.start ? Date.now() - s.start : 0 });
+  },
+  reset()      { this.save({ running: false, start: null, target: this.get().target }); },
+  elapsedSec() {
+    const s = this.get();
+    return (s.running && s.start) ? Math.floor((Date.now() - s.start) / 1000) : 0;
+  },
+};
+
+// ================================================================
 // FOOD API (Open Food Facts + micronutrients)
 // ================================================================
 const FoodAPI = {
@@ -1534,6 +1596,7 @@ const App = {
   // ── init ──────────────────────────────────────────────────
   async init() {
     this.registerSW();
+    DarkMode.init();
     this.bindNav();
     this.bindInstall();
     this.bindSettings();
@@ -1547,6 +1610,7 @@ const App = {
     this.bindPlanModal();
     this.bindWellnessModal();
     this.bindPrepModal();
+    this.bindFasting();
 
     await Notif.init();
     Hydration.start();
@@ -1872,6 +1936,14 @@ const App = {
         this._updateMacrosPreview(tmp);
       });
     });
+    // Dark mode toggle (header button + settings toggle)
+    document.getElementById('btn-dark-mode')?.addEventListener('click', () => DarkMode.toggle());
+    document.getElementById('setting-dark-mode')?.addEventListener('change', () => DarkMode.toggle());
+
+    // Export buttons
+    document.getElementById('btn-export-json')?.addEventListener('click', () => this.exportJSON());
+    document.getElementById('btn-export-csv')?.addEventListener('click',  () => this.exportCSV());
+
     // Measures section collapse toggle
     document.getElementById('btn-toggle-measures')?.addEventListener('click', () => {
       const sec = document.getElementById('section-measures');
@@ -1943,6 +2015,10 @@ const App = {
       _sv('setting-fat-goal', s.fatGoal);
       this._updateMacrosPreview(s);
     }
+
+    // Dark mode
+    const dmToggle = document.getElementById('setting-dark-mode');
+    if (dmToggle) dmToggle.checked = DarkMode.isDark();
 
     this.updateNotifBadge();
     this.openModal('modal-settings');
@@ -2200,6 +2276,100 @@ const App = {
     this.renderWellnessDash();
     this._renderSetupCard();
     this.checkOnboarding();
+    this._renderComparison();
+    this._renderFasting();
+  },
+
+  /** Today vs 7-day average comparison chips */
+  _renderComparison() {
+    const food  = DB.foodLog();
+    const water = DB.waterLog();
+    const past7 = Array.from({length:7}, (_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(i+1)); return fmtDate(d); });
+
+    // Calorie average (days with data only)
+    const kcalDays = past7.filter(d=>(food[d]||[]).length>0);
+    const avgKcal  = kcalDays.length
+      ? Math.round(kcalDays.reduce((a,d)=>a+(food[d]||[]).reduce((s,f)=>s+f.kcal,0),0)/kcalDays.length)
+      : null;
+    const todayKcal = (food[today()]||[]).reduce((a,f)=>a+f.kcal,0);
+
+    // Water average
+    const waterDays = past7.filter(d=>(water[d]||0)>0);
+    const avgWater  = waterDays.length
+      ? Math.round(waterDays.reduce((a,d)=>a+(water[d]||0),0)/waterDays.length)
+      : null;
+    const todayWater = water[today()]||0;
+
+    const _setChip = (todayId, avgId, deltaId, todayVal, avgVal, unit, lowerIsBetter=false) => {
+      document.getElementById(todayId).textContent = todayVal + unit;
+      document.getElementById(avgId).textContent   = avgVal != null ? `Prom. 7d: ${avgVal}${unit}` : 'Sin datos anteriores';
+      const delta = document.getElementById(deltaId);
+      if (avgVal == null || todayVal === 0) { delta.textContent=''; return; }
+      const diff = todayVal - avgVal;
+      const pct  = Math.round(Math.abs(diff) / Math.max(1, avgVal) * 100);
+      if (Math.abs(diff) < 0.05 * avgVal) { delta.textContent='→ igual'; delta.className='comparison-chip-delta even'; return; }
+      const positive = lowerIsBetter ? diff < 0 : diff > 0;
+      delta.className = `comparison-chip-delta ${positive?'up':'down'}`;
+      delta.textContent = (diff>0?'▲ +':'▼ ') + pct + '%';
+    };
+
+    _setChip('cmp-kcal-today','cmp-kcal-avg','cmp-kcal-delta', todayKcal, avgKcal, ' kcal', false);
+    _setChip('cmp-water-today','cmp-water-avg','cmp-water-delta', todayWater, avgWater, ' ml', false);
+  },
+
+  /** Fasting timer card render + 1-second ticker */
+  _renderFasting() {
+    const s = Fasting.get();
+    const timerEl  = document.getElementById('fasting-timer');
+    const subEl    = document.getElementById('fasting-timer-sub');
+    const barEl    = document.getElementById('fasting-bar');
+    const startBtn = document.getElementById('btn-fasting-start');
+    const resetBtn = document.getElementById('btn-fasting-reset');
+    if (!timerEl) return;
+
+    // Stop any previous ticker from this view render
+    if (this._fastingTickId) clearInterval(this._fastingTickId);
+
+    const targetSec = (s.target || 16) * 3600;
+
+    const _update = () => {
+      const elapsed = Fasting.elapsedSec();
+      const h = Math.floor(elapsed/3600), m = Math.floor((elapsed%3600)/60), sec = elapsed%60;
+      timerEl.textContent = [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');
+      const pct = Math.min(elapsed/targetSec*100,100);
+      barEl.style.width = pct+'%';
+      if (Fasting.get().running) {
+        const remaining = Math.max(0, targetSec - elapsed);
+        if (remaining === 0) {
+          subEl.textContent = `✅ ¡Meta ${s.target}h alcanzada!`;
+        } else {
+          const rh = Math.floor(remaining/3600), rm = Math.floor((remaining%3600)/60);
+          subEl.textContent = `Faltan ${rh}h ${rm}m de ${s.target}h`;
+        }
+      } else if (s.lastDur) {
+        const dh = Math.floor(s.lastDur/3600000), dm = Math.floor((s.lastDur%3600000)/60000);
+        subEl.textContent = `Último ayuno: ${dh}h ${dm}m`;
+      }
+    };
+
+    _update();
+
+    if (s.running) {
+      startBtn.textContent = '⏹ Detener ayuno';
+      startBtn.className   = 'fasting-btn fasting-btn-stop';
+      resetBtn.style.display = '';
+      this._fastingTickId = setInterval(_update, 1000);
+    } else {
+      startBtn.textContent = '▶ Iniciar ayuno';
+      startBtn.className   = 'fasting-btn fasting-btn-start';
+      resetBtn.style.display = s.lastDur ? '' : 'none';
+      if (!s.running && !s.start) subEl.textContent = `Inicia el temporizador (${s.target}h)`;
+    }
+
+    // Update preset active state
+    document.querySelectorAll('.fasting-preset-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.h) === (s.target||16));
+    });
   },
 
   // ================================================================
@@ -3795,6 +3965,70 @@ const App = {
 
   bindMicroDays() {
     document.getElementById('micro-days')?.addEventListener('change',()=>this.renderMicros());
+  },
+
+  // ================================================================
+  // FASTING TIMER BINDINGS
+  // ================================================================
+  bindFasting() {
+    document.getElementById('btn-fasting-start')?.addEventListener('click', () => {
+      const s = Fasting.get();
+      if (s.running) { Fasting.stop(); } else { Fasting.start(); }
+      this._renderFasting();
+    });
+    document.getElementById('btn-fasting-reset')?.addEventListener('click', () => {
+      Fasting.reset(); this._renderFasting();
+    });
+    document.querySelectorAll('.fasting-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const h = parseInt(btn.dataset.h);
+        const s = Fasting.get();
+        Fasting.save({...s, target: h});
+        this._renderFasting();
+      });
+    });
+  },
+
+  // ================================================================
+  // EXPORT DATA
+  // ================================================================
+  exportJSON() {
+    const data = {
+      exported: new Date().toISOString(),
+      settings:    DB.settings(),
+      tasks:       DB.tasks(),
+      foodLog:     DB.foodLog(),
+      waterLog:    DB.waterLog(),
+      weightLog:   DB.weightLog(),
+      recipes:     DB.recipes(),
+      exerciseLog: DB.exerciseLog(),
+      wellness:    DB.wellness(),
+      mealPlan:    DB.mealPlan(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `lifetrack-backup-${today()}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('Backup exportado ✓', 'success');
+  },
+
+  exportCSV() {
+    const food = DB.foodLog();
+    const rows = [['Fecha','Nombre','Marca','Kcal','Proteína(g)','Carbos(g)','Grasa(g)','Cantidad(g)','Slot']];
+    Object.entries(food).sort().forEach(([date, entries]) => {
+      (entries || []).forEach(e => {
+        rows.push([date, e.name||'', e.brand||'', e.kcal||0,
+                   e.prot||0, e.carbs||0, e.fat||0, e.qty||'', e.slot||'']);
+      });
+    });
+    const csv  = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `lifetrack-food-${today()}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast('CSV exportado ✓', 'success');
   },
 
   renderProgress() {

@@ -28,6 +28,48 @@
   --transition:    .2s ease;
 }
 
+/* ================================================================
+   DARK MODE
+   ================================================================ */
+[data-theme="dark"] {
+  --primary:       #818cf8;
+  --primary-dark:  #6366f1;
+  --primary-light: #1e1b4b;
+  --success:       #34d399;
+  --success-light: #064e3b;
+  --warning:       #fbbf24;
+  --warning-light: #451a03;
+  --danger:        #f87171;
+  --danger-light:  #450a0a;
+  --blue:          #60a5fa;
+  --blue-light:    #1e3a5f;
+  --bg:            #0f172a;
+  --surface:       #1e293b;
+  --text:          #f1f5f9;
+  --text-muted:    #64748b;
+  --text-sub:      #94a3b8;
+  --border:        #334155;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,.35);
+  --shadow:        0 4px 12px rgba(0,0,0,.35);
+}
+[data-theme="dark"] .login-card { background: #1e293b; }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
+  background: #0f172a; color: var(--text); border-color: var(--border);
+}
+[data-theme="dark"] .form-input { background: #0f172a; color: var(--text); }
+[data-theme="dark"] .modal-sheet { background: #1e293b; }
+[data-theme="dark"] .scanner-overlay video { filter: brightness(.92); }
+
+/* Dark mode toggle */
+.btn-dark-mode {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  transition: all var(--transition);
+}
+.btn-dark-mode:hover { color: var(--primary); border-color: var(--primary); }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; -webkit-text-size-adjust: 100%; }
 body {
@@ -1955,6 +1997,81 @@ svg { display: block; flex-shrink: 0; }
   padding: 2px 7px; border-radius: 99px;
   letter-spacing: .2px; white-space: nowrap;
 }
+
+/* ================================================================
+   COMPARISON CHIPS (today vs weekly avg)
+   ================================================================ */
+.comparison-row {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.comparison-chip {
+  flex: 1; background: var(--surface); border-radius: 12px;
+  padding: 10px 12px; box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.comparison-chip-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.comparison-chip-val { font-size: 18px; font-weight: 800; color: var(--text); }
+.comparison-chip-avg { font-size: 11px; color: var(--text-muted); }
+.comparison-chip-delta {
+  font-size: 11px; font-weight: 700; padding: 2px 7px;
+  border-radius: 99px; display: inline-flex; align-items: center; gap: 2px;
+  align-self: flex-start; margin-top: 2px;
+}
+.comparison-chip-delta.up   { background: #d1fae5; color: #065f46; }
+.comparison-chip-delta.down { background: #fee2e2; color: #7f1d1d; }
+.comparison-chip-delta.even { background: #f1f5f9; color: var(--text-muted); }
+
+/* ================================================================
+   FASTING TIMER CARD
+   ================================================================ */
+.fasting-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  color: #fff; position: relative; overflow: hidden;
+}
+[data-theme="dark"] .fasting-card {
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 100%);
+}
+.fasting-card::after {
+  content:''; position:absolute; right:-20px; top:-20px;
+  width:100px; height:100px; border-radius:50%;
+  background: rgba(255,255,255,.05);
+}
+.fasting-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.fasting-hd-title { font-size: 13px; font-weight: 700; opacity: .85; }
+.fasting-presets { display: flex; gap: 6px; }
+.fasting-preset-btn {
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px;
+  background: rgba(255,255,255,.15); color: #fff; cursor: pointer; border: none;
+  transition: background .15s;
+}
+.fasting-preset-btn:hover, .fasting-preset-btn.active { background: rgba(255,255,255,.3); }
+.fasting-timer {
+  font-size: 40px; font-weight: 900; letter-spacing: -1px;
+  font-variant-numeric: tabular-nums; margin-bottom: 4px;
+}
+.fasting-timer-sub {
+  font-size: 12px; opacity: .7; margin-bottom: 14px;
+}
+.fasting-bar-track {
+  height: 6px; background: rgba(255,255,255,.15); border-radius: 3px; margin-bottom: 14px;
+}
+.fasting-bar-fill {
+  height: 100%; background: #a5b4fc; border-radius: 3px;
+  transition: width .5s ease;
+}
+.fasting-btns { display: flex; gap: 8px; }
+.fasting-btn {
+  flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; transition: opacity .15s;
+}
+.fasting-btn:hover { opacity: .9; }
+.fasting-btn-start { background: #a5b4fc; color: #1e1b4b; }
+.fasting-btn-stop  { background: #fca5a5; color: #7f1d1d; }
+.fasting-btn-reset { background: rgba(255,255,255,.15); color: #fff; flex: 0; padding: 10px 14px; }
 
 /* ================================================================
    UTILITY
