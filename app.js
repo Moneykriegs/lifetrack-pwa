@@ -827,6 +827,20 @@ const DB = {
   planForDate(date)        { return (this.mealPlan())[date] || []; },
   addPlanEntry(date, entry){ const mp=this.mealPlan(); if(!mp[date])mp[date]=[]; mp[date].push(entry); this.saveMealPlan(mp); },
   removePlanEntry(date, id){ const mp=this.mealPlan(); if(mp[date]){mp[date]=mp[date].filter(e=>String(e.id)!==String(id)); this.saveMealPlan(mp);} },
+
+  // Supplements / medications
+  supplements()            { return this._g('lt_supplements', []); },
+  saveSupplements(v)       { this._s('lt_supplements', v); },
+  supplementLog()          { return this._g('lt_supplement_log', {}); },
+  saveSupplementLog(v)     { this._s('lt_supplement_log', v); },
+  todaySupplLog()          { return (this.supplementLog())[today()] || {}; },
+  toggleSuppl(id)          {
+    const l = this.supplementLog();
+    if (!l[today()]) l[today()] = {};
+    l[today()][id] = !l[today()][id];
+    this.saveSupplementLog(l);
+    return l[today()][id];
+  },
 };
 
 // ================================================================
@@ -1437,6 +1451,12 @@ const CloudSync = {
   schedulePush() {
     clearTimeout(this._pushTimer);
     this._pushTimer = setTimeout(() => this.push().catch(() => {}), 8000);
+    // Register background sync so the push happens even if the tab goes away
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.sync) reg.sync.register('lt-data-sync').catch(() => {});
+      }).catch(() => {});
+    }
   }
 };
 
@@ -1498,22 +1518,44 @@ function calcStreaks() {
 }
 
 // ================================================================
-// WEIGHT PREDICTION
+// WEIGHT PREDICTION — linear regression on weight log
 // ================================================================
 function calcPrediction() {
-  const s = DB.settings();
+  const s       = DB.settings();
   const weights = DB.weightLog();
   if (!weights.length) return null;
-  const currentKg = weights[weights.length-1].kg;
+  const currentKg = weights[weights.length - 1].kg;
 
-  // Average intake last 14 days
+  // ── Linear regression on up to last 30 weight entries ──────
+  let kgPerDay = null, r2 = null;
+  if (weights.length >= 3) {
+    const pts = weights.slice(-30);
+    const n   = pts.length;
+    const t0  = new Date(pts[0].date + 'T12:00:00').getTime();
+    const xs  = pts.map(p => (new Date(p.date + 'T12:00:00').getTime() - t0) / 86400000);
+    const ys  = pts.map(p => p.kg);
+    const meanX = xs.reduce((a,x)=>a+x,0)/n;
+    const meanY = ys.reduce((a,y)=>a+y,0)/n;
+    const sxy   = xs.reduce((a,x,i)=>a+(x-meanX)*(ys[i]-meanY),0);
+    const sxx   = xs.reduce((a,x)=>a+(x-meanX)**2,0);
+    if (sxx > 0.001) {
+      kgPerDay     = sxy / sxx;
+      const b      = meanY - kgPerDay * meanX;
+      const ssRes  = ys.reduce((a,y,i)=>a+(y-(b+kgPerDay*xs[i]))**2,0);
+      const ssTot  = ys.reduce((a,y)=>a+(y-meanY)**2,0);
+      r2 = ssTot > 0 ? +(1 - ssRes/ssTot).toFixed(2) : null;
+    }
+  }
+
+  // ── Average caloric intake last 14 days ────────────────────
   const food = DB.foodLog();
   const days14 = Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));return fmtDate(d);});
   const daysWithData = days14.filter(d=>(food[d]||[]).length>0);
-  if (daysWithData.length < 2) return null;
-  const avgKcal = daysWithData.reduce((a,d)=>a+(food[d]||[]).reduce((s,f)=>s+f.kcal,0),0)/daysWithData.length;
+  const avgKcal = daysWithData.length
+    ? daysWithData.reduce((a,d)=>a+(food[d]||[]).reduce((s,f)=>s+f.kcal,0),0)/daysWithData.length
+    : null;
 
-  // TDEE (Mifflin-St Jeor)
+  // ── TDEE (Mifflin-St Jeor) ─────────────────────────────────
   let tdee = s.calorieGoal || 2000;
   if (s.height && s.age) {
     const bmr = s.gender==='female'
@@ -1523,15 +1565,73 @@ function calcPrediction() {
     tdee = Math.round(bmr * (mult[s.activityLevel]||1.55));
   }
 
-  const dailyDeficit = tdee - avgKcal;
-  const kgPerWeek    = (dailyDeficit * 7) / 7700;
-  const goalKg       = s.weightGoal;
-  let weeksToGoal    = null;
-  if (goalKg && Math.abs(kgPerWeek) > 0.01) {
+  const dailyDeficit  = avgKcal != null ? tdee - avgKcal : null;
+  const kgPerWeekCaloric = dailyDeficit != null ? (dailyDeficit * 7) / 7700 : null;
+  const kgPerWeekReg     = kgPerDay != null ? kgPerDay * 7 : null;
+  // Prefer regression-based rate if we have it
+  const kgPerWeek = kgPerWeekReg ?? kgPerWeekCaloric;
+  const in4weeks  = kgPerDay != null ? +(currentKg + kgPerDay * 28).toFixed(1) : null;
+
+  const goalKg = s.weightGoal;
+  let weeksToGoal = null;
+  if (goalKg && kgPerWeek && Math.abs(kgPerWeek) > 0.005) {
     weeksToGoal = Math.ceil((currentKg - goalKg) / kgPerWeek);
   }
 
-  return { currentKg, avgKcal: Math.round(avgKcal), tdee, dailyDeficit: Math.round(dailyDeficit), kgPerWeek: +kgPerWeek.toFixed(2), goalKg, weeksToGoal };
+  return {
+    currentKg,
+    avgKcal: avgKcal != null ? Math.round(avgKcal) : null,
+    tdee,
+    dailyDeficit: dailyDeficit != null ? Math.round(dailyDeficit) : null,
+    kgPerWeek:    kgPerWeek != null ? +kgPerWeek.toFixed(2) : null,
+    goalKg, weeksToGoal, r2, in4weeks,
+    method: kgPerWeekReg != null ? 'regression' : 'caloric',
+  };
+}
+
+// ================================================================
+// WELLNESS CORRELATIONS
+// ================================================================
+function calcWellnessCorrelations() {
+  const wellness = DB.wellness();
+  const food     = DB.foodLog();
+  const water    = DB.waterLog();
+  const exercise = DB.exerciseLog();
+
+  // Build a series of paired observations from the past 30 days
+  const days = Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return fmtDate(d);});
+  const pairs = { sleepKcal:[], sleepWater:[], moodSleep:[], energyEx:[], moodKcal:[] };
+
+  days.forEach(date => {
+    const w  = wellness[date];
+    if (!w) return;
+    const kcal = (food[date]||[]).reduce((a,f)=>a+f.kcal,0);
+    const ml   = water[date]||0;
+    const exKcal = (exercise[date]||[]).reduce((a,e)=>a+e.kcalBurned,0);
+    if (w.sleep != null && kcal > 0) pairs.sleepKcal.push([w.sleep, kcal]);
+    if (w.sleep != null && ml > 0)   pairs.sleepWater.push([w.sleep, ml]);
+    if (w.mood  != null && w.sleep != null) pairs.moodSleep.push([w.mood, w.sleep]);
+    if (w.energy != null)             pairs.energyEx.push([w.energy, exKcal]);
+    if (w.mood  != null && kcal > 0)  pairs.moodKcal.push([w.mood, kcal]);
+  });
+
+  const pearson = (arr) => {
+    const n = arr.length; if (n < 4) return null;
+    const xs = arr.map(p=>p[0]), ys = arr.map(p=>p[1]);
+    const mx = xs.reduce((a,x)=>a+x,0)/n, my = ys.reduce((a,y)=>a+y,0)/n;
+    const num = arr.reduce((a,p)=>a+(p[0]-mx)*(p[1]-my),0);
+    const dx  = Math.sqrt(xs.reduce((a,x)=>a+(x-mx)**2,0));
+    const dy  = Math.sqrt(ys.reduce((a,y)=>a+(y-my)**2,0));
+    return (dx*dy) > 0 ? +(num/(dx*dy)).toFixed(2) : null;
+  };
+
+  return {
+    sleepKcal:  { r: pearson(pairs.sleepKcal),  n: pairs.sleepKcal.length,  label:'Sueño → Calorías',       desc:'¿Dormir más cambia tu ingesta?' },
+    sleepWater: { r: pearson(pairs.sleepWater), n: pairs.sleepWater.length, label:'Sueño → Hidratación',    desc:'¿El descanso mejora tu hidratación?' },
+    moodSleep:  { r: pearson(pairs.moodSleep),  n: pairs.moodSleep.length,  label:'Ánimo → Horas de sueño', desc:'¿Buen ánimo con más descanso?' },
+    energyEx:   { r: pearson(pairs.energyEx),   n: pairs.energyEx.length,   label:'Energía → Ejercicio',    desc:'¿Alta energía = más ejercicio?' },
+    moodKcal:   { r: pearson(pairs.moodKcal),   n: pairs.moodKcal.length,   label:'Ánimo → Calorías',       desc:'¿Cómo afecta tu estado de ánimo?' },
+  };
 }
 
 // ================================================================
@@ -1611,6 +1711,10 @@ const App = {
     this.bindWellnessModal();
     this.bindPrepModal();
     this.bindFasting();
+    this.bindSupplModal();
+
+    // Web share
+    document.getElementById('btn-share-progress')?.addEventListener('click', () => this.shareProgress());
 
     await Notif.init();
     Hydration.start();
@@ -1640,7 +1744,8 @@ const App = {
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', e => {
-        if (e.data?.type === 'NAVIGATE') this.navigate(e.data.view || 'dashboard');
+        if (e.data?.type === 'NAVIGATE')  this.navigate(e.data.view || 'dashboard');
+        if (e.data?.type === 'BG_SYNC')   CloudSync.push().catch(() => {});
       });
     }
 
@@ -4036,6 +4141,7 @@ const App = {
     this.renderExercise();
     this.renderWater();
     this.renderWeight();
+    this.renderSupplements();
     this.renderMicros();
   },
 
@@ -4079,17 +4185,188 @@ const App = {
       const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
     }
 
-    // Prediction
+    // Prediction (enhanced with regression)
     const pred=calcPrediction();
     const predDiv=document.getElementById('weight-prediction');
     const predText=document.getElementById('weight-pred-text');
-    if(pred){
+    if(pred && pred.kgPerWeek != null){
       predDiv.style.display='block';
-      const sign=pred.dailyDeficit>0?'déficit':'superávit';
-      const kgDir=pred.kgPerWeek>0?'perder':'ganar';
-      predText.innerHTML=`${sign} de <strong>${Math.abs(pred.dailyDeficit)}</strong> kcal/día → <strong>${Math.abs(pred.kgPerWeek)}</strong> kg/semana estimado` +
-        (pred.weeksToGoal&&pred.weeksToGoal>0?`<br>Meta de <strong>${pred.goalKg}kg</strong> en aprox. <strong>${pred.weeksToGoal} semanas</strong>`:'');
+      const method = pred.method === 'regression'
+        ? `<span style="font-size:10px;background:var(--primary-light);color:var(--primary);padding:1px 6px;border-radius:4px;margin-left:6px">Regresión${pred.r2!=null?' R²='+pred.r2:''}</span>`
+        : '';
+      const kgW = Math.abs(pred.kgPerWeek);
+      const trend = pred.kgPerWeek < -0.01 ? `▼ ${kgW} kg/semana` : pred.kgPerWeek > 0.01 ? `▲ +${kgW} kg/semana` : '→ Peso estable';
+      predText.innerHTML = `<span style="font-size:15px;font-weight:700">${trend}</span>${method}` +
+        (pred.in4weeks != null ? `<br><span style="font-size:13px;color:var(--text-muted)">En 4 semanas: ~<strong>${pred.in4weeks} kg</strong></span>` : '') +
+        (pred.weeksToGoal != null && pred.weeksToGoal > 0 && pred.weeksToGoal < 200
+          ? `<br><span style="font-size:13px;color:var(--success)">Meta ${pred.goalKg} kg en ~<strong>${pred.weeksToGoal} sem.</strong></span>` : '');
     } else predDiv.style.display='none';
+  },
+
+  // ================================================================
+  // SUPPLEMENTS
+  // ================================================================
+  renderSupplements() {
+    const suppls   = DB.supplements();
+    const todayLog = DB.todaySupplLog();
+    const listEl   = document.getElementById('suppl-list');
+    const subEl    = document.getElementById('suppl-sub');
+    if (!listEl) return;
+
+    if (!suppls.length) {
+      listEl.innerHTML = `<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:12px 0">Toca <strong>+</strong> para añadir suplementos</p>`;
+      subEl.textContent = 'Sin suplementos';
+      return;
+    }
+    const doneCount = suppls.filter(s => todayLog[s.id]).length;
+    subEl.textContent = `${doneCount}/${suppls.length} tomados hoy`;
+    listEl.innerHTML = suppls.map(s => `
+      <div class="suppl-item" data-id="${s.id}" style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border)">
+        <button class="suppl-check" data-id="${s.id}" style="width:28px;height:28px;border-radius:50%;border:2px solid ${todayLog[s.id]?'#10b981':'var(--border)'};background:${todayLog[s.id]?'#10b981':'transparent'};color:${todayLog[s.id]?'#fff':'var(--border)'};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+          ${todayLog[s.id]?'✓':''}
+        </button>
+        <span style="font-size:18px;flex-shrink:0">${esc(s.emoji||'💊')}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${esc(s.name)}</div>
+          ${s.dose||s.time?`<div style="font-size:11px;color:var(--text-muted)">${esc(s.dose||'')}${s.dose&&s.time?' · ':''}${esc(s.time||'')}</div>`:''}
+        </div>
+        <button class="suppl-delete" data-id="${s.id}" style="color:var(--text-muted);font-size:18px;padding:4px;background:none;border:none;cursor:pointer">×</button>
+      </div>`).join('');
+
+    listEl.querySelectorAll('.suppl-check').forEach(btn => {
+      btn.addEventListener('click', () => {
+        DB.toggleSuppl(btn.dataset.id);
+        this.renderSupplements();
+        CloudSync.schedulePush();
+      });
+    });
+    listEl.querySelectorAll('.suppl-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const name = suppls.find(s=>s.id===id)?.name || 'suplemento';
+        toastUndo(`"${name}" eliminado`, () => {
+          DB.saveSupplements([...DB.supplements(), suppls.find(s=>s.id===id)].filter(Boolean));
+          this.renderSupplements();
+        }, 'info');
+        DB.saveSupplements(DB.supplements().filter(s=>s.id!==id));
+        this.renderSupplements();
+      });
+    });
+  },
+
+  bindSupplModal() {
+    document.getElementById('btn-add-suppl')?.addEventListener('click', () => this.openModal('modal-suppl'));
+    document.getElementById('btn-close-suppl')?.addEventListener('click', () => this.closeModal('modal-suppl'));
+    document.getElementById('modal-suppl')?.addEventListener('click', e => { if(e.target===e.currentTarget) this.closeModal('modal-suppl'); });
+    // Emoji picker grid
+    const grid = document.getElementById('suppl-emoji-grid');
+    if (grid) {
+      grid.addEventListener('click', e => {
+        const text = e.target.textContent?.trim();
+        if (text) document.getElementById('suppl-emoji').value = text;
+      });
+    }
+    document.getElementById('btn-save-suppl')?.addEventListener('click', () => {
+      const name = document.getElementById('suppl-name').value.trim();
+      if (!name) { toast('Escribe el nombre del suplemento', 'error'); return; }
+      const s = {
+        id:    `suppl_${Date.now()}`,
+        name,
+        dose:  document.getElementById('suppl-dose').value.trim(),
+        time:  document.getElementById('suppl-time').value.trim(),
+        emoji: document.getElementById('suppl-emoji').value.trim() || '💊',
+      };
+      DB.saveSupplements([...DB.supplements(), s]);
+      this.closeModal('modal-suppl');
+      // Reset form
+      ['suppl-name','suppl-dose','suppl-time'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+      document.getElementById('suppl-emoji').value = '💊';
+      toast(`${s.emoji} "${s.name}" añadido`, 'success');
+      if (this.view === 'progress') this.renderSupplements();
+      CloudSync.schedulePush();
+    });
+  },
+
+  // ================================================================
+  // WELLNESS CORRELATIONS
+  // ================================================================
+  renderCorrelations() {
+    const corr  = calcWellnessCorrelations();
+    const grid  = document.getElementById('correlations-grid');
+    const empty = document.getElementById('correlations-empty');
+    if (!grid) return;
+
+    const entries = Object.values(corr).filter(c => c.r !== null && c.n >= 4);
+    if (!entries.length) {
+      grid.innerHTML = '';
+      empty?.style && (empty.style.display = '');
+      return;
+    }
+    empty?.style && (empty.style.display = 'none');
+
+    const label = r => {
+      const a = Math.abs(r);
+      if (a >= 0.7) return 'fuerte';
+      if (a >= 0.4) return 'moderada';
+      return 'débil';
+    };
+    const color = r => {
+      if (r >=  0.4) return '#10b981';
+      if (r <= -0.4) return '#ef4444';
+      return 'var(--text-muted)';
+    };
+    const bar = r => {
+      const pct = Math.round(Math.abs(r)*100);
+      const c   = color(r);
+      return `<div style="height:4px;background:var(--border);border-radius:2px;margin-top:4px"><div style="height:100%;width:${pct}%;background:${c};border-radius:2px;transition:width .4s"></div></div>`;
+    };
+
+    grid.innerHTML = entries.map(c => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${esc(c.label)}</span>
+          <span style="font-size:13px;font-weight:800;color:${color(c.r)}">${c.r > 0 ? '+' : ''}${c.r}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${esc(c.desc)} · correlación ${label(c.r)} (n=${c.n})</div>
+        ${bar(c.r)}
+      </div>`).join('');
+  },
+
+  // ================================================================
+  // WEB SHARE
+  // ================================================================
+  async shareProgress() {
+    const s      = DB.settings();
+    const food   = DB.todayFood();
+    const kcal   = food.reduce((a,f)=>a+f.kcal,0);
+    const water  = DB.todayWater();
+    const tasks  = DB.tasks(), done = DB.todayDone();
+    const todayT = tasks.filter(t=>!t.days?.length||t.days.includes(new Date().getDay()));
+    const doneN  = todayT.filter(t=>done[t.id]).length;
+    const weights = DB.weightLog();
+    const kg     = weights.length ? weights[weights.length-1].kg : null;
+    const goal   = s.calorieGoal || 2000;
+
+    const text = `📊 Mi progreso en LifeTrack — ${new Date().toLocaleDateString('es')}
+🍽 Calorías: ${kcal}/${goal} kcal
+💧 Agua: ${water}/${s.waterGoal||2500} ml
+✅ Tareas: ${doneN}/${todayT.length}${kg ? `\n⚖️ Peso: ${kg} kg` : ''}
+#LifeTrack #Salud #Nutrición`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Mi progreso LifeTrack', text });
+        toast('¡Compartido! 🎉', 'success');
+      } catch(e) {
+        if (e.name !== 'AbortError') {
+          await navigator.clipboard.writeText(text).catch(()=>{});
+          toast('Copiado al portapapeles', 'info');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(text).catch(()=>{});
+      toast('Copiado al portapapeles 📋', 'info');
+    }
   },
 
   renderMicros() {
@@ -4632,6 +4909,8 @@ const App = {
 
     // Wellness history
     this.renderWellnessHistory(days, labels);
+    // Correlations
+    this.renderCorrelations();
   },
 
   // ================================================================

@@ -1,4 +1,4 @@
-const CACHE = 'lifetrack-v26';
+const CACHE = 'lifetrack-v27';
 const SHELL = [
   './index.html',
   './styles.css',
@@ -70,4 +70,15 @@ self.addEventListener('notificationclick', e => {
 
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// Background sync — nudges the client to push queued data when connectivity resumes
+self.addEventListener('sync', e => {
+  if (e.tag === 'lt-data-sync') {
+    e.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+        list.forEach(client => client.postMessage({ type: 'BG_SYNC' }));
+      })
+    );
+  }
 });

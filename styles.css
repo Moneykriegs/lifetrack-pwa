@@ -2074,6 +2074,22 @@ svg { display: block; flex-shrink: 0; }
 .fasting-btn-reset { background: rgba(255,255,255,.15); color: #fff; flex: 0; padding: 10px 14px; }
 
 /* ================================================================
+   SUPPLEMENTS / MEDICATIONS
+   ================================================================ */
+.suppl-emoji-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 8px;
+  background: var(--bg); border-radius: 10px; cursor: pointer;
+  font-size: 20px;
+}
+.suppl-emoji-grid span { cursor: pointer; padding: 4px; border-radius: 6px; transition: background .15s; }
+.suppl-emoji-grid span:hover { background: var(--primary-light); }
+
+/* ================================================================
+   CORRELATIONS
+   ================================================================ */
+/* uses inline styles, nothing extra needed */
+
+/* ================================================================
    UTILITY
    ================================================================ */
 .hidden  { display: none !important; }
