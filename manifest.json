@@ -27,13 +27,38 @@
   "shortcuts": [
     {
       "name": "Nueva tarea",
-      "url": "./index.html#tasks",
-      "description": "Añadir una nueva tarea"
+      "short_name": "Tarea",
+      "url": "./index.html#tasks?new=1",
+      "description": "Añadir una nueva tarea",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "96x96" }]
     },
     {
       "name": "Registrar comida",
-      "url": "./index.html#food",
-      "description": "Registrar una comida"
+      "short_name": "Comida",
+      "url": "./index.html#food?focus=1",
+      "description": "Buscar y registrar una comida",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Escanear código",
+      "short_name": "Escanear",
+      "url": "./index.html#food?scan=1",
+      "description": "Escanear código de barras",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Agua +250 ml",
+      "short_name": "Agua",
+      "url": "./index.html#water?add=250",
+      "description": "Sumar 250 ml de agua al día",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Registrar peso",
+      "short_name": "Peso",
+      "url": "./index.html#progress?weight=1",
+      "description": "Registrar tu peso del día",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "96x96" }]
     }
   ]
 }

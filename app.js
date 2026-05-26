@@ -775,7 +775,7 @@ const DB = {
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
 
-  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true }); },
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120 }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
   foodLog()       { return this._g('lt_food', {}); },
@@ -859,6 +859,62 @@ const Notif = {
     } catch(e){ console.warn(e); }
   },
   cancel(id) { if(this.timers[id]){clearTimeout(this.timers[id]);delete this.timers[id];} }
+};
+
+// ================================================================
+// HYDRATION REMINDERS
+// ================================================================
+const Hydration = {
+  _timer: null,
+  _lastFiredAt: 0,
+  start() {
+    this.stop();
+    const s = DB.settings();
+    if (!s.hydrationEnabled || Notification.permission !== 'granted') return;
+    // Check every 15 min for granularity, throttle inside
+    this._timer = setInterval(() => this.tick(), 15 * 60 * 1000);
+    setTimeout(() => this.tick(), 5000); // first check shortly after start
+  },
+  stop() {
+    if (this._timer) { clearInterval(this._timer); this._timer = null; }
+  },
+  async tick() {
+    const s = DB.settings();
+    if (!s.hydrationEnabled) { this.stop(); return; }
+    const now  = new Date();
+    const hour = now.getHours() + now.getMinutes() / 60;
+    if (hour < s.hydrationStart || hour >= s.hydrationEnd) return;
+
+    // Throttle: never fire twice within `intervalMin` minutes
+    const minMs = (s.hydrationIntervalMin || 120) * 60 * 1000;
+    if (Date.now() - this._lastFiredAt < minMs) return;
+
+    // Pro-rata expected progress for current window position
+    const totalH    = Math.max(1, s.hydrationEnd - s.hydrationStart);
+    const elapsedH  = Math.min(totalH, hour - s.hydrationStart);
+    const expected  = (s.waterGoal || 2500) * (elapsedH / totalH);
+    const consumed  = DB.todayWater();
+    const deficit   = expected - consumed;
+
+    // Only nudge if deficit > 1 interval-worth of pro-rata water (and ≥ 200ml)
+    const intervalShare = (s.waterGoal || 2500) * (((s.hydrationIntervalMin || 120) / 60) / totalH);
+    if (deficit < Math.max(200, intervalShare * 0.6)) return;
+
+    this._lastFiredAt = Date.now();
+    const remaining = Math.max(0, (s.waterGoal || 2500) - consumed);
+    try {
+      const opts = {
+        body: `Llevas ${consumed} ml hoy. Tu meta son ${s.waterGoal} ml (te faltan ${remaining} ml).`,
+        icon: './icons/icon.svg', tag: 'lt-hydration', renotify: true,
+      };
+      if ('serviceWorker' in navigator) {
+        const r = await navigator.serviceWorker.ready;
+        r.showNotification('💧 ¡Hora de hidratarte!', opts);
+      } else {
+        new Notification('💧 ¡Hora de hidratarte!', opts);
+      }
+    } catch(e) { console.warn(e); }
+  },
 };
 
 // ================================================================
@@ -1493,6 +1549,7 @@ const App = {
     this.bindPrepModal();
 
     await Notif.init();
+    Hydration.start();
 
     // Overdue task reminders
     this.bindOverdueBanner();
@@ -1666,10 +1723,16 @@ const App = {
     });
   },
 
-  navigate(viewId) {
-    const valid=['dashboard','tasks','food','progress','history'];
-    if(!valid.includes(viewId)) viewId='dashboard';
-    this.view=viewId;
+  navigate(viewSpec) {
+    // viewSpec can be "tasks" or "tasks?new=1"
+    let viewId = viewSpec || 'dashboard';
+    let query  = '';
+    const qIdx = viewId.indexOf('?');
+    if (qIdx >= 0) { query = viewId.slice(qIdx + 1); viewId = viewId.slice(0, qIdx); }
+
+    const valid = ['dashboard','tasks','food','progress','history'];
+    if (!valid.includes(viewId)) viewId = 'dashboard';
+    this.view = viewId;
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     document.getElementById(`view-${viewId}`)?.classList.add('active');
@@ -1677,6 +1740,29 @@ const App = {
     const titles={dashboard:'Inicio',tasks:'Mis Tareas',food:'Comidas',progress:'Progreso',history:'Historial'};
     document.getElementById('view-title').textContent=titles[viewId];
     this.renderView();
+    if (query) setTimeout(() => this._dispatchShortcutAction(viewId, new URLSearchParams(query)), 80);
+  },
+
+  _dispatchShortcutAction(viewId, params) {
+    // Clear hash params so refresh doesn't re-trigger
+    history.replaceState(null, '', '#' + viewId);
+    if (viewId === 'tasks' && params.get('new') === '1') {
+      this.openTaskModal();
+    } else if (viewId === 'food' && params.get('scan') === '1') {
+      this.openBarcodeScanner();
+    } else if (viewId === 'food' && params.get('focus') === '1') {
+      document.getElementById('food-search')?.focus();
+    } else if (viewId === 'progress' && params.get('weight') === '1') {
+      document.getElementById('btn-log-weight')?.click();
+    } else if (params.get('add')) {
+      // Water shortcut: ?add=250 → log water + redirect to dashboard
+      const ml = parseInt(params.get('add'));
+      if (ml > 0) {
+        DB.addWater(ml);
+        toast(`+${ml} ml de agua añadidos`, 'success');
+        this.navigate('dashboard');
+      }
+    }
   },
 
   renderView() {
@@ -1761,6 +1847,11 @@ const App = {
         this._updateBodyFatPreview('bodyfat-preview-settings', _readSettingsForm())
       );
     });
+    // Hydration toggle reveals config
+    document.getElementById('setting-hydration-enabled')?.addEventListener('change', e => {
+      document.getElementById('hydration-config').style.display = e.target.checked ? '' : 'none';
+    });
+
     // Macros: auto toggle + live preview
     const macrosAuto = document.getElementById('setting-macros-auto');
     macrosAuto?.addEventListener('change', e => {
@@ -1828,6 +1919,16 @@ const App = {
     }
     this._updateTDEEPreview(s);
     this._updateBodyFatPreview('bodyfat-preview-settings', s);
+
+    // Hydration reminders
+    const hyEn = document.getElementById('setting-hydration-enabled');
+    if (hyEn) {
+      hyEn.checked = !!s.hydrationEnabled;
+      document.getElementById('hydration-config').style.display = s.hydrationEnabled ? '' : 'none';
+      document.getElementById('setting-hydration-start').value    = s.hydrationStart ?? 8;
+      document.getElementById('setting-hydration-end').value      = s.hydrationEnd   ?? 22;
+      document.getElementById('setting-hydration-interval').value = s.hydrationIntervalMin || 120;
+    }
 
     // Macros — auto/manual + values
     const autoEl = document.getElementById('setting-macros-auto');
@@ -1985,6 +2086,11 @@ const App = {
       proteinGoal: parseInt(document.getElementById('setting-protein-goal')?.value) || null,
       carbsGoal:   parseInt(document.getElementById('setting-carbs-goal')?.value)   || null,
       fatGoal:     parseInt(document.getElementById('setting-fat-goal')?.value)     || null,
+      // Hydration
+      hydrationEnabled:     !!document.getElementById('setting-hydration-enabled')?.checked,
+      hydrationStart:       parseInt(document.getElementById('setting-hydration-start')?.value) || 8,
+      hydrationEnd:         parseInt(document.getElementById('setting-hydration-end')?.value)   || 22,
+      hydrationIntervalMin: parseInt(document.getElementById('setting-hydration-interval')?.value) || 120,
     };
     // Auto-compute calorieGoal when style != custom
     if (style !== 'custom') {
@@ -1997,6 +2103,7 @@ const App = {
     document.getElementById('btn-sync').style.display = s.mcpUrl ? '' : 'none';
     this.closeSettings();
     Notif.scheduleAll();
+    Hydration.start();
     toast('Ajustes guardados','success');
     this.renderView();
   },
