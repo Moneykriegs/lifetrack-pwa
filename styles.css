@@ -1398,6 +1398,171 @@ svg { display: block; flex-shrink: 0; }
 .wellness-hist-note  { font-size: 12px; color: var(--text-sub); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ================================================================
+   ONBOARDING WALKTHROUGH
+   ================================================================ */
+.onboarding-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.onboarding-overlay.open { opacity: 1; pointer-events: all; }
+
+.onboarding-card {
+  background: var(--surface);
+  border-radius: 24px;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,.25);
+}
+
+.onboarding-progress-wrap {
+  height: 4px; background: var(--border);
+  border-radius: 4px 4px 0 0; flex-shrink: 0;
+}
+.onboarding-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+
+.onboarding-body {
+  padding: 24px 22px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.ob-slide-in { animation: ob-slide .25s ease; }
+@keyframes ob-slide { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:none; } }
+
+.ob-icon-wrap { text-align: center; margin-bottom: 8px; }
+.ob-icon      { font-size: 48px; line-height: 1; }
+.ob-title     { font-size: 20px; font-weight: 800; color: var(--text); text-align: center; margin: 0 0 8px; }
+.ob-subtitle  { font-size: 14px; color: var(--text-muted); text-align: center; margin: 0 0 16px; line-height: 1.5; }
+
+.ob-row2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+/* Activity buttons */
+.ob-activity-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.ob-activity-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 10px; font-size: 12px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; color: var(--text); flex: 1; min-width: 56px;
+  transition: all .15s;
+}
+.ob-activity-btn:hover  { border-color: var(--primary); background: var(--primary-light); }
+.ob-activity-btn.selected {
+  border-color: var(--primary); background: var(--primary-light);
+  color: var(--primary); font-weight: 700;
+}
+
+/* Cutting-style grid */
+.ob-style-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+}
+.ob-style-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 8px; border-radius: 14px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.ob-style-btn:hover    { border-color: var(--primary); background: var(--primary-light); }
+.ob-style-btn.selected {
+  border-color: var(--primary); background: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.ob-style-emoji { font-size: 22px; }
+.ob-style-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.ob-style-desc  { font-size: 11px; color: var(--text-muted); }
+
+.ob-goal-display {
+  text-align: center; font-size: 15px; color: var(--text-muted);
+  background: var(--bg); border-radius: 10px; padding: 10px;
+  margin-bottom: 16px;
+}
+.ob-goal-display strong { color: var(--primary); font-size: 18px; }
+
+/* Ingredients preferences scroll */
+.ob-prefs-scroll {
+  max-height: 36vh; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 8px 10px; margin-bottom: 14px;
+}
+.ob-prefs-count {
+  text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); margin-bottom: 10px;
+  padding: 6px 12px; background: var(--bg); border-radius: 99px;
+  display: inline-block; width: 100%;
+}
+.ob-prefs-count.ok { color: var(--success); background: var(--success-light); }
+
+/* Nav row */
+.ob-nav-row {
+  display: flex; gap: 10px; margin-top: 8px;
+}
+.ob-nav-row .btn { flex: 1; }
+.ob-btn-back {
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); font-weight: 600; border-radius: 12px;
+  padding: 12px; font-size: 15px; cursor: pointer;
+}
+.ob-btn-next {
+  border-radius: 12px; padding: 12px; font-size: 15px;
+}
+.ob-btn-next.ob-disabled,
+.ob-btn-next:disabled { opacity: .4; cursor: not-allowed; }
+
+.ob-skip-btn {
+  display: block; width: 100%; text-align: center;
+  margin-top: 12px; padding: 8px;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 13px; cursor: pointer; text-decoration: underline;
+}
+
+/* ── Dashboard setup nudge card ─────────────────────────── */
+.setup-card {
+  background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+  border: 1.5px solid #c4b5fd;
+  border-radius: 16px; padding: 14px 16px; margin-bottom: 12px;
+}
+.setup-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.setup-card-title { font-size: 15px; font-weight: 800; color: #4c1d95; }
+.setup-card-sub   { font-size: 12px; color: #7c3aed; margin-top: 2px; }
+.setup-card-ob-btn {
+  background: #6366f1; color: #fff; border: none;
+  border-radius: 10px; padding: 7px 14px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+}
+.setup-checklist { display: flex; flex-direction: column; gap: 6px; }
+.setup-check-row {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.6); border-radius: 10px; padding: 8px 10px;
+}
+.setup-check-row.done { background: rgba(255,255,255,.35); }
+.setup-check-icon  { font-size: 16px; flex-shrink: 0; }
+.setup-check-label { flex: 1; font-size: 13px; font-weight: 600; color: #4c1d95; }
+.setup-check-row.done .setup-check-label { color: #7c3aed; opacity: .7; }
+.setup-check-action {
+  background: #6366f1; color: #fff; border: none;
+  border-radius: 8px; padding: 4px 10px; font-size: 12px;
+  font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+
+/* ================================================================
    UTILITY
    ================================================================ */
 .hidden  { display: none !important; }

@@ -1553,6 +1553,8 @@ const App = {
 
     this.renderStreaks();
     this.renderWellnessDash();
+    this._renderSetupCard();
+    this.checkOnboarding();
   },
 
   // ================================================================
@@ -1656,6 +1658,323 @@ const App = {
     Notif.cancel(task.id); if(task.notifEnabled) Notif.schedule(task);
     toast(this.editTaskId?'Tarea actualizada':'Tarea añadida ✓','success');
     this.closeTaskModal(); this.renderTasks();
+  },
+
+  // ================================================================
+  // ONBOARDING WALKTHROUGH
+  // ================================================================
+  _setupStatus() {
+    const s = DB.settings();
+    const prefs = DB.foodPrefs();
+    return {
+      name:    !!(s.name && s.name !== 'Usuario'),
+      profile: !!(s.height && s.age),
+      weight:  DB.weightLog().length > 0,
+      goal:    s.cuttingStyle !== 'custom',
+      prefs:   !!(prefs?.liked?.length >= 3),
+    };
+  },
+
+  checkOnboarding() {
+    if (!localStorage.getItem('lt_onboarding_seen') && !this._obShown) {
+      this._obShown = true;
+      setTimeout(() => this.startOnboarding(), 350);
+    }
+  },
+
+  startOnboarding() {
+    const s = DB.settings();
+    const prefs = DB.foodPrefs();
+    const lastW = DB.weightLog().slice(-1)[0];
+    this._obStep = 1;
+    this._obData = {
+      name:             s.name !== 'Usuario' ? s.name : '',
+      weight:           lastW ? lastW.kg : '',
+      height:           s.height || '',
+      age:              s.age || '',
+      gender:           s.gender || 'male',
+      activityLevel:    s.activityLevel || 'moderate',
+      cuttingStyle:     s.cuttingStyle !== 'custom' ? s.cuttingStyle : 'maintenance',
+      calorieGoal:      s.calorieGoal || 2000,
+      likedIngredients: prefs?.liked ? [...prefs.liked] : [],
+    };
+    this._renderObStep();
+    document.getElementById('modal-onboarding').classList.add('open');
+  },
+
+  _renderObStep() {
+    const TOTAL = 4;
+    const pct   = Math.round((this._obStep / TOTAL) * 100);
+    document.getElementById('ob-progress-bar').style.width = pct + '%';
+    const body = document.getElementById('ob-body');
+    body.classList.remove('ob-slide-in');
+    body.innerHTML = this._obStepHTML(this._obStep);
+    void body.offsetWidth; // reflow
+    body.classList.add('ob-slide-in');
+    this._bindObStep(this._obStep);
+  },
+
+  _obStepHTML(step) {
+    const d   = this._obData;
+    const esc2 = t => String(t).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    if (step === 1) {
+      return `
+        <div class="ob-icon-wrap"><span class="ob-icon">👋</span></div>
+        <h2 class="ob-title">¡Bienvenido a LifeTrack!</h2>
+        <p class="ob-subtitle">Tu asistente personal de salud y nutrición.<br>Configúrate en menos de 2 minutos.</p>
+        <div class="form-group" style="margin-top:20px">
+          <label class="form-label">¿Cómo te llamamos?</label>
+          <input class="form-input" id="ob-name" type="text" placeholder="Tu nombre"
+            maxlength="30" value="${esc2(d.name)}" autocomplete="given-name">
+        </div>
+        <button class="btn btn-primary ob-btn-next" id="ob-next">Comenzar →</button>
+        <button class="ob-skip-btn" id="ob-skip">Saltar configuración</button>`;
+    }
+
+    if (step === 2) {
+      const acts = [
+        { id:'sedentary',   label:'Sedentario', icon:'🪑' },
+        { id:'light',       label:'Ligero',     icon:'🚶' },
+        { id:'moderate',    label:'Moderado',   icon:'🏃' },
+        { id:'active',      label:'Activo',     icon:'⚡' },
+        { id:'very_active', label:'Intenso',    icon:'🔥' },
+      ];
+      return `
+        <div class="ob-icon-wrap"><span class="ob-icon">💪</span></div>
+        <h2 class="ob-title">Tu perfil físico</h2>
+        <p class="ob-subtitle">Calculamos tu TDEE real con estos datos.</p>
+        <div class="ob-row2">
+          <div class="form-group">
+            <label class="form-label">Peso (kg)</label>
+            <input class="form-input" id="ob-weight" type="number" placeholder="70" min="30" max="300" step="0.1" value="${esc2(d.weight)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Altura (cm)</label>
+            <input class="form-input" id="ob-height" type="number" placeholder="170" min="100" max="250" value="${esc2(d.height)}">
+          </div>
+        </div>
+        <div class="ob-row2">
+          <div class="form-group">
+            <label class="form-label">Edad</label>
+            <input class="form-input" id="ob-age" type="number" placeholder="25" min="10" max="120" value="${esc2(d.age)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Género</label>
+            <select class="form-input" id="ob-gender">
+              <option value="male"   ${d.gender==='male'  ?'selected':''}>Hombre</option>
+              <option value="female" ${d.gender==='female'?'selected':''}>Mujer</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nivel de actividad</label>
+          <div class="ob-activity-row">
+            ${acts.map(a=>`<button class="ob-activity-btn${d.activityLevel===a.id?' selected':''}" data-activity="${a.id}">
+              <span>${a.icon}</span><span>${a.label}</span>
+            </button>`).join('')}
+          </div>
+        </div>
+        <div class="ob-nav-row">
+          <button class="btn ob-btn-back" id="ob-back">← Atrás</button>
+          <button class="btn btn-primary ob-btn-next" id="ob-next">Siguiente →</button>
+        </div>`;
+    }
+
+    if (step === 3) {
+      const styles = CUTTING_STYLES.filter(c => c.id !== 'custom');
+      const tdee   = this._calcTDEE({ height:d.height, age:d.age, gender:d.gender, activityLevel:d.activityLevel });
+      const goal   = tdee ? (this._calcGoalFromStyle(tdee, d.cuttingStyle) || d.calorieGoal) : d.calorieGoal;
+      return `
+        <div class="ob-icon-wrap"><span class="ob-icon">🎯</span></div>
+        <h2 class="ob-title">¿Cuál es tu objetivo?</h2>
+        <p class="ob-subtitle">${tdee
+          ? `Tu TDEE estimado: <strong>${tdee} kcal/día</strong>`
+          : 'Elige tu meta calórica.'}</p>
+        <div class="ob-style-grid">
+          ${styles.map(c=>`<button class="ob-style-btn${d.cuttingStyle===c.id?' selected':''}" data-style="${c.id}">
+            <span class="ob-style-emoji">${c.emoji}</span>
+            <span class="ob-style-label">${c.label}</span>
+            <span class="ob-style-desc">${c.desc}</span>
+          </button>`).join('')}
+        </div>
+        <div class="ob-goal-display">Meta: <strong id="ob-goal-val">${goal}</strong> kcal/día</div>
+        <div class="ob-nav-row">
+          <button class="btn ob-btn-back" id="ob-back">← Atrás</button>
+          <button class="btn btn-primary ob-btn-next" id="ob-next">Siguiente →</button>
+        </div>`;
+    }
+
+    if (step === 4) {
+      const liked = new Set(d.likedIngredients);
+      const count = liked.size;
+      const CAT_EMOJI = { 'Proteínas':'🥩','Verduras':'🥦','Carbohidratos':'🍚','Grasas':'🥑','Lácteos':'🥛','Legumbres':'🫘' };
+      const cats = [...new Set(INGREDIENTS.map(i=>i.cat))];
+      return `
+        <div class="ob-icon-wrap"><span class="ob-icon">🥗</span></div>
+        <h2 class="ob-title">Ingredientes favoritos</h2>
+        <p class="ob-subtitle">Selecciona ≥ 3 para recibir recomendaciones de recetas.</p>
+        <div id="ob-prefs-count" class="ob-prefs-count${count>=3?' ok':''}">
+          ${count} seleccionados${count<3?' · (mínimo 3)':''}
+        </div>
+        <div class="ob-prefs-scroll">
+          ${cats.map(cat=>`
+            <div class="pref-cat-header">${CAT_EMOJI[cat]||''} ${cat}</div>
+            <div class="pref-chip-row">
+              ${INGREDIENTS.filter(i=>i.cat===cat).map(i=>
+                `<button class="pref-chip${liked.has(i.id)?' selected':''}" data-pref-id="${i.id}">${i.emoji} ${i.label}</button>`
+              ).join('')}
+            </div>`).join('')}
+        </div>
+        <div class="ob-nav-row">
+          <button class="btn ob-btn-back" id="ob-back">← Atrás</button>
+          <button class="btn btn-primary ob-btn-next${count<3?' ob-disabled':''}" id="ob-next" ${count<3?'disabled':''}>Finalizar ✓</button>
+        </div>`;
+    }
+    return '';
+  },
+
+  _bindObStep(step) {
+    const d = this._obData;
+    document.getElementById('ob-next')?.addEventListener('click',  () => this._obNext(step));
+    document.getElementById('ob-back')?.addEventListener('click',  () => this._obBack());
+    document.getElementById('ob-skip')?.addEventListener('click',  () => this._obFinish(true));
+
+    if (step === 2) {
+      document.querySelectorAll('.ob-activity-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ob-activity-btn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+          d.activityLevel = btn.dataset.activity;
+        });
+      });
+    }
+
+    if (step === 3) {
+      document.querySelectorAll('.ob-style-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ob-style-btn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+          d.cuttingStyle = btn.dataset.style;
+          const tdee = this._calcTDEE(d);
+          const goal = tdee ? (this._calcGoalFromStyle(tdee, d.cuttingStyle) || d.calorieGoal) : d.calorieGoal;
+          if (goal) { d.calorieGoal = goal; const el=document.getElementById('ob-goal-val'); if(el) el.textContent=goal; }
+        });
+      });
+    }
+
+    if (step === 4) {
+      document.querySelectorAll('#ob-body .pref-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('selected');
+          const id = btn.dataset.prefId;
+          if (btn.classList.contains('selected')) {
+            if (!d.likedIngredients.includes(id)) d.likedIngredients.push(id);
+          } else {
+            d.likedIngredients = d.likedIngredients.filter(x=>x!==id);
+          }
+          const count = d.likedIngredients.length;
+          const countEl = document.getElementById('ob-prefs-count');
+          if (countEl) {
+            countEl.textContent = `${count} seleccionados${count<3?' · (mínimo 3)':''}`;
+            countEl.classList.toggle('ok', count >= 3);
+          }
+          const nextBtn = document.getElementById('ob-next');
+          if (nextBtn) { nextBtn.disabled = count<3; nextBtn.classList.toggle('ob-disabled', count<3); }
+        });
+      });
+    }
+  },
+
+  _obNext(step) {
+    const d = this._obData;
+    if (step === 1) {
+      const name = document.getElementById('ob-name')?.value.trim();
+      if (!name) { toast('Ingresa tu nombre', 'error'); return; }
+      d.name = name;
+    }
+    if (step === 2) {
+      d.weight = parseFloat(document.getElementById('ob-weight')?.value) || null;
+      d.height = parseInt(document.getElementById('ob-height')?.value)   || null;
+      d.age    = parseInt(document.getElementById('ob-age')?.value)      || null;
+      d.gender = document.getElementById('ob-gender')?.value || 'male';
+      if (!d.height || !d.age) { toast('Completa la altura y edad', 'error'); return; }
+      // Recalculate goal when moving to step 3
+      const tdee = this._calcTDEE(d);
+      if (tdee) d.calorieGoal = this._calcGoalFromStyle(tdee, d.cuttingStyle) || d.calorieGoal;
+    }
+    if (step === 4) { this._obFinish(false); return; }
+    this._obStep++;
+    this._renderObStep();
+  },
+
+  _obBack() {
+    if (this._obStep > 1) { this._obStep--; this._renderObStep(); }
+  },
+
+  _obFinish(skipped) {
+    if (!skipped) {
+      const d   = this._obData;
+      const cur = DB.settings();
+      DB.saveSettings({
+        ...cur,
+        name:         d.name || cur.name,
+        height:       d.height || cur.height,
+        age:          d.age    || cur.age,
+        gender:       d.gender,
+        activityLevel:d.activityLevel,
+        cuttingStyle: d.cuttingStyle,
+        calorieGoal:  d.calorieGoal,
+      });
+      if (d.weight) DB.logWeight(d.weight);
+      if (d.likedIngredients.length >= 3) DB.saveFoodPrefs({ liked: d.likedIngredients });
+      this.updateHeaderUser({ name: d.name });
+      CloudSync.schedulePush?.();
+    }
+    localStorage.setItem('lt_onboarding_seen', '1');
+    document.getElementById('modal-onboarding').classList.remove('open');
+    this.renderView();
+    if (!skipped) toast('¡Perfil configurado! 🎉', 'success');
+  },
+
+  // ── Dashboard setup nudge card ────────────────────────────
+  _renderSetupCard() {
+    const el = document.getElementById('dash-setup-card');
+    if (!el) return;
+    const st = this._setupStatus();
+    const steps = [
+      { key:'profile', label:'Perfil físico',          done: st.profile, action: 'settings' },
+      { key:'goal',    label:'Objetivo calórico',       done: st.goal,    action: 'settings' },
+      { key:'prefs',   label:'Ingredientes favoritos',  done: st.prefs,   action: 'prefs'    },
+    ];
+    const doneCount = steps.filter(s=>s.done).length;
+    if (doneCount === steps.length) { el.style.display='none'; return; }
+    el.style.display = '';
+    el.innerHTML = `
+      <div class="setup-card">
+        <div class="setup-card-header">
+          <div>
+            <div class="setup-card-title">⚙️ Completa tu perfil</div>
+            <div class="setup-card-sub">${doneCount} de ${steps.length} pasos listos</div>
+          </div>
+          <button class="setup-card-ob-btn" id="btn-setup-ob">Completar →</button>
+        </div>
+        <div class="setup-checklist">
+          ${steps.map(s=>`
+            <div class="setup-check-row${s.done?' done':''}">
+              <span class="setup-check-icon">${s.done?'✅':'⭕'}</span>
+              <span class="setup-check-label">${s.label}</span>
+              ${!s.done?`<button class="setup-check-action" data-action="${s.action}">Ir →</button>`:''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    document.getElementById('btn-setup-ob')?.addEventListener('click', ()=>this.startOnboarding());
+    el.querySelectorAll('[data-action]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if (btn.dataset.action==='prefs') this.openIngredientPrefs();
+        else this.openSettings();
+      });
+    });
   },
 
   // ================================================================

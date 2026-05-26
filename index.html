@@ -77,6 +77,9 @@
         <span class="greeting-tag" id="dash-quote">Hoy te va ir bien 💪</span>
       </div>
 
+      <!-- Setup nudge card (hidden when complete) -->
+      <div id="dash-setup-card" style="display:none"></div>
+
       <!-- Rings -->
       <div class="stats-grid">
         <div class="stat-card">
@@ -994,6 +997,18 @@
       Selecciona al menos 3 ingredientes
     </div>
     <button class="btn btn-primary" id="btn-save-prefs" disabled style="width:100%">Guardar preferencias</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ONBOARDING WALKTHROUGH
+═══════════════════════════════════════════════════════ -->
+<div id="modal-onboarding" class="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Configuración inicial">
+  <div class="onboarding-card">
+    <div class="onboarding-progress-wrap">
+      <div class="onboarding-progress-bar" id="ob-progress-bar" style="width:0%"></div>
+    </div>
+    <div class="onboarding-body" id="ob-body"></div>
   </div>
 </div>
 
