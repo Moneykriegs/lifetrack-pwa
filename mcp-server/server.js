@@ -11,12 +11,33 @@
 
 import express      from 'express';
 import cors         from 'cors';
+import crypto       from 'crypto';
 import { McpServer }          from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import * as Data from './data.js';
 
 const PORT = 3746;
+
+// ── Auth ──────────────────────────────────────────────────────
+// Shared bearer token for the REST API. Set LIFETRACK_API_TOKEN to keep it
+// stable across restarts; otherwise a random one is generated and printed.
+const API_TOKEN = process.env.LIFETRACK_API_TOKEN || crypto.randomBytes(24).toString('hex');
+// Comma-separated allowlist of browser origins. Empty = reflect request origin
+// (still gated by the bearer token below).
+const ALLOWED_ORIGINS = (process.env.LIFETRACK_ALLOWED_ORIGINS || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+function requireAuth(req, res, next) {
+  const hdr   = req.get('authorization') || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : '';
+  const a = Buffer.from(token);
+  const b = Buffer.from(API_TOKEN);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ ok: false, error: 'unauthorized' });
+  }
+  next();
+}
 
 // ================================================================
 // MCP SERVER — tools Claude can call
@@ -350,10 +371,21 @@ mcp.tool(
 // REST API (HTTP on :3746 — for PWA sync over local WiFi)
 // ================================================================
 const app = express();
-app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+  origin:         ALLOWED_ORIGINS.length ? ALLOWED_ORIGINS : true,
+  methods:        ['GET', 'POST', 'PUT'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(express.json({ limit: '2mb' }));
 
+// Public health check (no token) — only leaks the version string.
 app.get('/api/status', (_req, res) => res.json({ ok: true, version: '1.0.0' }));
+
+// Everything below requires a valid bearer token.
+app.use('/api', requireAuth);
+
+// Accept only ISO dates as object keys (blocks __proto__ etc.)
+const safeDate = (d) => (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) ? d : Data.today();
 
 app.get('/api/data', (_req, res) => res.json(Data.getData()));
 
@@ -365,27 +397,27 @@ app.post('/api/sync', (req, res) => {
 
 app.post('/api/meal', (req, res) => {
   const { name, kcal, prot=0, carbs=0, fat=0, qty=100, date } = req.body;
-  const d = date || Data.today();
+  const d = safeDate(date);
   const data = Data.getData();
   if (!data.foodLog[d]) data.foodLog[d] = [];
-  data.foodLog[d].push({ id:`f_${Date.now()}`, name, qty, kcal, prot, carbs, fat });
+  data.foodLog[d].push({ id:`f_${Date.now()}`, name: String(name||'').slice(0,120), qty, kcal, prot, carbs, fat });
   Data.saveData(data);
   res.json({ ok: true });
 });
 
 app.post('/api/water', (req, res) => {
   const { ml, date } = req.body;
-  const d = date || Data.today();
+  const d = safeDate(date);
   const data = Data.getData();
   if (!data.waterLog[d]) data.waterLog[d] = 0;
-  data.waterLog[d] += ml;
+  data.waterLog[d] += Number(ml) || 0;
   Data.saveData(data);
   res.json({ ok: true, total_ml: data.waterLog[d] });
 });
 
 app.post('/api/weight', (req, res) => {
   const { kg, note, date } = req.body;
-  const d = date || Data.today();
+  const d = safeDate(date);
   const data = Data.getData();
   data.weightLog = data.weightLog.filter(w => w.date !== d);
   data.weightLog.push({ date: d, kg, note: note || null });
@@ -404,6 +436,12 @@ app.put('/api/settings', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.error(`\n🚀 LifeTrack REST API  →  http://localhost:${PORT}/api/status`);
   console.error(`📱 Android WiFi sync  →  http://<TU-IP-LOCAL>:${PORT}/api/sync`);
+  console.error(`🔑 API token          →  ${API_TOKEN}`);
+  if (!process.env.LIFETRACK_API_TOKEN) {
+    console.error(`   ⚠️  Token aleatorio (cambia en cada reinicio).`);
+    console.error(`   Para fijarlo:  LIFETRACK_API_TOKEN=<tu-token> node server.js`);
+  }
+  console.error(`   Pégalo en Ajustes → Servidor MCP → Token en la PWA.`);
   console.error(`🤖 MCP stdio activo   →  conectado a Claude Desktop / Code\n`);
 });
 

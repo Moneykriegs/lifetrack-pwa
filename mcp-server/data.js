@@ -54,10 +54,23 @@ export function saveData(data) {
   writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// Strip prototype-pollution vectors from untrusted client input.
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+function sanitize(value, depth = 0) {
+  if (depth > 8 || value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(v => sanitize(v, depth + 1));
+  const clean = Object.create(null);
+  for (const [k, v] of Object.entries(value)) {
+    if (FORBIDDEN_KEYS.has(k)) continue;
+    clean[k] = sanitize(v, depth + 1);
+  }
+  return clean;
+}
+
 // Bidirectional merge: PWA localStorage → server JSON
 export function mergeSync(serverData, clientData) {
-  const s = serverData;
-  const c = clientData;
+  const s = serverData || {};
+  const c = sanitize(clientData) || {};
 
   // Settings: merge, client wins for same keys (user may have changed on phone)
   const settings = { ...s.settings, ...c.settings };

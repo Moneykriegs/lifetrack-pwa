@@ -775,7 +775,7 @@ const DB = {
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
 
-  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120 }); },
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', mcpToken:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120 }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
   foodLog()       { return this._g('lt_food', {}); },
@@ -1240,10 +1240,27 @@ function toastUndo(msg, onUndo, type = 'info') {
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// Strip prototype-pollution vectors from data received over the network.
+const _FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+function sanitizeUntrusted(value, depth = 0) {
+  if (depth > 8 || value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(v => sanitizeUntrusted(v, depth + 1));
+  const clean = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (_FORBIDDEN_KEYS.has(k)) continue;
+    clean[k] = sanitizeUntrusted(v, depth + 1);
+  }
+  return clean;
+}
+
 // ================================================================
 // MCP SYNC
 // ================================================================
 const MCPSync = {
+  _authHeaders() {
+    const token = DB.settings().mcpToken;
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  },
   async push() {
     const url = DB.settings().mcpUrl;
     if (!url) return;
@@ -1256,7 +1273,8 @@ const MCPSync = {
         mealPlan: DB.mealPlan(), wellness: DB.wellness()
       };
       const res = await fetch(`${url}/api/sync`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST',
+        headers:{'Content-Type':'application/json', ...this._authHeaders()},
         body: JSON.stringify(payload), signal: AbortSignal.timeout(6000)
       });
       if (!res.ok) throw new Error(res.status);
@@ -1288,7 +1306,7 @@ const MCPSync = {
 // CLIENT-SIDE MERGE  (mirrors server data.js mergeSync)
 // ================================================================
 function mergeClientServer(server, client) {
-  const s = server || {}, c = client || {};
+  const s = server || {}, c = sanitizeUntrusted(client) || {};
 
   const settings = { ...s.settings, ...c.settings };
 
@@ -2201,6 +2219,7 @@ const App = {
     document.getElementById('setting-water-goal').value=s.waterGoal||2500;
     document.getElementById('setting-weight-goal').value=s.weightGoal||'';
     document.getElementById('setting-mcp-url').value=s.mcpUrl||'';
+    const mcpTokenEl=document.getElementById('setting-mcp-token'); if(mcpTokenEl) mcpTokenEl.value=s.mcpToken||'';
     document.getElementById('setting-cutting-style').value=s.cuttingStyle||'custom';
     // Measurements
     const _sv = (id, v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
@@ -2376,6 +2395,7 @@ const App = {
       waterGoal: parseInt(document.getElementById('setting-water-goal').value)||2500,
       weightGoal: parseFloat(document.getElementById('setting-weight-goal').value)||null,
       mcpUrl: document.getElementById('setting-mcp-url').value.trim().replace(/\/$/,''),
+      mcpToken: (document.getElementById('setting-mcp-token')?.value || '').trim(),
       cuttingStyle: style,
       // Body measurements
       neck: _f('setting-neck'), waist: _f('setting-waist'), hip: _f('setting-hip'),
@@ -4386,9 +4406,9 @@ const App = {
       const sugg = document.getElementById('food-photo-suggestions');
       if (!sugg) return;
 
-      const favHtml = favs.map(f => {
+      const favHtml = favs.map((f, idx) => {
         const entry = f.last;
-        return `<div class="photo-suggestion-item" data-type="food" data-idx="${JSON.stringify({...entry,qty:entry.qty||100})}">
+        return `<div class="photo-suggestion-item" data-type="food" data-fav-idx="${idx}">
           <span style="font-size:20px">🍽</span>
           <div>
             <div class="photo-suggestion-name">${esc(f.name)}${f.brand?` <span style="font-size:11px;color:var(--text-muted)">${esc(f.brand)}</span>`:''}</div>
@@ -4413,15 +4433,15 @@ const App = {
         item.addEventListener('click', () => {
           const type = item.dataset.type;
           if (type === 'food') {
-            try {
-              const entry = JSON.parse(item.dataset.idx);
-              const slot2 = this._currentMealSlot();
-              DB.addFood({...entry, slot: slot2, ts: new Date().toISOString()});
-              toast(`${entry.name} añadido ✓`, 'success');
-              CloudSync.schedulePush();
-              this.closeModal('modal-food-photo');
-              if (this.view==='food') this.renderFood();
-            } catch(e) { console.warn(e); }
+            const fav = favs[parseInt(item.dataset.favIdx)];
+            const entry = fav?.last;
+            if (!entry) return;
+            const slot2 = this._currentMealSlot();
+            DB.addFood({...entry, qty: entry.qty||100, slot: slot2, ts: new Date().toISOString()});
+            toast(`${entry.name} añadido ✓`, 'success');
+            CloudSync.schedulePush();
+            this.closeModal('modal-food-photo');
+            if (this.view==='food') this.renderFood();
           } else if (type === 'recipe') {
             this.closeModal('modal-food-photo');
             this.openRecipeDetail(item.dataset.id);
