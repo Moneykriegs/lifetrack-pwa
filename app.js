@@ -795,6 +795,7 @@ const DB = {
   saveWaterLog(v) { this._s('lt_water', v); },
   todayWater()    { const d=this._d(); return (this.waterLog())[d] || 0; },
   addWater(ml)    { const d=this._d(), l=this.waterLog(); l[d]=(l[d]||0)+ml; this.saveWaterLog(l); return l[d]; },
+  removeWater(ml) { const d=this._d(), l=this.waterLog(); l[d]=Math.max(0,(l[d]||0)-ml); this.saveWaterLog(l); return l[d]; },
 
   weightLog()     { return this._g('lt_weight', []); },
   saveWeightLog(v){ this._s('lt_weight', v); },
@@ -2769,7 +2770,11 @@ const App = {
 
     // Dashboard water quick buttons
     document.querySelectorAll('#dash-water-card .water-quick-btn').forEach(btn=>{
-      btn.onclick=()=>{ const ml=parseInt(btn.dataset.ml); DB.addWater(ml); toast(`+${ml}ml agua 💧`,'info'); this.renderDashboard(); };
+      btn.onclick=()=>{
+        const ml=parseInt(btn.dataset.ml); DB.addWater(ml);
+        toastUndo(`+${ml}ml agua 💧`, () => { DB.removeWater(ml); this.renderDashboard(); }, 'info');
+        this.renderDashboard();
+      };
     });
     document.getElementById('btn-dash-water-custom')?.addEventListener('click',()=>this.navigate('progress'));
 
@@ -4475,8 +4480,12 @@ const App = {
     document.querySelectorAll('#view-progress .water-quick-btn').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const ml=parseInt(btn.dataset.ml);
-        const total=DB.addWater(ml);
-        toast(`+${ml}ml 💧`,'info');
+        DB.addWater(ml);
+        toastUndo(`+${ml}ml 💧`, () => {
+          DB.removeWater(ml);
+          this.renderWater();
+          if(this.view==='dashboard') this.renderDashboard();
+        }, 'info');
         this.renderWater();
         if(this.view==='dashboard') this.renderDashboard();
       });
@@ -4485,15 +4494,19 @@ const App = {
       const wrap=document.getElementById('water-custom-wrap');
       wrap.style.display=wrap.style.display==='none'?'block':'none';
     });
-    document.getElementById('btn-water-add-custom').addEventListener('click',()=>{
-      const ml=parseInt(document.getElementById('water-custom-input').value)||0;
+    const applyCustomWater = (sign) => {
+      const inp = document.getElementById('water-custom-input');
+      const ml  = parseInt(inp.value) || 0;
       if(ml<10||ml>3000){toast('Cantidad inválida','error');return;}
-      DB.addWater(ml); toast(`+${ml}ml 💧`,'info');
-      document.getElementById('water-custom-input').value='';
+      if (sign < 0) { const total = DB.removeWater(ml); toast(`−${ml}ml 💧 (total ${total}ml)`,'info'); }
+      else          { DB.addWater(ml); toast(`+${ml}ml 💧`,'info'); }
+      inp.value='';
       document.getElementById('water-custom-wrap').style.display='none';
       this.renderWater();
       if(this.view==='dashboard') this.renderDashboard();
-    });
+    };
+    document.getElementById('btn-water-add-custom').addEventListener('click',()=>applyCustomWater(1));
+    document.getElementById('btn-water-remove-custom')?.addEventListener('click',()=>applyCustomWater(-1));
   },
 
   bindWeightModal() {

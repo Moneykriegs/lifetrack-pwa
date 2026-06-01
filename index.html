@@ -446,9 +446,10 @@
           <button class="water-custom-btn" id="btn-water-custom">✏️ Otro</button>
         </div>
         <div id="water-custom-wrap" style="display:none;margin-top:10px">
-          <div class="form-row">
+          <div class="form-row" style="gap:8px">
             <input type="number" class="form-input" id="water-custom-input" placeholder="ml" min="1" max="3000" style="flex:1">
-            <button class="btn btn-primary" id="btn-water-add-custom" style="flex:0;padding:12px 16px;font-size:14px">OK</button>
+            <button class="btn" id="btn-water-remove-custom" style="flex:0;padding:12px 14px;font-size:14px;background:var(--surface);color:var(--danger);border:1.5px solid var(--danger);box-shadow:none">− Quitar</button>
+            <button class="btn btn-primary" id="btn-water-add-custom" style="flex:0;padding:12px 14px;font-size:14px">+ Añadir</button>
           </div>
         </div>
       </div>
