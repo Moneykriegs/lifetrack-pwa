@@ -842,6 +842,8 @@ const DB = {
   // Supplements / medications
   supplements()            { return this._g('lt_supplements', []); },
   saveSupplements(v)       { this._s('lt_supplements', v); },
+  lifts()                  { return this._g('lt_lifts', {}); },
+  saveLifts(v)             { this._s('lt_lifts', v); },
   supplementLog()          { return this._g('lt_supplement_log', {}); },
   saveSupplementLog(v)     { this._s('lt_supplement_log', v); },
   todaySupplLog()          { return (this.supplementLog())[today()] || {}; },
@@ -1363,7 +1365,14 @@ function mergeClientServer(server, client) {
     if (!cur || (entry.ts && (!cur.ts || entry.ts > cur.ts))) wellness[d] = entry;
   });
 
-  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness };
+  // Lifts: per-exercise, keep the entry with the newer date.
+  const lifts = { ...s.lifts };
+  Object.entries(c.lifts || {}).forEach(([id, entry]) => {
+    const cur = lifts[id];
+    if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
+  });
+
+  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts };
 }
 
 // ================================================================
@@ -1428,7 +1437,7 @@ const CloudSync = {
       completions: DB.completions(), foodLog: DB.foodLog(),
       waterLog: DB.waterLog(), weightLog: DB.weightLog(),
       recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
-      mealPlan: DB.mealPlan(), wellness: DB.wellness()
+      mealPlan: DB.mealPlan(), wellness: DB.wellness(), lifts: DB.lifts()
     };
     const { error } = await this.sb
       .from('user_data')
@@ -1458,7 +1467,7 @@ const CloudSync = {
         completions: DB.completions(), foodLog: DB.foodLog(),
         waterLog: DB.waterLog(), weightLog: DB.weightLog(),
         recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
-        mealPlan: DB.mealPlan(), wellness: DB.wellness()
+        mealPlan: DB.mealPlan(), wellness: DB.wellness(), lifts: DB.lifts()
       };
       const merged = serverData ? mergeClientServer(serverData, localData) : localData;
       DB.saveSettings(merged.settings);
@@ -1471,6 +1480,7 @@ const CloudSync = {
       DB.saveExerciseLog(merged.exerciseLog);
       DB.saveMealPlan(merged.mealPlan);
       DB.saveWellness(merged.wellness);
+      if (merged.lifts) DB.saveLifts(merged.lifts);
       await this.push();
       return true;
     } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }
@@ -1898,6 +1908,72 @@ const Benchmark = {
 };
 
 // ================================================================
+// STRENGTH STANDARDS  (classic-lift ranking, bronze→diamond)
+// ----------------------------------------------------------------
+// Tier thresholds are bodyweight multiples per (lift, sex), approximating
+// widely-used strength standards (StrengthLevel / ExRx). Ratio = e1RM / BW.
+// Like Epic 2 this is a "ghost" benchmark vs population norms, not a
+// real-user leaderboard. Swap `mult` for authoritative tables freely.
+// ================================================================
+const LIFT_TIERS = [
+  { id:'bronze',   label:'Bronce',   color:'#cd7f32', emoji:'🥉' },
+  { id:'silver',   label:'Plata',    color:'#9ca3af', emoji:'🥈' },
+  { id:'gold',     label:'Oro',      color:'#f5b301', emoji:'🥇' },
+  { id:'platinum', label:'Platino',  color:'#22d3ee', emoji:'💎' },
+  { id:'diamond',  label:'Diamante', color:'#818cf8', emoji:'🔷' },
+];
+
+const LIFT_STANDARDS = {
+  lifts: [
+    { id:'squat',    label:'Sentadilla',   emoji:'🦵' },
+    { id:'bench',    label:'Press banca',  emoji:'🏋️' },
+    { id:'deadlift', label:'Peso muerto',  emoji:'🪨' },
+    { id:'ohp',      label:'Press militar',emoji:'💪' },
+  ],
+  // Bodyweight multiples per tier: [Bronce, Plata, Oro, Platino, Diamante]
+  mult: {
+    male: {
+      squat:[0.75,1.25,1.50,2.00,2.50], bench:[0.50,0.75,1.00,1.50,2.00],
+      deadlift:[1.00,1.50,2.00,2.50,3.00], ohp:[0.35,0.55,0.80,1.10,1.40],
+    },
+    female: {
+      squat:[0.50,0.75,1.10,1.50,2.00], bench:[0.25,0.40,0.60,0.90,1.20],
+      deadlift:[0.50,1.00,1.25,1.75,2.25], ohp:[0.20,0.35,0.50,0.75,1.00],
+    },
+  },
+};
+
+const Strength = {
+  // Epley estimated 1RM from a working set.
+  e1rm(kg, reps) {
+    const w = parseFloat(kg), r = parseInt(reps) || 1;
+    if (!w) return null;
+    return r > 1 ? Math.round(w * (1 + r / 30)) : Math.round(w);
+  },
+
+  // Returns { idx, ratio, thresholds } where idx is -1 (below Bronce) … 4 (Diamante).
+  rank(liftId, e1rm, bodyKg, sex) {
+    const m = LIFT_STANDARDS.mult[sex === 'female' ? 'female' : 'male']?.[liftId];
+    if (!m || !bodyKg || !e1rm) return null;
+    const ratio = e1rm / bodyKg;
+    let idx = -1;
+    for (let i = 0; i < m.length; i++) if (ratio >= m[i]) idx = i;
+    return { idx, ratio: +ratio.toFixed(2), thresholds: m };
+  },
+
+  tier(idx) { return idx >= 0 ? LIFT_TIERS[idx] : null; },
+
+  // Composite tier index across logged lifts (rounded average), or null.
+  overall(lifts, bodyKg, sex) {
+    const idxs = LIFT_STANDARDS.lifts
+      .map(l => this.rank(l.id, lifts[l.id]?.e1rm, bodyKg, sex)?.idx)
+      .filter(v => v != null && v >= 0);
+    if (!idxs.length) return null;
+    return Math.round(idxs.reduce((a, b) => a + b, 0) / idxs.length);
+  },
+};
+
+// ================================================================
 // APP
 // ================================================================
 const App = {
@@ -1966,6 +2042,7 @@ const App = {
     this.bindTaskModal();
     this.bindFoodModal();
     this.bindDiaryDate();
+    this.bindLiftModal();
     this.bindRecipeModal();
     this.bindWeightModal();
     this.bindWater();
@@ -4438,6 +4515,7 @@ const App = {
       exerciseLog: DB.exerciseLog(),
       wellness:    DB.wellness(),
       mealPlan:    DB.mealPlan(),
+      lifts:       DB.lifts(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
     const url  = URL.createObjectURL(blob);
@@ -4471,6 +4549,7 @@ const App = {
     this.renderWater();
     this.renderWeight();
     this.renderBenchmark();
+    this.renderStrength();
     this.renderCycle();
     this.renderSupplements();
     this.renderMicros();
@@ -4545,6 +4624,137 @@ const App = {
       <p style="font-size:10.5px;color:var(--text-muted);margin-top:8px;line-height:1.4">
         El percentil compara con la distribución poblacional (NHANES). El punto medio
         poblacional no es necesariamente saludable — la banda verde marca el rango recomendado.</p>`;
+  },
+
+  // ================================================================
+  // STRENGTH RANKING — classic lifts, bronze→diamond
+  // ================================================================
+  _liftPick: 'squat',
+
+  renderStrength() {
+    const body = document.getElementById('strength-body');
+    const sub  = document.getElementById('strength-sub');
+    if (!body) return;
+
+    const s       = DB.settings();
+    const sex     = s.gender === 'female' ? 'female' : 'male';
+    const weights = DB.weightLog();
+    const bodyKg  = weights.length ? weights[weights.length - 1].kg : null;
+    const lifts   = DB.lifts();
+
+    if (!bodyKg) {
+      sub.textContent = 'Falta tu peso';
+      body.innerHTML = `<p style="font-size:13px;color:var(--text-muted);padding:8px 0">
+        Registra tu <strong>peso</strong> para calcular tu ranking (se normaliza por peso corporal).</p>`;
+      return;
+    }
+    sub.textContent = `${sex === 'female' ? 'Mujeres' : 'Hombres'} · ${bodyKg} kg`;
+
+    const overallTier = Strength.tier(Strength.overall(lifts, bodyKg, sex));
+    const overallHtml = overallTier ? `
+      <div class="strength-overall">
+        <span class="strength-overall-emoji">${overallTier.emoji}</span>
+        <div>
+          <div style="font-size:12px;color:var(--text-muted)">Rango general</div>
+          <div style="font-size:18px;font-weight:800;color:${overallTier.color}">${overallTier.label}</div>
+        </div>
+      </div>` : '';
+
+    const rows = LIFT_STANDARDS.lifts.map(l => {
+      const entry = lifts[l.id];
+      const r     = entry ? Strength.rank(l.id, entry.e1rm, bodyKg, sex) : null;
+      const tier  = r ? Strength.tier(r.idx) : null;
+
+      let detail = 'Sin registro — toca + para añadir', barHtml = '', badge = '';
+      if (entry && r) {
+        const m       = r.thresholds;
+        const curBase = r.idx >= 0 ? m[r.idx] : 0;
+        const nextThr = r.idx < m.length - 1 ? m[r.idx + 1] : null;
+        const pct     = nextThr ? Math.min(100, Math.round((r.ratio - curBase) / (nextThr - curBase) * 100)) : 100;
+        const color   = tier?.color || 'var(--text-muted)';
+        detail = `${entry.e1rm} kg · ${r.ratio}× peso${entry.reps > 1 ? ' (1RM est.)' : ''}`;
+        barHtml = `<div class="tier-bar"><div style="width:${pct}%;background:${color}"></div></div>` +
+          (nextThr
+            ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Siguiente: ${LIFT_TIERS[r.idx + 1].label} a ${Math.round(nextThr * bodyKg)} kg</div>`
+            : `<div style="font-size:10px;color:${color};margin-top:2px">Rango máximo 🔝</div>`);
+        badge = tier
+          ? `<span class="tier-badge" style="color:${tier.color}">${tier.emoji} ${tier.label}</span>`
+          : `<span class="tier-badge" style="color:var(--text-muted)">Principiante</span>`;
+      }
+      return `
+        <div class="strength-row">
+          <span class="strength-row-emoji">${l.emoji}</span>
+          <div class="strength-row-main">
+            <div class="strength-row-name">${l.label}</div>
+            <div class="strength-row-detail">${detail}</div>
+            ${barHtml}
+          </div>
+          ${badge}
+        </div>`;
+    }).join('');
+
+    body.innerHTML = overallHtml + rows;
+  },
+
+  _updateLiftHint() {
+    const kg   = parseFloat(document.getElementById('lift-kg')?.value);
+    const reps = parseInt(document.getElementById('lift-reps')?.value) || 1;
+    const hint = document.getElementById('lift-e1rm-hint');
+    if (!hint) return;
+    hint.textContent = (kg && reps > 1) ? `1RM estimado: ${Strength.e1rm(kg, reps)} kg.` : '';
+  },
+
+  openLiftModal() {
+    const picker = document.getElementById('lift-picker');
+    const fill = () => {
+      const c = DB.lifts()[this._liftPick];
+      document.getElementById('lift-kg').value   = c?.kg   || '';
+      document.getElementById('lift-reps').value = c?.reps || 1;
+      this._updateLiftHint();
+    };
+    if (picker) {
+      picker.innerHTML = LIFT_STANDARDS.lifts.map(l =>
+        `<button class="lift-picker-btn${l.id === this._liftPick ? ' selected' : ''}" data-lift="${l.id}">${l.emoji} ${l.label}</button>`).join('');
+      picker.querySelectorAll('.lift-picker-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          this._liftPick = btn.dataset.lift;
+          picker.querySelectorAll('.lift-picker-btn').forEach(b => b.classList.toggle('selected', b === btn));
+          fill();
+        });
+      });
+    }
+    fill();
+    this.openModal('modal-lift');
+  },
+
+  saveLift() {
+    const kg   = parseFloat(document.getElementById('lift-kg').value);
+    const reps = parseInt(document.getElementById('lift-reps').value) || 1;
+    if (!kg || kg <= 0) { toast('Ingresa el peso levantado', 'error'); return; }
+    const e1rm  = Strength.e1rm(kg, reps);
+    const lifts = DB.lifts();
+    lifts[this._liftPick] = { kg, reps, e1rm, date: today() };
+    DB.saveLifts(lifts);
+    this.closeModal('modal-lift');
+
+    const meta    = LIFT_STANDARDS.lifts.find(l => l.id === this._liftPick);
+    const s       = DB.settings();
+    const weights = DB.weightLog();
+    const bodyKg  = weights.length ? weights[weights.length - 1].kg : null;
+    const r       = bodyKg ? Strength.rank(this._liftPick, e1rm, bodyKg, s.gender) : null;
+    const tier    = r ? Strength.tier(r.idx) : null;
+    toast(`${meta?.emoji || ''} ${meta?.label}: ${e1rm} kg${tier ? ` · ${tier.emoji} ${tier.label}` : ''}`, 'success');
+    if (this.view === 'progress') this.renderStrength();
+    CloudSync.schedulePush();
+  },
+
+  bindLiftModal() {
+    document.getElementById('btn-log-lift')?.addEventListener('click', () => this.openLiftModal());
+    document.getElementById('btn-close-lift')?.addEventListener('click', () => this.closeModal('modal-lift'));
+    document.getElementById('modal-lift')?.addEventListener('click', e => { if (e.target === e.currentTarget) this.closeModal('modal-lift'); });
+    document.getElementById('lift-kg')?.addEventListener('input', () => this._updateLiftHint());
+    document.getElementById('lift-reps')?.addEventListener('input', () => this._updateLiftHint());
+    document.getElementById('btn-save-lift')?.addEventListener('click', () => this.saveLift());
   },
 
   renderWater() {

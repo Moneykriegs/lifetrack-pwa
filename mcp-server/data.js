@@ -142,7 +142,14 @@ export function mergeSync(serverData, clientData) {
     if (!cur || (entry.ts && (!cur.ts || entry.ts > cur.ts))) wellness[date] = entry;
   });
 
-  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness };
+  // Lifts: per-exercise, keep the entry with the newer date
+  const lifts = { ...s.lifts };
+  Object.entries(c.lifts || {}).forEach(([id, entry]) => {
+    const cur = lifts[id];
+    if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
+  });
+
+  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts };
 }
 
 // Calculate estimated TDEE from profile

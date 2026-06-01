@@ -2179,3 +2179,40 @@ svg { display: block; flex-shrink: 0; }
 .diary-date-input {
   position: absolute; inset: 0; opacity: 0; pointer-events: none;
 }
+
+/* ── Strength ranking ─────────────────────────────────────────── */
+.strength-overall {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 12px; margin-bottom: 10px;
+  background: var(--primary-light);
+}
+.strength-overall-emoji { font-size: 26px; line-height: 1; }
+.strength-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+}
+.strength-row-emoji { font-size: 20px; flex-shrink: 0; width: 24px; text-align: center; }
+.strength-row-main  { flex: 1; min-width: 0; }
+.strength-row-name  { font-size: 14px; font-weight: 600; color: var(--text); }
+.strength-row-detail{ font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.tier-badge {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800;
+  border: 1.5px solid currentColor;
+}
+.tier-bar {
+  height: 5px; border-radius: 3px; background: var(--border);
+  margin-top: 6px; overflow: hidden;
+}
+.tier-bar > div { height: 100%; border-radius: 3px; transition: width .4s; }
+.lift-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.lift-picker-btn {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text);
+  font-size: 14px; font-weight: 600; cursor: pointer; text-align: left;
+}
+.lift-picker-btn.selected {
+  border-color: var(--primary); background: var(--primary-light);
+  color: var(--primary);
+}
