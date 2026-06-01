@@ -1803,6 +1803,11 @@ const BENCHMARK_LMS = {
   healthy: {
     bmi:          { all:    { min: 18.5, max: 24.9 } },              // WHO
     body_fat_pct: { male:   { min: 8,  max: 20 }, female: { min: 21, max: 33 } },
+    // FMI = fat mass / h²  (fat half of BMI). Normal-BMI ranges (Schutz 2002).
+    fmi:          { male:   { min: 2,  max: 5.5 }, female: { min: 4,  max: 8 } },
+    // FFMI = fat-free mass / h²  (muscle half of BMI). Higher is better up to a
+    // natural ceiling (~25 ♂ / ~22 ♀); band marks "good muscularity".
+    ffmi:         { male:   { min: 18, max: 25 }, female: { min: 15, max: 21 } },
   },
   bands: [ [18,29], [30,39], [40,49], [50,59], [60,69], [70,200] ],
   data: {
@@ -1828,6 +1833,28 @@ const BENCHMARK_LMS = {
         { L:1, M:37, S:0.18 }, { L:1, M:38, S:0.18 }, { L:1, M:38, S:0.18 },
       ],
     },
+    // Fat-Free Mass Index (muscle). Median ~19.3 ♂ / ~15.4 ♀, mild age decline.
+    ffmi: {
+      male: [
+        { L:1, M:19.2, S:0.11 }, { L:1, M:19.5, S:0.11 }, { L:1, M:19.5, S:0.11 },
+        { L:1, M:19.2, S:0.11 }, { L:1, M:18.8, S:0.11 }, { L:1, M:18.2, S:0.11 },
+      ],
+      female: [
+        { L:1, M:15.2, S:0.12 }, { L:1, M:15.5, S:0.12 }, { L:1, M:15.6, S:0.12 },
+        { L:1, M:15.5, S:0.12 }, { L:1, M:15.2, S:0.12 }, { L:1, M:14.8, S:0.12 },
+      ],
+    },
+    // Fat Mass Index (fat half of BMI). Right-skewed like BMI.
+    fmi: {
+      male: [
+        { L:-0.5, M:5.5, S:0.40 }, { L:-0.5, M:6.5, S:0.40 }, { L:-0.5, M:7.2, S:0.40 },
+        { L:-0.5, M:7.6, S:0.40 }, { L:-0.5, M:7.8, S:0.40 }, { L:-0.5, M:7.4, S:0.40 },
+      ],
+      female: [
+        { L:-0.4, M:8.5, S:0.38 }, { L:-0.4, M:9.5, S:0.38 }, { L:-0.4, M:10.5, S:0.38 },
+        { L:-0.4, M:11.5, S:0.38 }, { L:-0.4, M:12.0, S:0.38 }, { L:-0.4, M:11.5, S:0.38 },
+      ],
+    },
   },
 };
 
@@ -1836,6 +1863,28 @@ const Benchmark = {
     const h = parseFloat(heightCm) / 100, w = parseFloat(weightKg);
     if (!h || !w) return null;
     return +(w / (h * h)).toFixed(1);
+  },
+
+  // Fat-Free Mass Index (muscle half of BMI) = lean mass / height².
+  ffmi(weightKg, heightCm, bodyFatPct) {
+    const h = parseFloat(heightCm) / 100, w = parseFloat(weightKg), bf = parseFloat(bodyFatPct);
+    if (!h || !w || isNaN(bf)) return null;
+    return +((w * (1 - bf / 100)) / (h * h)).toFixed(1);
+  },
+
+  // Fat Mass Index (fat half of BMI) = fat mass / height².
+  fmi(weightKg, heightCm, bodyFatPct) {
+    const h = parseFloat(heightCm) / 100, w = parseFloat(weightKg), bf = parseFloat(bodyFatPct);
+    if (!h || !w || isNaN(bf)) return null;
+    return +((w * (bf / 100)) / (h * h)).toFixed(1);
+  },
+
+  // Relative Fat Mass (Woolcock 2018) — body-fat % from height/waist alone.
+  // R²=0.84 vs DXA (BMI only 0.36). height & waist in the same unit (cm).
+  rfm(heightCm, waistCm, sex) {
+    const h = parseFloat(heightCm), waist = parseFloat(waistCm);
+    if (!h || !waist) return null;
+    return +(64 - 20 * (h / waist) + 12 * (sex === 'female' ? 1 : 0)).toFixed(1);
   },
 
   _bandIndex(age) {
@@ -4568,18 +4617,44 @@ const App = {
     const kg      = weights.length ? weights[weights.length - 1].kg : null;
     const sex     = s.gender === 'female' ? 'female' : 'male';
 
-    // Build the metrics we can actually compute from the user's data.
-    const metrics = [];
     const bmi = Benchmark.bmi(kg, s.height);
-    if (bmi) metrics.push({ key:'bmi', label:'IMC', value:bmi, unit:'', fmt:v=>v.toFixed(1) });
-    const bf = this._calcBodyFat(s);
-    if (bf) metrics.push({ key:'body_fat_pct', label:'Grasa corporal', value:bf, unit:'%', fmt:v=>v+'%' });
+    const bf  = this._calcBodyFat(s);                       // Navy method (needs neck/waist)
+    const ffmi = Benchmark.ffmi(kg, s.height, bf);          // muscle half of BMI
+    const rfm  = Benchmark.rfm(s.height, s.waist, sex);     // body-fat % cross-check
+    const bfHealthy = Benchmark.healthyRange('body_fat_pct', sex);
+
+    // Build the metrics we can compute, splitting BMI into its fat & muscle parts.
+    const metrics = [];
+    if (bmi) {
+      // BMI ↔ body-composition discordance flag (the "adjustment" insight).
+      let note = null;
+      if (bf != null && bfHealthy) {
+        if (bmi >= 25 && bf <= bfHealthy.max)
+          note = { text:'⚠️ El IMC te sobreestima: tu masa magra es alta, no exceso de grasa.', color:'#10b981' };
+        else if (bmi < 25 && bf > bfHealthy.max)
+          note = { text:'⚠️ Peso normal pero grasa elevada (tipo «skinny-fat»): vigila tu composición.', color:'#f59e0b' };
+        else
+          note = { text:'✓ IMC y composición corporal concuerdan.', color:'var(--text-muted)' };
+      } else {
+        note = { text:'Añade medidas (cuello/cintura) en Ajustes para afinar con composición corporal.', color:'var(--text-muted)' };
+      }
+      metrics.push({ key:'bmi', label:'IMC', value:bmi, fmt:v=>v.toFixed(1), note });
+    }
+    if (bf != null) {
+      const note = rfm != null
+        ? { text:`Estimación cruzada (RFM por cintura/altura): ${rfm}%`, color:'var(--text-muted)' }
+        : null;
+      metrics.push({ key:'body_fat_pct', label:'Grasa corporal', value:bf, fmt:v=>v+'%', note });
+    }
+    if (ffmi != null) {
+      metrics.push({ key:'ffmi', label:'Músculo (FFMI)', value:ffmi, fmt:v=>v.toFixed(1), higherBetter:true });
+    }
 
     if (!metrics.length) {
       sub.textContent = 'Faltan datos';
       body.innerHTML = `<p style="font-size:13px;color:var(--text-muted);padding:8px 0">
         Añade tu <strong>altura</strong> y registra tu <strong>peso</strong> para ver tu percentil.
-        (La grasa corporal requiere medidas de cuello/cintura en Ajustes.)</p>`;
+        (Grasa y músculo requieren medidas de cuello/cintura en Ajustes.)</p>`;
       return;
     }
 
@@ -4589,15 +4664,18 @@ const App = {
     body.innerHTML = metrics.map(m => {
       const pct     = Benchmark.percentile(m.key, m.value, sex, s.age);
       const healthy = Benchmark.healthyRange(m.key, sex);
-      // Map the healthy band onto the population percentile axis (0–100).
       const hMinPct = healthy ? Benchmark.percentile(m.key, healthy.min, sex, s.age) : null;
       const hMaxPct = healthy ? Benchmark.percentile(m.key, healthy.max, sex, s.age) : null;
       const inHealthy = healthy && m.value >= healthy.min && m.value <= healthy.max;
-      const status = inHealthy
-        ? { text:'Dentro del rango saludable', color:'#10b981' }
-        : (healthy && m.value > healthy.max)
-          ? { text:'Por encima del rango saludable', color:'#f59e0b' }
-          : { text:'Por debajo del rango saludable', color:'#3b82f6' };
+
+      // For "higher is better" metrics (muscle), being above the band is good.
+      let status;
+      if (inHealthy)                          status = { text:'Dentro del rango saludable', color:'#10b981' };
+      else if (m.higherBetter)                status = (healthy && m.value > healthy.max)
+        ? { text:'Musculatura excelente', color:'#10b981' }
+        : { text:'Masa muscular baja — gana músculo', color:'#f59e0b' };
+      else if (healthy && m.value > healthy.max) status = { text:'Por encima del rango saludable', color:'#f59e0b' };
+      else                                    status = { text:'Por debajo del rango saludable', color:'#3b82f6' };
 
       const bandLeft  = Math.min(hMinPct ?? 0, hMaxPct ?? 100);
       const bandWidth = Math.abs((hMaxPct ?? 100) - (hMinPct ?? 0));
@@ -4608,22 +4686,20 @@ const App = {
             <span style="font-size:14px;font-weight:600;color:var(--text)">${m.label}: <strong>${m.fmt(m.value)}</strong></span>
             <span style="font-size:13px;font-weight:800;color:var(--primary)">Percentil ${pct}</span>
           </div>
-          <div style="font-size:11px;color:${status.color};font-weight:600;margin-bottom:8px">${status.text}</div>
-          <!-- Percentile track 0–100 with the healthy band shaded -->
+          <div style="font-size:11px;color:${status.color};font-weight:600;margin-bottom:6px">${status.text}</div>
           <div style="position:relative;height:10px;background:var(--border);border-radius:5px;margin:6px 0 4px">
             <div style="position:absolute;top:0;bottom:0;left:${bandLeft}%;width:${bandWidth}%;background:#10b98144;border-left:1px solid #10b981;border-right:1px solid #10b981"></div>
             <div style="position:absolute;top:50%;left:${pct}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--primary);border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
-            <span>P1</span>
-            <span style="color:#10b981">zona sana</span>
-            <span>P99</span>
+            <span>P1</span><span style="color:#10b981">zona sana</span><span>P99</span>
           </div>
+          ${m.note ? `<div style="font-size:10.5px;color:${m.note.color};margin-top:6px;line-height:1.35">${m.note.text}</div>` : ''}
         </div>`;
     }).join('') + `
       <p style="font-size:10.5px;color:var(--text-muted);margin-top:8px;line-height:1.4">
-        El percentil compara con la distribución poblacional (NHANES). El punto medio
-        poblacional no es necesariamente saludable — la banda verde marca el rango recomendado.</p>`;
+        El IMC se descompone en grasa (FMI) y músculo (FFMI): por eso un IMC alto puede ser
+        músculo, no grasa. Percentiles vs población (NHANES); la banda verde es el rango recomendado.</p>`;
   },
 
   // ================================================================
