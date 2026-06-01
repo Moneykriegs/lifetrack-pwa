@@ -1776,6 +1776,128 @@ function generateWeeklyInsights() {
 }
 
 // ================================================================
+// POPULATION BENCHMARKS  (LMS method — Cole & Green)
+// ----------------------------------------------------------------
+// Each distribution is described by 3 parameters per (metric, sex, age-band):
+//   L = Box-Cox power (skew), M = median, S = coefficient of variation.
+// From these, ANY percentile is analytic and O(1):
+//   z = ((X/M)^L − 1) / (L·S)   (L≠0)   |   z = ln(X/M)/S   (L=0)
+//   percentile = Φ(z)
+// Values are representative adult references derived from NHANES (US) BMI and
+// DXA body-fat data (Kelly 2009). Replace `data` with authoritative LMS tables
+// — or load from the Supabase `benchmark_distributions` table — without
+// touching the engine below. Age bands cover adults 18+.
+// ================================================================
+const BENCHMARK_LMS = {
+  // Healthy reference bands (not the population mean — the *recommended* range).
+  healthy: {
+    bmi:          { all:    { min: 18.5, max: 24.9 } },              // WHO
+    body_fat_pct: { male:   { min: 8,  max: 20 }, female: { min: 21, max: 33 } },
+  },
+  bands: [ [18,29], [30,39], [40,49], [50,59], [60,69], [70,200] ],
+  data: {
+    bmi: {
+      male: [
+        { L:-1.2, M:25.8, S:0.18 }, { L:-1.3, M:27.3, S:0.19 },
+        { L:-1.3, M:28.2, S:0.19 }, { L:-1.3, M:28.7, S:0.19 },
+        { L:-1.2, M:28.9, S:0.18 }, { L:-1.1, M:27.9, S:0.17 },
+      ],
+      female: [
+        { L:-1.1, M:25.4, S:0.23 }, { L:-1.2, M:27.0, S:0.24 },
+        { L:-1.2, M:28.1, S:0.24 }, { L:-1.2, M:29.0, S:0.24 },
+        { L:-1.1, M:29.3, S:0.23 }, { L:-1.0, M:28.4, S:0.22 },
+      ],
+    },
+    body_fat_pct: {
+      male: [
+        { L:1, M:20, S:0.30 }, { L:1, M:23, S:0.27 }, { L:1, M:25, S:0.25 },
+        { L:1, M:26, S:0.24 }, { L:1, M:27, S:0.23 }, { L:1, M:27, S:0.23 },
+      ],
+      female: [
+        { L:1, M:30, S:0.22 }, { L:1, M:32, S:0.21 }, { L:1, M:34, S:0.20 },
+        { L:1, M:37, S:0.18 }, { L:1, M:38, S:0.18 }, { L:1, M:38, S:0.18 },
+      ],
+    },
+  },
+};
+
+const Benchmark = {
+  bmi(weightKg, heightCm) {
+    const h = parseFloat(heightCm) / 100, w = parseFloat(weightKg);
+    if (!h || !w) return null;
+    return +(w / (h * h)).toFixed(1);
+  },
+
+  _bandIndex(age) {
+    const a = parseInt(age);
+    if (!a) return 1; // default to 30-39 when age unknown
+    const i = BENCHMARK_LMS.bands.findIndex(([lo, hi]) => a >= lo && a <= hi);
+    return i < 0 ? BENCHMARK_LMS.bands.length - 1 : i;
+  },
+
+  _lookup(metric, sex, age) {
+    const s = (sex === 'female') ? 'female' : 'male';
+    const table = BENCHMARK_LMS.data[metric]?.[s];
+    if (!table) return null;
+    return table[this._bandIndex(age)] || null;
+  },
+
+  // Standard normal CDF — Abramowitz & Stegun 7.1.26 (|error| < 7.5e-8).
+  _phi(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+    let p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 +
+            t * (-1.821255978 + t * 1.330274429))));
+    return z > 0 ? 1 - p : p;
+  },
+
+  // Inverse standard normal CDF (probit) — Acklam's rational approximation.
+  _probit(p) {
+    if (p <= 0) return -Infinity;
+    if (p >= 1) return Infinity;
+    const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+    const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+    const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+    const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+    const pl=0.02425, ph=1-pl; let q, r;
+    if (p < pl) { q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+    if (p > ph) { q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+    q=p-0.5; r=q*q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  },
+
+  _zScore(metric, value, sex, age) {
+    const p = this._lookup(metric, sex, age);
+    if (!p || !value) return null;
+    const { L, M, S } = p;
+    return Math.abs(L) < 1e-6 ? Math.log(value / M) / S : (Math.pow(value / M, L) - 1) / (L * S);
+  },
+
+  // Percentile (0–100) of `value` within the population distribution.
+  percentile(metric, value, sex, age) {
+    const z = this._zScore(metric, value, sex, age);
+    if (z == null || !isFinite(z)) return null;
+    return Math.min(99, Math.max(1, Math.round(this._phi(z) * 100)));
+  },
+
+  // Inverse: the metric value at percentile `p` (1–99) for this cohort.
+  valueAtPercentile(metric, p, sex, age) {
+    const lms = this._lookup(metric, sex, age);
+    if (!lms) return null;
+    const { L, M, S } = lms;
+    const z = this._probit(p / 100);
+    const v = Math.abs(L) < 1e-6 ? M * Math.exp(S * z) : M * Math.pow(1 + L * S * z, 1 / L);
+    return isFinite(v) ? +v.toFixed(1) : null;
+  },
+
+  healthyRange(metric, sex) {
+    const h = BENCHMARK_LMS.healthy[metric];
+    if (!h) return null;
+    return h.all || (sex === 'female' ? h.female : h.male);
+  },
+};
+
+// ================================================================
 // APP
 // ================================================================
 const App = {
@@ -4348,9 +4470,81 @@ const App = {
     this.renderExercise();
     this.renderWater();
     this.renderWeight();
+    this.renderBenchmark();
     this.renderCycle();
     this.renderSupplements();
     this.renderMicros();
+  },
+
+  // ================================================================
+  // POPULATION BENCHMARK — percentile vs healthy distribution
+  // ================================================================
+  renderBenchmark() {
+    const body = document.getElementById('benchmark-body');
+    const sub  = document.getElementById('benchmark-sub');
+    if (!body) return;
+
+    const s       = DB.settings();
+    const weights = DB.weightLog();
+    const kg      = weights.length ? weights[weights.length - 1].kg : null;
+    const sex     = s.gender === 'female' ? 'female' : 'male';
+
+    // Build the metrics we can actually compute from the user's data.
+    const metrics = [];
+    const bmi = Benchmark.bmi(kg, s.height);
+    if (bmi) metrics.push({ key:'bmi', label:'IMC', value:bmi, unit:'', fmt:v=>v.toFixed(1) });
+    const bf = this._calcBodyFat(s);
+    if (bf) metrics.push({ key:'body_fat_pct', label:'Grasa corporal', value:bf, unit:'%', fmt:v=>v+'%' });
+
+    if (!metrics.length) {
+      sub.textContent = 'Faltan datos';
+      body.innerHTML = `<p style="font-size:13px;color:var(--text-muted);padding:8px 0">
+        Añade tu <strong>altura</strong> y registra tu <strong>peso</strong> para ver tu percentil.
+        (La grasa corporal requiere medidas de cuello/cintura en Ajustes.)</p>`;
+      return;
+    }
+
+    const ageTxt = s.age ? `${s.age} años` : 'edad sin definir';
+    sub.textContent = `${sex === 'female' ? 'Mujeres' : 'Hombres'} · ${ageTxt}`;
+
+    body.innerHTML = metrics.map(m => {
+      const pct     = Benchmark.percentile(m.key, m.value, sex, s.age);
+      const healthy = Benchmark.healthyRange(m.key, sex);
+      // Map the healthy band onto the population percentile axis (0–100).
+      const hMinPct = healthy ? Benchmark.percentile(m.key, healthy.min, sex, s.age) : null;
+      const hMaxPct = healthy ? Benchmark.percentile(m.key, healthy.max, sex, s.age) : null;
+      const inHealthy = healthy && m.value >= healthy.min && m.value <= healthy.max;
+      const status = inHealthy
+        ? { text:'Dentro del rango saludable', color:'#10b981' }
+        : (healthy && m.value > healthy.max)
+          ? { text:'Por encima del rango saludable', color:'#f59e0b' }
+          : { text:'Por debajo del rango saludable', color:'#3b82f6' };
+
+      const bandLeft  = Math.min(hMinPct ?? 0, hMaxPct ?? 100);
+      const bandWidth = Math.abs((hMaxPct ?? 100) - (hMinPct ?? 0));
+
+      return `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+            <span style="font-size:14px;font-weight:600;color:var(--text)">${m.label}: <strong>${m.fmt(m.value)}</strong></span>
+            <span style="font-size:13px;font-weight:800;color:var(--primary)">Percentil ${pct}</span>
+          </div>
+          <div style="font-size:11px;color:${status.color};font-weight:600;margin-bottom:8px">${status.text}</div>
+          <!-- Percentile track 0–100 with the healthy band shaded -->
+          <div style="position:relative;height:10px;background:var(--border);border-radius:5px;margin:6px 0 4px">
+            <div style="position:absolute;top:0;bottom:0;left:${bandLeft}%;width:${bandWidth}%;background:#10b98144;border-left:1px solid #10b981;border-right:1px solid #10b981"></div>
+            <div style="position:absolute;top:50%;left:${pct}%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:var(--primary);border:2px solid var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+            <span>P1</span>
+            <span style="color:#10b981">zona sana</span>
+            <span>P99</span>
+          </div>
+        </div>`;
+    }).join('') + `
+      <p style="font-size:10.5px;color:var(--text-muted);margin-top:8px;line-height:1.4">
+        El percentil compara con la distribución poblacional (NHANES). El punto medio
+        poblacional no es necesariamente saludable — la banda verde marca el rango recomendado.</p>`;
   },
 
   renderWater() {
