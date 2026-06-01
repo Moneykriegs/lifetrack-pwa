@@ -778,16 +778,23 @@ const DB = {
   settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', mcpToken:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120 }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
+  // Active diary date for retro-logging. null = today. The Food view sets this
+  // to a past date so all food/water/completion writes land on the right day;
+  // App.navigate() resets it to null for every other view (always "today").
+  _logDate: null,
+  _d()            { return this._logDate || today(); },
+  setLogDate(d)   { this._logDate = (d && d !== today()) ? d : null; },
+
   foodLog()       { return this._g('lt_food', {}); },
   saveFoodLog(v)  { this._s('lt_food', v); },
-  todayFood()     { return (this.foodLog())[today()] || []; },
-  addFood(entry)  { const l=this.foodLog(); if(!l[today()])l[today()]=[]; l[today()].push(entry); this.saveFoodLog(l); },
-  removeFood(idx) { const l=this.foodLog(); if(l[today()]){l[today()].splice(idx,1); this.saveFoodLog(l);} },
+  todayFood()     { const d=this._d(); return (this.foodLog())[d] || []; },
+  addFood(entry)  { const d=this._d(), l=this.foodLog(); if(!l[d])l[d]=[]; l[d].push(entry); this.saveFoodLog(l); },
+  removeFood(idx) { const d=this._d(), l=this.foodLog(); if(l[d]){l[d].splice(idx,1); this.saveFoodLog(l);} },
 
   waterLog()      { return this._g('lt_water', {}); },
   saveWaterLog(v) { this._s('lt_water', v); },
-  todayWater()    { return (this.waterLog())[today()] || 0; },
-  addWater(ml)    { const l=this.waterLog(); l[today()]=(l[today()]||0)+ml; this.saveWaterLog(l); return l[today()]; },
+  todayWater()    { const d=this._d(); return (this.waterLog())[d] || 0; },
+  addWater(ml)    { const d=this._d(), l=this.waterLog(); l[d]=(l[d]||0)+ml; this.saveWaterLog(l); return l[d]; },
 
   weightLog()     { return this._g('lt_weight', []); },
   saveWeightLog(v){ this._s('lt_weight', v); },
@@ -799,10 +806,10 @@ const DB = {
 
   completions()   { return this._g('lt_done', {}); },
   saveCompletions(v){ this._s('lt_done', v); },
-  todayDone()     { return (this.completions())[today()] || {}; },
+  todayDone()     { const d=this._d(); return (this.completions())[d] || {}; },
   toggleDone(id)  {
-    const all=this.completions(); if(!all[today()])all[today()]={};
-    all[today()][id]=!all[today()][id]; this.saveCompletions(all); return all[today()][id];
+    const d=this._d(), all=this.completions(); if(!all[d])all[d]={};
+    all[d][id]=!all[d][id]; this.saveCompletions(all); return all[d][id];
   },
 
   recipes()          { return this._g('lt_recipes', []); },
@@ -1836,6 +1843,7 @@ const App = {
     this.bindSettings();
     this.bindTaskModal();
     this.bindFoodModal();
+    this.bindDiaryDate();
     this.bindRecipeModal();
     this.bindWeightModal();
     this.bindWater();
@@ -2038,6 +2046,8 @@ const App = {
     const valid = ['dashboard','tasks','food','progress','history'];
     if (!valid.includes(viewId)) viewId = 'dashboard';
     this.view = viewId;
+    // Retro-logging: the Food diary may target a past date; every other view is "today".
+    DB.setLogDate(viewId === 'food' ? this._foodDate : null);
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     document.getElementById(`view-${viewId}`)?.classList.add('active');
@@ -3298,11 +3308,65 @@ const App = {
   },
 
   renderFood() {
+    DB.setLogDate(this._foodDate || null);
+    this._renderDiaryDate();
     this.renderFoodLog();
     this.updateFoodBar();
     this.renderFavoriteFoods();
     if(this.recipesOpen) this.renderRecipes();
     this.updatePlanBadge();
+  },
+
+  // ── DIARY DATE NAVIGATOR (retro-logging) ──────────────────────
+  _foodDate: null,   // null = today; otherwise 'YYYY-MM-DD' in the past
+
+  _renderDiaryDate() {
+    const nav = document.getElementById('diary-date-nav');
+    if (!nav) return;
+    const cur     = this._foodDate || today();
+    const isToday = cur === today();
+    nav.classList.toggle('past', !isToday);
+
+    const label = document.getElementById('diary-date-label');
+    const input = document.getElementById('diary-date-input');
+    const next  = document.getElementById('diary-next');
+    if (input) { input.value = cur; input.max = today(); }
+    if (next)  next.disabled = isToday;
+    if (label) {
+      if (isToday) {
+        label.textContent = '📅 Hoy';
+      } else {
+        const d = new Date(cur + 'T12:00:00');
+        const y = new Date(); y.setDate(y.getDate() - 1);
+        label.textContent = (cur === fmtDate(y))
+          ? `✏️ Ayer · ${d.toLocaleDateString('es',{day:'numeric',month:'short'})}`
+          : `✏️ ${d.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})}`;
+      }
+    }
+  },
+
+  setFoodDate(d) {
+    const t = today();
+    if (!d || d > t) d = t;              // never log into the future
+    this._foodDate = (d === t) ? null : d;
+    DB.setLogDate(this._foodDate);
+    this.renderFood();
+  },
+
+  bindDiaryDate() {
+    const shift = (delta) => {
+      const base = new Date((this._foodDate || today()) + 'T12:00:00');
+      base.setDate(base.getDate() + delta);
+      this.setFoodDate(fmtDate(base));
+    };
+    document.getElementById('diary-prev')?.addEventListener('click', () => shift(-1));
+    document.getElementById('diary-next')?.addEventListener('click', () => shift(1));
+    const input = document.getElementById('diary-date-input');
+    document.getElementById('diary-date-label')?.addEventListener('click', () => {
+      if (input?.showPicker) { try { input.showPicker(); return; } catch(e){} }
+      input?.click();
+    });
+    input?.addEventListener('change', e => { if (e.target.value) this.setFoodDate(e.target.value); });
   },
 
   // ── FAVORITES / QUICK-ADD ────────────────────────────────
