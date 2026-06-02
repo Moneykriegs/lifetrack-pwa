@@ -2031,6 +2031,10 @@ const App = {
   searchTimer: null,
   editTaskId: null,
   pendingFood: null,
+  pendingFoodUnitSize: null,   // grams per 1 unit; null = gram mode
+  pendingFoodUnitMode: false,  // true when showing portion presets
+  foodQueue: [],               // items staged for bulk-add
+  commonFoodsOpen: false,
   pendingRecipe: null,
   editRecipeId: null,
   deferredInstall: null,
@@ -3509,16 +3513,42 @@ const App = {
       this.closeBarcodeScanner();
       setTimeout(() => this._promptManualBarcode(), 200);
     });
-    document.getElementById('btn-add-food').addEventListener('click',()=>this.addFood());
-    document.querySelectorAll('.qty-preset').forEach(btn=>btn.addEventListener('click',()=>{
-      document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('btn-add-food').addEventListener('click', () => this.addFood());
+    document.getElementById('btn-add-to-tray').addEventListener('click', () => this.addFoodFromModal());
+
+    // Gram presets
+    document.querySelectorAll('.qty-preset').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      document.getElementById('food-qty').value=btn.dataset.qty;
+      document.getElementById('food-qty').value = btn.dataset.qty;
       this.updateFoodPreview();
     }));
-    document.getElementById('food-qty').addEventListener('input',()=>{
-      document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
+    // Portion presets
+    document.querySelectorAll('.qty-preset-u').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.qty-preset-u').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('food-qty').value = btn.dataset.units;
       this.updateFoodPreview();
+    }));
+    document.getElementById('food-qty').addEventListener('input', () => {
+      document.querySelectorAll('.qty-preset, .qty-preset-u').forEach(b => b.classList.remove('selected'));
+      this.updateFoodPreview();
+    });
+    // Unit mode toggle buttons
+    document.getElementById('btn-unit-mode-portions')?.addEventListener('click', () => this._setUnitMode(true));
+    document.getElementById('btn-unit-mode-grams')?.addEventListener('click', () => this._setUnitMode(false));
+
+    // Common foods toggle
+    document.getElementById('btn-toggle-common-foods')?.addEventListener('click', () => {
+      this.commonFoodsOpen = !this.commonFoodsOpen;
+      this.renderCommonFoods();
+    });
+
+    // Food tray commit / clear
+    document.getElementById('btn-commit-tray')?.addEventListener('click', () => this.commitFoodQueue());
+    document.getElementById('btn-clear-tray')?.addEventListener('click', () => {
+      this.foodQueue = [];
+      this.renderFoodQueue();
     });
     // Recipes toggle
     document.getElementById('btn-toggle-recipes').addEventListener('click',()=>{
@@ -3566,6 +3596,8 @@ const App = {
     this.renderFoodLog();
     this.updateFoodBar();
     this.renderFavoriteFoods();
+    this.renderCommonFoods();
+    this.renderFoodQueue();
     if(this.recipesOpen) this.renderRecipes();
     this.updatePlanBadge();
   },
@@ -3706,6 +3738,99 @@ const App = {
     }, 50);
   },
 
+  // Convert a PREP_FOODS entry (macros per-portion) to a per-100g food object for the modal
+  _prepFoodToModal(pf) {
+    const f = 100 / pf.qty;
+    return {
+      name:  pf.name,
+      brand: 'Alimento común',
+      kcal:  +(pf.kcal  * f).toFixed(1),
+      prot:  +(pf.prot  * f).toFixed(1),
+      carbs: +(pf.carbs * f).toFixed(1),
+      fat:   +(pf.fat   * f).toFixed(1),
+      _unitSize: pf.qty, // grams per 1 portion
+    };
+  },
+
+  renderCommonFoods() {
+    const listEl = document.getElementById('common-foods-list');
+    const chev   = document.getElementById('common-foods-chevron');
+    if (!listEl) return;
+    listEl.style.display = this.commonFoodsOpen ? '' : 'none';
+    if (chev) chev.style.transform = this.commonFoodsOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+    if (!this.commonFoodsOpen) return;
+
+    const grouped = {};
+    PREP_FOODS.forEach(f => {
+      if (!grouped[f.cat]) grouped[f.cat] = [];
+      grouped[f.cat].push(f);
+    });
+
+    listEl.innerHTML = Object.entries(grouped).map(([cat, foods]) => `
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${esc(cat)}</div>
+        <div class="fav-row">
+          ${foods.map(f => `
+            <button class="fav-chip" data-common-food="${esc(f.id)}" title="${esc(f.name)}">
+              <span class="fav-name">${esc(f.name)}</span>
+              <span class="fav-kcal">${f.kcal} kcal</span>
+            </button>`).join('')}
+        </div>
+      </div>`).join('');
+
+    listEl.querySelectorAll('[data-common-food]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pf = PREP_FOODS.find(f => f.id === btn.dataset.commonFood);
+        if (!pf) return;
+        const item = this._prepFoodToModal(pf);
+        this.openFoodModal(item);
+      });
+    });
+  },
+
+  // ── Food queue (bandeja) ──────────────────────────────────────────
+  addFoodToQueue(entry) {
+    entry.id = `fq_${Date.now()}_${this.foodQueue.length}`;
+    this.foodQueue.push(entry);
+    this.renderFoodQueue();
+    toast(`${entry.name.split(' ').slice(0,3).join(' ')} → bandeja`, 'success');
+  },
+
+  renderFoodQueue() {
+    const tray = document.getElementById('food-tray');
+    if (!tray) return;
+    if (!this.foodQueue.length) { tray.style.display = 'none'; return; }
+    tray.style.display = '';
+    const totalKcal = this.foodQueue.reduce((s, e) => s + e.kcal, 0);
+    document.getElementById('food-tray-total').textContent = `${totalKcal} kcal`;
+    const itemsEl = document.getElementById('food-tray-items');
+    itemsEl.innerHTML = this.foodQueue.map((e, i) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500">
+        ${esc(e.name.split(' ').slice(0,2).join(' '))}
+        <span style="color:var(--text-muted);font-size:11px">${e.kcal}kcal</span>
+        <button data-tray-remove="${i}" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:0 0 0 2px;line-height:1">✕</button>
+      </span>`).join('');
+    itemsEl.querySelectorAll('[data-tray-remove]').forEach(btn => {
+      btn.addEventListener('click', () => this.removeFromQueue(+btn.dataset.trayRemove));
+    });
+  },
+
+  removeFromQueue(idx) {
+    this.foodQueue.splice(idx, 1);
+    this.renderFoodQueue();
+  },
+
+  commitFoodQueue() {
+    if (!this.foodQueue.length) return;
+    const n = this.foodQueue.length;
+    this.foodQueue.forEach(e => DB.addFood(e));
+    this.foodQueue = [];
+    this.renderFoodQueue();
+    toast(`${n} alimento${n>1?'s':''} añadido${n>1?'s':''} ✓`, 'success');
+    this.renderFoodLog(); this.updateFoodBar();
+    if (this.view === 'dashboard') this.renderDashboard();
+  },
+
   async searchFood(q) {
     const spinner=document.getElementById('search-spinner');
     const results=document.getElementById('food-results');
@@ -3832,37 +3957,92 @@ const App = {
   },
 
   openFoodModal(food) {
-    this.pendingFood=food;
-    document.getElementById('food-modal-name').textContent=food.name;
-    document.getElementById('food-modal-brand').textContent=food.brand||'';
-    document.getElementById('food-modal-per100').textContent=`${food.kcal} kcal · P:${food.prot}g · C:${food.carbs}g · G:${food.fat}g por 100g`;
-    document.getElementById('food-qty').value='100';
-    document.querySelectorAll('.qty-preset').forEach(b=>b.classList.remove('selected'));
-    document.querySelector('.qty-preset[data-qty="100"]')?.classList.add('selected');
+    this.pendingFood = food;
+    const unitSize = food._unitSize || null;
+    this.pendingFoodUnitSize = unitSize;
+    this.pendingFoodUnitMode = !!unitSize;
+
+    document.getElementById('food-modal-name').textContent = food.name;
+    document.getElementById('food-modal-brand').textContent = food.brand || '';
+    document.getElementById('food-modal-per100').textContent =
+      `${food.kcal} kcal · P:${food.prot}g · C:${food.carbs}g · G:${food.fat}g por 100g`;
+
+    const toggleRow = document.getElementById('food-unit-toggle-row');
+    if (unitSize) {
+      toggleRow.style.display = 'flex';
+      document.getElementById('food-unit-label').textContent = `1 porción = ${unitSize}g`;
+      this._setUnitMode(true);
+    } else {
+      toggleRow.style.display = 'none';
+      this._setUnitMode(false);
+    }
+
     this.updateFoodPreview();
     this.openModal('modal-food-detail');
   },
 
-  closeFoodModal() { this.closeModal('modal-food-detail'); this.pendingFood=null; },
+  _setUnitMode(portions) {
+    this.pendingFoodUnitMode = portions;
+    document.getElementById('qty-presets-grams').style.display = portions ? 'none' : '';
+    document.getElementById('qty-presets-portions').style.display = portions ? '' : 'none';
+    document.getElementById('food-qty-label').textContent = portions ? 'Porciones' : 'Cantidad en gramos';
+    document.getElementById('food-qty').step = portions ? '0.5' : '1';
+    document.getElementById('food-qty').min  = portions ? '0.5' : '1';
+
+    const btnPortions = document.getElementById('btn-unit-mode-portions');
+    const btnGrams    = document.getElementById('btn-unit-mode-grams');
+    if (portions) {
+      btnPortions.style.cssText += ';background:var(--primary);color:#fff;border-color:var(--primary)';
+      btnGrams.style.cssText    += ';background:none;color:var(--text-muted);border-color:var(--border)';
+      document.getElementById('food-qty').value = '1';
+      document.querySelectorAll('.qty-preset-u').forEach(b => b.classList.toggle('selected', b.dataset.units === '1'));
+    } else {
+      btnGrams.style.cssText    += ';background:var(--primary);color:#fff;border-color:var(--primary)';
+      btnPortions.style.cssText += ';background:none;color:var(--text-muted);border-color:var(--border)';
+      document.getElementById('food-qty').value = '100';
+      document.querySelectorAll('.qty-preset').forEach(b => b.classList.toggle('selected', b.dataset.qty === '100'));
+    }
+    this.updateFoodPreview();
+  },
+
+  _resolveGrams() {
+    const raw = parseFloat(document.getElementById('food-qty').value) || (this.pendingFoodUnitMode ? 1 : 100);
+    return this.pendingFoodUnitMode && this.pendingFoodUnitSize
+      ? raw * this.pendingFoodUnitSize
+      : raw;
+  },
+
+  closeFoodModal() { this.closeModal('modal-food-detail'); this.pendingFood = null; },
 
   updateFoodPreview() {
-    const food=this.pendingFood; if(!food) return;
-    const qty=parseFloat(document.getElementById('food-qty').value)||100;
-    const e=FoodAPI.scale(food,qty);
-    document.getElementById('food-modal-preview').textContent=
+    const food = this.pendingFood; if (!food) return;
+    const grams = this._resolveGrams();
+    const e = FoodAPI.scale(food, grams);
+    document.getElementById('food-modal-preview').textContent =
       `${e.kcal} kcal · Prot:${e.prot}g · Carbs:${e.carbs}g · Grasa:${e.fat}g`;
   },
 
+  _buildFoodEntry() {
+    const food = this.pendingFood; if (!food) return null;
+    const grams = this._resolveGrams();
+    const entry = FoodAPI.scale(food, grams);
+    entry.id = `f_${Date.now()}`;
+    return entry;
+  },
+
   addFood() {
-    const food=this.pendingFood; if(!food) return;
-    const qty=parseFloat(document.getElementById('food-qty').value)||100;
-    const entry=FoodAPI.scale(food,qty);
-    entry.id=`f_${Date.now()}`;
+    const entry = this._buildFoodEntry(); if (!entry) return;
     DB.addFood(entry);
-    toast(`${food.name.split(' ').slice(0,3).join(' ')} añadido ✓`,'success');
+    toast(`${entry.name.split(' ').slice(0,3).join(' ')} añadido ✓`, 'success');
     this.closeFoodModal();
     this.renderFoodLog(); this.updateFoodBar();
-    if(this.view==='dashboard') this.renderDashboard();
+    if (this.view === 'dashboard') this.renderDashboard();
+  },
+
+  addFoodFromModal() {
+    const entry = this._buildFoodEntry(); if (!entry) return;
+    this.addFoodToQueue(entry);
+    this.closeFoodModal();
   },
 
   updateFoodBar() {

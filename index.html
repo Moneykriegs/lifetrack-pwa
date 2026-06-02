@@ -339,10 +339,32 @@
         <div id="recipe-list"></div>
       </div>
 
+      <!-- Alimentos comunes (PREP_FOODS quick-add) -->
+      <div id="common-foods-section" style="margin-bottom:10px">
+        <button id="btn-toggle-common-foods" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:0;width:100%;margin-bottom:6px">
+          <svg id="common-foods-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:.2s;transform:rotate(-90deg)"><polyline points="6 9 12 15 18 9"/></svg>
+          🥗 Alimentos comunes
+        </button>
+        <div id="common-foods-list" style="display:none"></div>
+      </div>
+
       <!-- Favoritos / quick-add (sólo si hay historial) -->
       <div id="food-favorites" style="display:none;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:5px">⭐ Tus favoritos</div>
         <div id="food-favorites-list" class="fav-row"></div>
+      </div>
+
+      <!-- Bandeja multi-alimento -->
+      <div id="food-tray" style="display:none;position:sticky;bottom:72px;z-index:50;background:var(--card);border:1.5px solid var(--primary);border-radius:14px;padding:10px 14px;margin-bottom:10px;box-shadow:0 4px 20px rgba(99,102,241,.18)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:700;color:var(--text)">🛒 Bandeja</span>
+          <span id="food-tray-total" style="font-size:13px;font-weight:700;color:var(--primary)">0 kcal</span>
+        </div>
+        <div id="food-tray-items" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-commit-tray" class="btn btn-primary" style="flex:1;padding:9px">Añadir todo al registro</button>
+          <button id="btn-clear-tray" class="btn btn-secondary" style="padding:9px 14px">✕</button>
+        </div>
       </div>
 
       <!-- Food search + barcode scanner + photo -->
@@ -710,21 +732,37 @@
     <div class="modal-body">
       <p id="food-modal-brand" style="font-size:13px;color:var(--text-muted);margin-bottom:4px"></p>
       <p id="food-modal-per100" style="font-size:12px;color:var(--text-muted);margin-bottom:16px;padding:8px 10px;background:var(--bg);border-radius:8px"></p>
+      <!-- Unit mode toggle (shown only for common foods) -->
+      <div id="food-unit-toggle-row" style="display:none;margin-bottom:12px;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--text-muted)">Modo:</span>
+        <button id="btn-unit-mode-portions" class="unit-mode-btn unit-mode-active" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;cursor:pointer;font-weight:600">Porciones</button>
+        <button id="btn-unit-mode-grams" class="unit-mode-btn" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:none;color:var(--text-muted);cursor:pointer">Gramos</button>
+        <span id="food-unit-label" style="font-size:11px;color:var(--text-muted);margin-left:auto"></span>
+      </div>
       <div class="form-group">
-        <label class="form-label">Cantidad en gramos</label>
-        <div class="qty-presets">
+        <label class="form-label" id="food-qty-label">Cantidad en gramos</label>
+        <div class="qty-presets" id="qty-presets-grams">
           <button class="qty-preset" data-qty="50">50g</button>
           <button class="qty-preset selected" data-qty="100">100g</button>
           <button class="qty-preset" data-qty="150">150g</button>
           <button class="qty-preset" data-qty="200">200g</button>
         </div>
-        <input class="form-input" type="number" id="food-qty" value="100" min="1" max="2000">
+        <div class="qty-presets" id="qty-presets-portions" style="display:none">
+          <button class="qty-preset-u" data-units="0.5">½ porc.</button>
+          <button class="qty-preset-u selected" data-units="1">1 porc.</button>
+          <button class="qty-preset-u" data-units="1.5">1½ porc.</button>
+          <button class="qty-preset-u" data-units="2">2 porc.</button>
+        </div>
+        <input class="form-input" type="number" id="food-qty" value="100" min="0.5" max="2000" step="0.5">
       </div>
       <div style="background:var(--primary-light);border-radius:10px;padding:12px 14px;margin-bottom:16px">
         <p style="font-size:12px;color:var(--primary);font-weight:500;margin-bottom:2px">Total esta porción:</p>
         <p id="food-modal-preview" style="font-size:15px;font-weight:700;color:var(--primary)">100 kcal</p>
       </div>
-      <button class="btn btn-primary" id="btn-add-food">Añadir al registro</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="btn-add-food" style="flex:1">Añadir al registro</button>
+        <button class="btn btn-secondary" id="btn-add-to-tray" title="Añadir a la bandeja y seguir agregando" style="padding:0 14px;font-size:18px">🛒</button>
+      </div>
     </div>
   </div>
 </div>

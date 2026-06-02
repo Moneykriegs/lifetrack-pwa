@@ -657,6 +657,12 @@ svg { display: block; flex-shrink: 0; }
   transition: all var(--transition);
 }
 .qty-preset.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.qty-preset-u {
+  padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+  font-size: 13px; font-weight: 500; color: var(--text-sub);
+  transition: all var(--transition);
+}
+.qty-preset-u.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
 
 /* ================================================================
    NOTIFICATIONS BADGE
