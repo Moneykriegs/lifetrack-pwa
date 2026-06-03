@@ -2327,7 +2327,27 @@ const App = {
   },
 
   registerSW() {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // When a new SW version is found, activate it immediately
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version ready — skip waiting and reload to get fresh files
+            newSW.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+      // When the controller changes (new SW took over), reload once
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; location.reload(); }
+      });
+      // Check for update on every page load
+      reg.update().catch(() => {});
+    }).catch(() => {});
   },
 
   bindNav() {
