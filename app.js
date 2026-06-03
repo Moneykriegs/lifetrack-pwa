@@ -1442,7 +1442,11 @@ const CloudSync = {
     }
 
     const { createClient } = window.supabase;
-    this.sb = createClient(cfg.url, cfg.anonKey);
+    // Use implicit flow so OAuth works correctly in PWA/mobile contexts where
+    // the redirect comes back in a different browser context (no shared sessionStorage)
+    this.sb = createClient(cfg.url, cfg.anonKey, {
+      auth: { flowType: 'implicit' }
+    });
     return 'online';
   },
 
