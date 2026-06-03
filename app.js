@@ -2217,6 +2217,9 @@ const App = {
       const session = await CloudSync.getSession();
       if (session) {
         await this.onCloudSignIn(session);
+      } else if (localStorage.getItem('lt_skip_auth')) {
+        // User previously chose to use the app without an account — respect that
+        this.navigate(location.hash.replace('#', '') || 'dashboard');
       } else {
         this.showLoginScreen();
       }
@@ -2241,6 +2244,7 @@ const App = {
       catch { toast('Error al conectar con Google', 'error'); }
     });
     document.getElementById('btn-skip-auth').addEventListener('click', () => {
+      localStorage.setItem('lt_skip_auth', '1');
       this.hideLoginScreen();
       this.navigate(location.hash.replace('#', '') || 'dashboard');
     });
@@ -2299,6 +2303,7 @@ const App = {
   },
 
   onCloudSignOut() {
+    localStorage.removeItem('lt_skip_auth'); // reset so login screen shows after explicit sign-out
     this.updateHeaderUser(null);
     document.getElementById('settings-account-section').style.display = 'none';
     document.getElementById('btn-sync').style.display = 'none';
