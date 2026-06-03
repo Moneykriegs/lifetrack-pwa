@@ -303,16 +303,23 @@
         </div>
       </div>
 
-      <!-- Plan semanal + Meal Prep -->
-      <div style="padding:0 4px 6px;display:flex;gap:8px">
-        <button class="plan-open-btn" id="btn-open-plan" style="flex:1">
+      <!-- Plan semanal + Meal Prep + Despensa -->
+      <div style="padding:0 4px 6px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="plan-open-btn" id="btn-open-plan" style="flex:1;min-width:100px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Plan semanal
           <span id="plan-tomorrow-badge" style="display:none;margin-left:4px;background:var(--primary);color:white;border-radius:20px;padding:1px 7px;font-size:11px"></span>
         </button>
-        <button class="plan-open-btn prep-open-btn" id="btn-open-prep" style="flex:1">
+        <button class="plan-open-btn prep-open-btn" id="btn-open-prep" style="flex:1;min-width:100px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
           Meal Prep
+        </button>
+        <button class="plan-open-btn pantry-open-btn" id="btn-open-pantry" style="flex:1;min-width:100px;position:relative">
+          🧺 Despensa
+          <span id="pantry-count-badge" style="display:none;margin-left:4px;background:var(--success);color:white;border-radius:20px;padding:1px 7px;font-size:11px"></span>
+        </button>
+        <button class="plan-open-btn cheat-meal-btn" id="btn-toggle-cheat-meal" title="Activar modo cheat meal" style="flex:1;min-width:100px">
+          🍕 Cheat meal
         </button>
       </div>
 
@@ -1009,6 +1016,20 @@
         <p style="font-size:11px;color:var(--text-muted);margin:-2px 0 0">Sólo nos notifica si vas por debajo del ritmo esperado.</p>
       </div>
 
+      <!-- Meal reminder -->
+      <div class="settings-section-title" style="margin-top:8px">🍽️ Recordatorio de almuerzo</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Notificación diaria de almuerzo</span>
+        <label class="toggle"><input type="checkbox" id="setting-meal-reminder-enabled"><span class="toggle-track"></span></label>
+      </div>
+      <div id="meal-reminder-config" style="display:none;margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Hora del recordatorio</label>
+          <input class="form-input" type="time" id="setting-meal-reminder-time" value="13:00">
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin:-2px 0 0">Recibirás 3 sugerencias de almuerzo basadas en tu despensa y preferencias.</p>
+      </div>
+
       <!-- Dark mode -->
       <div class="toggle-row" style="margin-bottom:14px">
         <span class="toggle-label">🌙 Modo oscuro</span>
@@ -1513,6 +1534,109 @@
         Con más de 1 rep estimamos tu 1RM (fórmula de Epley). <span id="lift-e1rm-hint"></span>
       </p>
       <button class="btn btn-primary" id="btn-save-lift">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: DESPENSA
+═══════════════════════════════════════════════════════════ -->
+<div id="modal-pantry" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pantry-modal-title">
+  <div class="modal-sheet" style="max-height:90vh">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 class="modal-title" id="pantry-modal-title">🧺 Mi Despensa</h2>
+      <button class="btn-close" id="btn-close-pantry" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Añade los ingredientes que tienes disponibles. Las recomendaciones de comidas priorizarán recetas que puedas preparar ahora.</p>
+
+      <!-- Add item form -->
+      <div class="pantry-add-form">
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Ingrediente / producto</label>
+            <input class="form-input" type="text" id="pantry-item-name" placeholder="ej: Pechuga de pollo" autocomplete="off" maxlength="60">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Cantidad</label>
+            <input class="form-input" type="number" id="pantry-item-qty" value="1" min="0" step="0.1" inputmode="decimal">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Unidad</label>
+            <select class="form-input" id="pantry-item-unit">
+              <option value="ud.">ud.</option>
+              <option value="g">g</option>
+              <option value="kg">kg</option>
+              <option value="ml">ml</option>
+              <option value="L">L</option>
+              <option value="taza">taza</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label class="form-label">Vincular a ingrediente (para mejores recomendaciones)</label>
+          <select class="form-input" id="pantry-item-ingredient">
+            <option value="">— Sin vincular —</option>
+            <optgroup label="Proteínas">
+              <option value="chicken">🍗 Pollo</option>
+              <option value="beef">🥩 Carne de res</option>
+              <option value="pork">🥓 Cerdo</option>
+              <option value="salmon">🐟 Salmón</option>
+              <option value="tuna">🐠 Atún</option>
+              <option value="shrimp">🦐 Camarón</option>
+              <option value="turkey">🦃 Pavo</option>
+              <option value="eggs">🥚 Huevos</option>
+              <option value="tofu">🟨 Tofu</option>
+            </optgroup>
+            <optgroup label="Verduras">
+              <option value="broccoli">🥦 Brócoli</option>
+              <option value="spinach">🌿 Espinaca</option>
+              <option value="tomato">🍅 Tomate</option>
+              <option value="onion">🧅 Cebolla</option>
+              <option value="garlic">🧄 Ajo</option>
+              <option value="peppers">🫑 Pimientos</option>
+              <option value="zucchini">🥒 Calabacita</option>
+              <option value="mushrooms">🍄 Champiñones</option>
+              <option value="carrot">🥕 Zanahoria</option>
+              <option value="lettuce">🥬 Lechuga</option>
+            </optgroup>
+            <optgroup label="Carbohidratos">
+              <option value="rice">🍚 Arroz</option>
+              <option value="pasta">🍝 Pasta</option>
+              <option value="bread">🍞 Pan integral</option>
+              <option value="oats">🌾 Avena</option>
+              <option value="potato">🥔 Papa</option>
+              <option value="sweet_potato">🍠 Camote</option>
+              <option value="quinoa">🌱 Quinoa</option>
+              <option value="tortilla">🫓 Tortilla</option>
+              <option value="banana">🍌 Plátano</option>
+            </optgroup>
+            <optgroup label="Grasas">
+              <option value="avocado">🥑 Aguacate</option>
+              <option value="olive_oil">🫒 Aceite de oliva</option>
+              <option value="almonds">🌰 Almendras</option>
+              <option value="nuts">🌰 Nueces</option>
+            </optgroup>
+            <optgroup label="Lácteos">
+              <option value="milk">🥛 Leche</option>
+              <option value="yogurt">🥛 Yogur griego</option>
+              <option value="cheese">🧀 Queso</option>
+              <option value="cottage">🧀 Cottage</option>
+            </optgroup>
+            <optgroup label="Legumbres">
+              <option value="beans">🫘 Frijoles</option>
+              <option value="lentils">🫘 Lentejas</option>
+              <option value="chickpeas">🫘 Garbanzos</option>
+            </optgroup>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="btn-save-pantry-item" style="width:100%">+ Añadir a la despensa</button>
+      </div>
+
+      <!-- Pantry items list -->
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Disponible ahora</div>
+      <div id="pantry-list"></div>
     </div>
   </div>
 </div>

@@ -775,7 +775,7 @@ const DB = {
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
 
-  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', mcpToken:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120 }); },
+  settings()      { return this._g('lt_settings', { name:'Usuario', calorieGoal:2000, waterGoal:2500, weightGoal:null, height:null, age:null, gender:'male', activityLevel:'moderate', mcpUrl:'', mcpToken:'', cuttingStyle:'custom', proteinGoal:null, carbsGoal:null, fatGoal:null, macrosAuto:true, hydrationEnabled:false, hydrationStart:8, hydrationEnd:22, hydrationIntervalMin:120, mealReminderEnabled:false, mealReminderTime:'13:00', cheatMealEnabled:false }); },
   saveSettings(v) { this._s('lt_settings', v); },
 
   // Active diary date for retro-logging. null = today. The Food view sets this
@@ -845,6 +845,10 @@ const DB = {
   saveSupplements(v)       { this._s('lt_supplements', v); },
   lifts()                  { return this._g('lt_lifts', {}); },
   saveLifts(v)             { this._s('lt_lifts', v); },
+
+  pantry()                 { return this._g('lt_pantry', []); },
+  savePantry(v)            { this._s('lt_pantry', v); },
+
   supplementLog()          { return this._g('lt_supplement_log', {}); },
   saveSupplementLog(v)     { this._s('lt_supplement_log', v); },
   todaySupplLog()          { return (this.supplementLog())[today()] || {}; },
@@ -940,6 +944,47 @@ const Hydration = {
         r.showNotification('💧 ¡Hora de hidratarte!', opts);
       } else {
         new Notification('💧 ¡Hora de hidratarte!', opts);
+      }
+    } catch(e) { console.warn(e); }
+  },
+};
+
+// ================================================================
+// MEAL REMINDER — daily push notification with lunch recommendations
+// ================================================================
+const MealReminder = {
+  _timer: null,
+  start() {
+    this.stop();
+    const s = DB.settings();
+    if (!s.mealReminderEnabled || Notification.permission !== 'granted') return;
+    const [h, m] = (s.mealReminderTime || '13:00').split(':').map(Number);
+    const now = new Date(), next = new Date();
+    next.setHours(h, m, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    this._timer = setTimeout(async () => { await this.fire(); this.start(); }, next - now);
+  },
+  stop() {
+    if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+  },
+  async fire() {
+    if (Notification.permission !== 'granted') return;
+    const s = DB.settings();
+    const cheat = s.cheatMealEnabled;
+    const recs = cheat
+      ? App._getCheatRecommendations().slice(0, 3)
+      : (App._getRecommendations('lunch')?.recommendations || []).slice(0, 3);
+    if (!recs.length) return;
+    const names = recs.map(r => `${r.emoji} ${r.name}`).join(', ');
+    const title = cheat ? '🍕 ¡Hora de darte un gusto!' : '🍽️ ¿Qué vas a almorzar hoy?';
+    const body  = `Te recomendamos: ${names}`;
+    try {
+      const opts = { body, icon: './icons/icon.svg', tag: 'lt-meal-rec', renotify: true, data: { view: 'food' } };
+      if ('serviceWorker' in navigator) {
+        const r = await navigator.serviceWorker.ready;
+        r.showNotification(title, opts);
+      } else {
+        new Notification(title, opts);
       }
     } catch(e) { console.warn(e); }
   },
@@ -2115,6 +2160,8 @@ const App = {
 
     await Notif.init();
     Hydration.start();
+    MealReminder.start();
+    this.bindPantryModal();
 
     // Overdue task reminders
     this.bindOverdueBanner();
@@ -2419,6 +2466,11 @@ const App = {
     document.getElementById('setting-hydration-enabled')?.addEventListener('change', e => {
       document.getElementById('hydration-config').style.display = e.target.checked ? '' : 'none';
     });
+    // Meal reminder toggle reveals time picker
+    document.getElementById('setting-meal-reminder-enabled')?.addEventListener('change', e => {
+      const cfg = document.getElementById('meal-reminder-config');
+      if (cfg) cfg.style.display = e.target.checked ? '' : 'none';
+    });
 
     // Macros: auto toggle + live preview
     const macrosAuto = document.getElementById('setting-macros-auto');
@@ -2505,6 +2557,16 @@ const App = {
       document.getElementById('setting-hydration-start').value    = s.hydrationStart ?? 8;
       document.getElementById('setting-hydration-end').value      = s.hydrationEnd   ?? 22;
       document.getElementById('setting-hydration-interval').value = s.hydrationIntervalMin || 120;
+    }
+
+    // Meal reminder
+    const mrEn = document.getElementById('setting-meal-reminder-enabled');
+    if (mrEn) {
+      mrEn.checked = !!s.mealReminderEnabled;
+      const mrCfg = document.getElementById('meal-reminder-config');
+      if (mrCfg) mrCfg.style.display = s.mealReminderEnabled ? '' : 'none';
+      const mrTime = document.getElementById('setting-meal-reminder-time');
+      if (mrTime) mrTime.value = s.mealReminderTime || '13:00';
     }
 
     // Macros — auto/manual + values
@@ -2673,6 +2735,8 @@ const App = {
       hydrationStart:       parseInt(document.getElementById('setting-hydration-start')?.value) || 8,
       hydrationEnd:         parseInt(document.getElementById('setting-hydration-end')?.value)   || 22,
       hydrationIntervalMin: parseInt(document.getElementById('setting-hydration-interval')?.value) || 120,
+      mealReminderEnabled:  !!document.getElementById('setting-meal-reminder-enabled')?.checked,
+      mealReminderTime:     document.getElementById('setting-meal-reminder-time')?.value || '13:00',
     };
     // Auto-compute calorieGoal when style != custom
     if (style !== 'custom') {
@@ -2686,6 +2750,7 @@ const App = {
     this.closeSettings();
     Notif.scheduleAll();
     Hydration.start();
+    MealReminder.start();
     toast('Ajustes guardados','success');
     this.renderView();
   },
@@ -4297,6 +4362,123 @@ const App = {
     return { recommendations: candidates, remaining, mealType, slotTarget };
   },
 
+  // Returns top recipes ignoring calorie constraints — scored by ingredient preference and pantry match only
+  _getCheatRecommendations() {
+    const prefs = DB.foodPrefs();
+    const likedSet = new Set(prefs?.liked || []);
+    const pantrySet = new Set(DB.pantry().map(i => i.ingredientId).filter(Boolean));
+    return RECIPE_DB
+      .map(r => {
+        const prefMatches   = r.ingredients.filter(i => likedSet.has(i)).length;
+        const pantryMatches = r.ingredients.filter(i => pantrySet.has(i)).length;
+        const score = prefMatches * 10 + pantryMatches * 5;
+        return { ...r, score, mult: 1, scaledKcal: r.kcal, scaledProt: r.prot, scaledCarbs: r.carbs, scaledFat: r.fat };
+      })
+      .filter(r => r.score > 0 || r.ingredients.length > 0)
+      .sort((a, b) => b.score - a.score);
+  },
+
+  // Pantry CRUD ──────────────────────────────────────────────────
+  bindPantryModal() {
+    document.getElementById('btn-open-pantry')?.addEventListener('click', () => this.openPantry());
+    document.getElementById('btn-close-pantry')?.addEventListener('click', () => this.closePantry());
+    document.getElementById('modal-pantry')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) this.closePantry();
+    });
+    document.getElementById('btn-save-pantry-item')?.addEventListener('click', () => this.savePantryItem());
+    document.getElementById('pantry-item-name')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') this.savePantryItem();
+    });
+    document.getElementById('btn-toggle-cheat-meal')?.addEventListener('click', () => this.toggleCheatMeal());
+  },
+
+  openPantry() {
+    this.renderPantry();
+    document.getElementById('modal-pantry').classList.add('open');
+  },
+
+  closePantry() {
+    document.getElementById('modal-pantry').classList.remove('open');
+  },
+
+  savePantryItem() {
+    const nameEl = document.getElementById('pantry-item-name');
+    const qtyEl  = document.getElementById('pantry-item-qty');
+    const unitEl = document.getElementById('pantry-item-unit');
+    const ingEl  = document.getElementById('pantry-item-ingredient');
+    const name = nameEl.value.trim();
+    if (!name) { toast('Escribe un nombre', 'error'); return; }
+    const item = {
+      id:           Date.now(),
+      name,
+      qty:          parseFloat(qtyEl.value) || 1,
+      unit:         unitEl.value || 'ud.',
+      ingredientId: ingEl.value || null,
+      addedAt:      new Date().toISOString(),
+    };
+    DB.savePantry([...DB.pantry(), item]);
+    nameEl.value = '';
+    qtyEl.value  = '1';
+    ingEl.value  = '';
+    CloudSync.schedulePush?.();
+    this.renderPantry();
+    toast(`${name} añadido a la despensa ✓`, 'success');
+  },
+
+  removePantryItem(id) {
+    DB.savePantry(DB.pantry().filter(i => i.id !== id));
+    CloudSync.schedulePush?.();
+    this.renderPantry();
+  },
+
+  renderPantry() {
+    const items = DB.pantry();
+    const list  = document.getElementById('pantry-list');
+    if (!list) return;
+    if (!items.length) {
+      list.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0">Tu despensa está vacía. Añade ingredientes para recibir recomendaciones personalizadas.</p>';
+      return;
+    }
+    list.innerHTML = items.map(item => `
+      <div class="pantry-item" data-id="${item.id}">
+        <div class="pantry-item-info">
+          <span class="pantry-item-name">${item.name}</span>
+          <span class="pantry-item-qty">${item.qty} ${item.unit}</span>
+        </div>
+        <button class="btn-icon pantry-remove-btn" data-id="${item.id}" aria-label="Eliminar">✕</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.pantry-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.removePantryItem(Number(btn.dataset.id)));
+    });
+    // Update cheat meal badge in food view
+    this._updatePantryBadge();
+  },
+
+  _updatePantryBadge() {
+    const badge = document.getElementById('pantry-count-badge');
+    if (badge) {
+      const n = DB.pantry().length;
+      badge.textContent = n;
+      badge.style.display = n ? '' : 'none';
+    }
+    const cheatBtn = document.getElementById('btn-toggle-cheat-meal');
+    if (cheatBtn) {
+      const active = DB.settings().cheatMealEnabled;
+      cheatBtn.classList.toggle('cheat-active', !!active);
+      cheatBtn.title = active ? 'Modo cheat meal ACTIVO — click para desactivar' : 'Activar modo cheat meal';
+    }
+  },
+
+  toggleCheatMeal() {
+    const s = DB.settings();
+    const next = !s.cheatMealEnabled;
+    DB.saveSettings({ ...s, cheatMealEnabled: next });
+    this._updatePantryBadge();
+    toast(next ? '🍕 Modo cheat meal activado' : '🥗 Modo normal restaurado', 'success');
+    this.renderRecommendations();
+  },
+
   renderRecommendations() {
     const panel = document.getElementById('rec-panel');
     if (!panel || panel.style.display === 'none') return;
@@ -4318,29 +4500,46 @@ const App = {
       return;
     }
 
+    const cheat = DB.settings().cheatMealEnabled;
     const mealType = this._getMealTypeByHour();
-    const rec = this._getRecommendations(mealType);
+    const pantrySet = new Set(DB.pantry().map(i => i.ingredientId).filter(Boolean));
+    let displayList, remText, headerLabel;
 
-    if (!rec || !rec.recommendations.length) {
-      panel.innerHTML = `<p class="text-muted text-center" style="padding:16px 0;font-size:13px">¡Meta del día casi cubierta! 🎉<br>No quedan muchas calorías disponibles.</p>`;
+    if (cheat) {
+      displayList = this._getCheatRecommendations().slice(0, 5);
+      remText = '🍕 Modo cheat meal';
+      headerLabel = 'Antojo del día';
+    } else {
+      const rec = this._getRecommendations(mealType);
+      if (!rec || !rec.recommendations.length) {
+        panel.innerHTML = `<p class="text-muted text-center" style="padding:16px 0;font-size:13px">¡Meta del día casi cubierta! 🎉<br>No quedan muchas calorías disponibles.</p>`;
+        return;
+      }
+      displayList = rec.recommendations;
+      remText = rec.remaining > 0 ? `${rec.remaining} kcal disponibles` : '¡Meta alcanzada!';
+      headerLabel = MEAL_LABELS[rec.mealType];
+    }
+
+    if (!displayList.length) {
+      panel.innerHTML = `<p class="text-muted text-center" style="padding:16px 0;font-size:13px">Sin recomendaciones disponibles.</p>`;
       return;
     }
 
     const likedSet = new Set(prefs.liked);
-    const remText = rec.remaining > 0 ? `${rec.remaining} kcal disponibles` : '¡Meta alcanzada!';
-    const maxScore = rec.recommendations[0].score;
+    const maxScore = Math.max(...displayList.map(r => r.score), 1);
 
     panel.innerHTML = `
       <div class="rec-header">
         <div style="display:flex;align-items:center;gap:8px">
-          <span class="rec-meal-badge">${MEAL_LABELS[rec.mealType]}</span>
+          <span class="rec-meal-badge${cheat ? ' cheat-badge' : ''}">${headerLabel}</span>
           <span style="font-size:11px;color:var(--text-muted)">${remText}</span>
         </div>
         <button class="btn-text-sm" id="btn-edit-prefs">✏️ Prefs</button>
       </div>
       <div class="rec-list">
-        ${rec.recommendations.map(r => {
+        ${displayList.map(r => {
           const matchCount = r.ingredients.filter(i => likedSet.has(i)).length;
+          const pantryMatch = pantrySet.size > 0 && r.ingredients.filter(i => pantrySet.has(i)).length;
           const fitPct = Math.round((r.score / maxScore) * 100);
           const multLabel = r.mult !== 1
             ? `<span class="rec-serving-badge">${r.mult}× porción</span>`
@@ -4373,7 +4572,7 @@ const App = {
             ).join('')}</div>` : ''}
             <div class="rec-match-row">
               <div class="rec-match-bar-wrap"><div class="rec-match-bar-fill" style="width:${fitPct}%"></div></div>
-              <span class="rec-match-label">${matchCount} ingredientes favoritos</span>
+              <span class="rec-match-label">${matchCount} ingredientes favoritos${pantryMatch ? ` · 🧺 ${pantryMatch} en despensa` : ''}</span>
             </div>
           </div>`;
         }).join('')}
@@ -4390,6 +4589,7 @@ const App = {
       )
     );
     document.getElementById('btn-edit-prefs')?.addEventListener('click', () => this.openIngredientPrefs());
+    this._updatePantryBadge();
   },
 
   addRecipeDbEntry(recipeId, mult = 1) {
