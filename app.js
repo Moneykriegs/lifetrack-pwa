@@ -2457,6 +2457,11 @@ const App = {
       if (!confirm('¿Cerrar sesión de Google?')) return;
       await CloudSync.signOut();
     });
+    document.getElementById('btn-connect-google')?.addEventListener('click', () => {
+      localStorage.removeItem('lt_skip_auth');
+      this.closeSettings();
+      this.showLoginScreen();
+    });
     // Live TDEE preview when any body-param or cutting style changes
     const _readSettingsForm = () => ({
       age:          parseInt(document.getElementById('setting-age').value)||null,
@@ -2540,7 +2545,10 @@ const App = {
     const s=DB.settings();
     // Refresh account section
     const u = CloudSync.user || CloudSync._loadCachedUser();
-    const acctSec = document.getElementById('settings-account-section');
+    const acctSec    = document.getElementById('settings-account-section');
+    const connectSec = document.getElementById('settings-connect-section');
+    // Show connect button only when Supabase is configured but user is not signed in
+    if (connectSec) connectSec.style.display = (!u && CloudSync.sb) ? '' : 'none';
     if (u && acctSec) {
       acctSec.style.display = '';
       document.getElementById('settings-user-name').textContent  = u.name  || '—';
