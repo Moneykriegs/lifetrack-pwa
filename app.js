@@ -2307,6 +2307,10 @@ const App = {
     this.updateHeaderUser(null);
     document.getElementById('settings-account-section').style.display = 'none';
     document.getElementById('btn-sync').style.display = 'none';
+    // Show the connect section if settings modal is open
+    const hasCloud = !!(window.SUPABASE_CONFIG?.url && !window.SUPABASE_CONFIG.url.startsWith('YOUR_'));
+    const connectSec = document.getElementById('settings-connect-section');
+    if (connectSec) connectSec.style.display = hasCloud ? '' : 'none';
     this.showLoginScreen();
   },
 
@@ -2334,25 +2338,40 @@ const App = {
   registerSW() {
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      // When a new SW version is found, activate it immediately
+      // When a new SW version is found, notify the user instead of force-reloading
       reg.addEventListener('updatefound', () => {
         const newSW = reg.installing;
         if (!newSW) return;
         newSW.addEventListener('statechange', () => {
           if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version ready — skip waiting and reload to get fresh files
-            newSW.postMessage({ type: 'SKIP_WAITING' });
+            // Show a non-intrusive update banner instead of force-reloading mid-session
+            this._showUpdateBanner(newSW);
           }
         });
       });
-      // When the controller changes (new SW took over), reload once
+      // Check for update on every page load (silent, no auto-reload)
+      reg.update().catch(() => {});
+    }).catch(() => {});
+  },
+
+  _showUpdateBanner(newSW) {
+    // Avoid duplicates
+    if (document.getElementById('sw-update-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'sw-update-banner';
+    banner.innerHTML = `
+      <span>🔄 Nueva versión disponible</span>
+      <button id="btn-sw-update" style="margin-left:12px;padding:4px 12px;border-radius:20px;border:none;background:white;color:#6366f1;font-weight:700;cursor:pointer;font-size:13px">Actualizar</button>`;
+    banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#6366f1;color:white;padding:10px 16px;border-radius:24px;font-size:13px;font-weight:600;z-index:9999;display:flex;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.25);white-space:nowrap';
+    document.body.appendChild(banner);
+    document.getElementById('btn-sw-update').addEventListener('click', () => {
+      newSW.postMessage({ type: 'SKIP_WAITING' });
+      // Reload once the new SW takes control
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) { refreshing = true; location.reload(); }
       });
-      // Check for update on every page load
-      reg.update().catch(() => {});
-    }).catch(() => {});
+    });
   },
 
   bindNav() {
@@ -2547,10 +2566,11 @@ const App = {
     const u = CloudSync.user || CloudSync._loadCachedUser();
     const acctSec    = document.getElementById('settings-account-section');
     const connectSec = document.getElementById('settings-connect-section');
-    // Show connect button only when Supabase is configured but user is not signed in
-    if (connectSec) connectSec.style.display = (!u && CloudSync.sb) ? '' : 'none';
+    // Show connect section when not signed in (Supabase available), account section when signed in
+    const hasCloud = !!(window.SUPABASE_CONFIG?.url && !window.SUPABASE_CONFIG.url.startsWith('YOUR_'));
+    if (connectSec) connectSec.style.display = (!u && hasCloud) ? '' : 'none';
+    if (acctSec) acctSec.style.display = u ? '' : 'none';
     if (u && acctSec) {
-      acctSec.style.display = '';
       document.getElementById('settings-user-name').textContent  = u.name  || '—';
       document.getElementById('settings-user-email').textContent = u.email || '—';
       if (u.avatar) {
