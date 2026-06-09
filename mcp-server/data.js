@@ -67,6 +67,27 @@ function sanitize(value, depth = 0) {
   return clean;
 }
 
+// Union two entry arrays, deduping by stable id (fingerprint fallback for
+// legacy entries without one). Mirrors unionEntries in the PWA's app.js.
+function unionEntries(serverArr, clientArr) {
+  const out = [], seen = new Set();
+  const keyOf = e => (e && e.id != null) ? `id:${e.id}` : `fp:${JSON.stringify(e)}`;
+  [...(serverArr || []), ...(clientArr || [])].forEach(e => {
+    const k = keyOf(e);
+    if (!seen.has(k)) { seen.add(k); out.push(e); }
+  });
+  return out;
+}
+
+// Per-day union for { "YYYY-MM-DD": [entries] } logs
+function unionDayLog(serverLog, clientLog) {
+  const merged = { ...(serverLog || {}) };
+  Object.entries(clientLog || {}).forEach(([date, entries]) => {
+    merged[date] = merged[date] ? unionEntries(merged[date], entries) : entries;
+  });
+  return merged;
+}
+
 // Bidirectional merge: PWA localStorage → server JSON
 export function mergeSync(serverData, clientData) {
   const s = serverData || {};
@@ -75,18 +96,20 @@ export function mergeSync(serverData, clientData) {
   // Settings: merge, client wins for same keys (user may have changed on phone)
   const settings = { ...s.settings, ...c.settings };
 
-  // Food log: union by date; within a date, use whichever has more entries
-  const foodLog = { ...s.foodLog };
-  Object.entries(c.foodLog || {}).forEach(([date, entries]) => {
-    if (!foodLog[date] || entries.length > foodLog[date].length) {
-      foodLog[date] = entries;
-    }
-  });
+  // Food log: entry-level union per date (same-day adds from two devices are both kept)
+  const foodLog = unionDayLog(s.foodLog, c.foodLog);
 
-  // Water log: sum per date (take max to avoid double-counting)
+  // Water log: per-day newer-timestamp wins so deletions sync; legacy days fall back to max
+  const waterTs  = { ...(s.waterTs || {}) };
   const waterLog = { ...s.waterLog };
   Object.entries(c.waterLog || {}).forEach(([date, ml]) => {
-    waterLog[date] = Math.max(waterLog[date] || 0, ml);
+    const cTs = (c.waterTs || {})[date] || 0;
+    const sTs = (s.waterTs || {})[date] || 0;
+    if (cTs || sTs) {
+      if (cTs >= sTs) { waterLog[date] = ml; waterTs[date] = cTs; }
+    } else {
+      waterLog[date] = Math.max(waterLog[date] || 0, ml);
+    }
   });
 
   // Weight log: merge by date (client wins same date)
@@ -119,21 +142,9 @@ export function mergeSync(serverData, clientData) {
   });
   const recipes = [...recipeMap.values()];
 
-  // Exercise log: union by date; within a date, use whichever has more entries
-  const exerciseLog = { ...s.exerciseLog };
-  Object.entries(c.exerciseLog || {}).forEach(([date, entries]) => {
-    if (!exerciseLog[date] || entries.length > exerciseLog[date].length) {
-      exerciseLog[date] = entries;
-    }
-  });
-
-  // Meal plan: union by date; within a date, use whichever has more entries
-  const mealPlan = { ...s.mealPlan };
-  Object.entries(c.mealPlan || {}).forEach(([date, entries]) => {
-    if (!mealPlan[date] || entries.length > mealPlan[date].length) {
-      mealPlan[date] = entries;
-    }
-  });
+  // Exercise log + meal plan: entry-level union per date
+  const exerciseLog = unionDayLog(s.exerciseLog, c.exerciseLog);
+  const mealPlan    = unionDayLog(s.mealPlan, c.mealPlan);
 
   // Wellness: client wins same date (newest timestamp)
   const wellness = { ...s.wellness };
@@ -149,7 +160,10 @@ export function mergeSync(serverData, clientData) {
     if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
   });
 
-  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts };
+  // Pantry: union by item id
+  const pantry = unionEntries(s.pantry, c.pantry);
+
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, pantry };
 }
 
 // Calculate estimated TDEE from profile

@@ -788,14 +788,24 @@ const DB = {
   foodLog()       { return this._g('lt_food', {}); },
   saveFoodLog(v)  { this._s('lt_food', v); },
   todayFood()     { const d=this._d(); return (this.foodLog())[d] || []; },
-  addFood(entry)  { const d=this._d(), l=this.foodLog(); if(!l[d])l[d]=[]; l[d].push(entry); this.saveFoodLog(l); },
+  addFood(entry)  {
+    const d=this._d(), l=this.foodLog(); if(!l[d])l[d]=[];
+    // Stable unique id so cross-device merge can union instead of guessing by array length
+    if (entry.id == null) entry = { ...entry, id: `fd_${Date.now()}_${Math.random().toString(36).slice(2,8)}` };
+    if (!entry.ts) entry = { ...entry, ts: new Date().toISOString() };
+    l[d].push(entry); this.saveFoodLog(l);
+  },
   removeFood(idx) { const d=this._d(), l=this.foodLog(); if(l[d]){l[d].splice(idx,1); this.saveFoodLog(l);} },
 
   waterLog()      { return this._g('lt_water', {}); },
   saveWaterLog(v) { this._s('lt_water', v); },
+  // Per-day last-modified timestamps so the merge can honor deletions (newer wins)
+  waterTs()       { return this._g('lt_water_ts', {}); },
+  saveWaterTs(v)  { this._s('lt_water_ts', v); },
+  _touchWaterTs(d){ const t=this.waterTs(); t[d]=Date.now(); this.saveWaterTs(t); },
   todayWater()    { const d=this._d(); return (this.waterLog())[d] || 0; },
-  addWater(ml)    { const d=this._d(), l=this.waterLog(); l[d]=(l[d]||0)+ml; this.saveWaterLog(l); return l[d]; },
-  removeWater(ml) { const d=this._d(), l=this.waterLog(); l[d]=Math.max(0,(l[d]||0)-ml); this.saveWaterLog(l); return l[d]; },
+  addWater(ml)    { const d=this._d(), l=this.waterLog(); l[d]=(l[d]||0)+ml; this.saveWaterLog(l); this._touchWaterTs(d); return l[d]; },
+  removeWater(ml) { const d=this._d(), l=this.waterLog(); l[d]=Math.max(0,(l[d]||0)-ml); this.saveWaterLog(l); this._touchWaterTs(d); return l[d]; },
 
   weightLog()     { return this._g('lt_weight', []); },
   saveWeightLog(v){ this._s('lt_weight', v); },
@@ -848,6 +858,20 @@ const DB = {
 
   pantry()                 { return this._g('lt_pantry', []); },
   savePantry(v)            { this._s('lt_pantry', v); },
+
+  // Canonical sync payload — single source of truth for every sync path
+  // (CloudSync.push, CloudSync.syncFull, MCPSync.push). Add new synced
+  // domains HERE so they can never drift between paths again.
+  snapshot() {
+    return {
+      settings: this.settings(), tasks: this.tasks(),
+      completions: this.completions(), foodLog: this.foodLog(),
+      waterLog: this.waterLog(), waterTs: this.waterTs(),
+      weightLog: this.weightLog(), recipes: this.recipes(),
+      exerciseLog: this.exerciseLog(), mealPlan: this.mealPlan(),
+      wellness: this.wellness(), lifts: this.lifts(), pantry: this.pantry(),
+    };
+  },
 
   supplementLog()          { return this._g('lt_supplement_log', {}); },
   saveSupplementLog(v)     { this._s('lt_supplement_log', v); },
@@ -1320,13 +1344,7 @@ const MCPSync = {
     const url = DB.settings().mcpUrl;
     if (!url) return;
     try {
-      const payload = {
-        settings: DB.settings(), tasks: DB.tasks(),
-        completions: DB.completions(), foodLog: DB.foodLog(),
-        waterLog: DB.waterLog(), weightLog: DB.weightLog(),
-        recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
-        mealPlan: DB.mealPlan(), wellness: DB.wellness()
-      };
+      const payload = DB.snapshot();
       const res = await fetch(`${url}/api/sync`, {
         method:'POST',
         headers:{'Content-Type':'application/json', ...this._authHeaders()},
@@ -1340,11 +1358,14 @@ const MCPSync = {
       if (data.completions) DB.saveCompletions(data.completions);
       if (data.foodLog)     DB.saveFoodLog(data.foodLog);
       if (data.waterLog)    DB.saveWaterLog(data.waterLog);
+      if (data.waterTs)     DB.saveWaterTs(data.waterTs);
       if (data.weightLog)   DB.saveWeightLog(data.weightLog);
       if (data.recipes)     DB.saveRecipes(data.recipes);
       if (data.exerciseLog) DB.saveExerciseLog(data.exerciseLog);
       if (data.mealPlan)    DB.saveMealPlan(data.mealPlan);
       if (data.wellness)    DB.saveWellness(data.wellness);
+      if (data.lifts)       DB.saveLifts(data.lifts);
+      if (data.pantry)      DB.savePantry(data.pantry);
       return true;
     } catch(e) { console.warn('MCP sync error:', e); return false; }
   },
@@ -1360,19 +1381,53 @@ const MCPSync = {
 // ================================================================
 // CLIENT-SIDE MERGE  (mirrors server data.js mergeSync)
 // ================================================================
+
+// Union two entry arrays, deduping by stable id (fingerprint fallback for
+// legacy entries without one). Prevents the old "longer array wins" merge
+// from silently discarding same-day entries made on another device.
+function unionEntries(serverArr, clientArr) {
+  const out = [], seen = new Set();
+  const keyOf = e => (e && e.id != null) ? `id:${e.id}` : `fp:${JSON.stringify(e)}`;
+  [...(serverArr || []), ...(clientArr || [])].forEach(e => {
+    const k = keyOf(e);
+    if (!seen.has(k)) { seen.add(k); out.push(e); }
+  });
+  return out;
+}
+
+// Per-day union for { "YYYY-MM-DD": [entries] } logs
+function unionDayLog(serverLog, clientLog) {
+  const merged = { ...(serverLog || {}) };
+  Object.entries(clientLog || {}).forEach(([d, entries]) => {
+    merged[d] = merged[d] ? unionEntries(merged[d], entries) : entries;
+  });
+  return merged;
+}
+
 function mergeClientServer(server, client) {
   const s = server || {}, c = sanitizeUntrusted(client) || {};
 
   const settings = { ...s.settings, ...c.settings };
 
-  const foodLog = { ...s.foodLog };
-  Object.entries(c.foodLog || {}).forEach(([d, e]) => {
-    if (!foodLog[d] || e.length > foodLog[d].length) foodLog[d] = e;
-  });
+  // Entry-level union: same-day adds from two devices are both kept.
+  // (Known trade-off: without tombstones, a deletion made on one device can
+  // be resurrected by a stale copy on another — acceptable vs. losing data.)
+  const foodLog     = unionDayLog(s.foodLog, c.foodLog);
+  const exerciseLog = unionDayLog(s.exerciseLog, c.exerciseLog);
+  const mealPlan    = unionDayLog(s.mealPlan, c.mealPlan);
 
+  // Water: per-day newer-timestamp wins so deletions sync correctly.
+  // Days without a timestamp (legacy data) fall back to max().
+  const waterTs  = { ...(s.waterTs || {}) };
   const waterLog = { ...s.waterLog };
   Object.entries(c.waterLog || {}).forEach(([d, ml]) => {
-    waterLog[d] = Math.max(waterLog[d] || 0, ml);
+    const cTs = (c.waterTs || {})[d] || 0;
+    const sTs = (s.waterTs || {})[d] || 0;
+    if (cTs || sTs) {
+      if (cTs >= sTs) { waterLog[d] = ml; waterTs[d] = cTs; }
+    } else {
+      waterLog[d] = Math.max(waterLog[d] || 0, ml);
+    }
   });
 
   const wMap = new Map();
@@ -1395,16 +1450,6 @@ function mergeClientServer(server, client) {
   });
   const recipes = [...rMap.values()];
 
-  const exerciseLog = { ...s.exerciseLog };
-  Object.entries(c.exerciseLog || {}).forEach(([d, e]) => {
-    if (!exerciseLog[d] || e.length > exerciseLog[d].length) exerciseLog[d] = e;
-  });
-
-  const mealPlan = { ...s.mealPlan };
-  Object.entries(c.mealPlan || {}).forEach(([d, e]) => {
-    if (!mealPlan[d] || e.length > mealPlan[d].length) mealPlan[d] = e;
-  });
-
   const wellness = { ...s.wellness };
   Object.entries(c.wellness || {}).forEach(([d, entry]) => {
     const cur = wellness[d];
@@ -1418,7 +1463,10 @@ function mergeClientServer(server, client) {
     if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
   });
 
-  return { settings, tasks, completions, foodLog, waterLog, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts };
+  // Pantry: union by item id (same resurrect-vs-lose trade-off as day logs)
+  const pantry = unionEntries(s.pantry, c.pantry);
+
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, pantry };
 }
 
 // ================================================================
@@ -1482,13 +1530,7 @@ const CloudSync = {
   /** Push local data to Supabase (fire-and-forget OK) */
   async push() {
     if (!this.sb || !this.userId) return false;
-    const payload = {
-      settings: DB.settings(), tasks: DB.tasks(),
-      completions: DB.completions(), foodLog: DB.foodLog(),
-      waterLog: DB.waterLog(), weightLog: DB.weightLog(),
-      recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
-      mealPlan: DB.mealPlan(), wellness: DB.wellness(), lifts: DB.lifts()
-    };
+    const payload = DB.snapshot();
     const { error } = await this.sb
       .from('user_data')
       .upsert({ user_id: this.userId, data: payload }, { onConflict: 'user_id' });
@@ -1512,25 +1554,21 @@ const CloudSync = {
     if (!this.sb || !this.userId) return false;
     try {
       const serverData = await this.pull();
-      const localData  = {
-        settings: DB.settings(), tasks: DB.tasks(),
-        completions: DB.completions(), foodLog: DB.foodLog(),
-        waterLog: DB.waterLog(), weightLog: DB.weightLog(),
-        recipes: DB.recipes(), exerciseLog: DB.exerciseLog(),
-        mealPlan: DB.mealPlan(), wellness: DB.wellness(), lifts: DB.lifts()
-      };
+      const localData  = DB.snapshot();
       const merged = serverData ? mergeClientServer(serverData, localData) : localData;
       DB.saveSettings(merged.settings);
       DB.saveTasks(merged.tasks);
       DB.saveCompletions(merged.completions);
       DB.saveFoodLog(merged.foodLog);
       DB.saveWaterLog(merged.waterLog);
+      if (merged.waterTs) DB.saveWaterTs(merged.waterTs);
       DB.saveWeightLog(merged.weightLog);
       DB.saveRecipes(merged.recipes);
       DB.saveExerciseLog(merged.exerciseLog);
       DB.saveMealPlan(merged.mealPlan);
       DB.saveWellness(merged.wellness);
-      if (merged.lifts) DB.saveLifts(merged.lifts);
+      if (merged.lifts)  DB.saveLifts(merged.lifts);
+      if (merged.pantry) DB.savePantry(merged.pantry);
       await this.push();
       return true;
     } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }
