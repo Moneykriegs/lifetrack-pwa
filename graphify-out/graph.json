@@ -1,0 +1,2288 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "app.js",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "app",
+      "community": 0,
+      "norm_label": "app.js"
+    },
+    {
+      "label": "DAYS_SHORT",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "app_days_short",
+      "community": 0,
+      "norm_label": "days_short"
+    },
+    {
+      "label": "DAYS_FULL",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "app_days_full",
+      "community": 0,
+      "norm_label": "days_full"
+    },
+    {
+      "label": "MONTHS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "app_months",
+      "community": 0,
+      "norm_label": "months"
+    },
+    {
+      "label": "MICROS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "app_micros",
+      "community": 0,
+      "norm_label": "micros"
+    },
+    {
+      "label": "MICRO_KEYS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "app_micro_keys",
+      "community": 0,
+      "norm_label": "micro_keys"
+    },
+    {
+      "label": "MOODS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "app_moods",
+      "community": 0,
+      "norm_label": "moods"
+    },
+    {
+      "label": "MEAL_SLOTS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "app_meal_slots",
+      "community": 0,
+      "norm_label": "meal_slots"
+    },
+    {
+      "label": "SLOT_FRACTIONS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L46",
+      "_origin": "ast",
+      "id": "app_slot_fractions",
+      "community": 0,
+      "norm_label": "slot_fractions"
+    },
+    {
+      "label": "CUTTING_STYLES",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L53",
+      "_origin": "ast",
+      "id": "app_cutting_styles",
+      "community": 0,
+      "norm_label": "cutting_styles"
+    },
+    {
+      "label": "PREP_FOODS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "app_prep_foods",
+      "community": 0,
+      "norm_label": "prep_foods"
+    },
+    {
+      "label": "INGREDIENTS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L97",
+      "_origin": "ast",
+      "id": "app_ingredients",
+      "community": 0,
+      "norm_label": "ingredients"
+    },
+    {
+      "label": "RECIPE_DB",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L149",
+      "_origin": "ast",
+      "id": "app_recipe_db",
+      "community": 0,
+      "norm_label": "recipe_db"
+    },
+    {
+      "label": "INGREDIENT_MICROS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L236",
+      "_origin": "ast",
+      "id": "app_ingredient_micros",
+      "community": 0,
+      "norm_label": "ingredient_micros"
+    },
+    {
+      "label": "calcRecipeMicros()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L286",
+      "_origin": "ast",
+      "id": "app_calcrecipemicros",
+      "community": 0,
+      "norm_label": "calcrecipemicros()"
+    },
+    {
+      "label": "RECIPE_AMOUNTS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L298",
+      "_origin": "ast",
+      "id": "app_recipe_amounts",
+      "community": 0,
+      "norm_label": "recipe_amounts"
+    },
+    {
+      "label": "RECIPE_STEPS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L473",
+      "_origin": "ast",
+      "id": "app_recipe_steps",
+      "community": 0,
+      "norm_label": "recipe_steps"
+    },
+    {
+      "label": "ACTIVITIES",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L743",
+      "_origin": "ast",
+      "id": "app_activities",
+      "community": 0,
+      "norm_label": "activities"
+    },
+    {
+      "label": "_localDateStr()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L758",
+      "_origin": "ast",
+      "id": "app_localdatestr",
+      "community": 6,
+      "norm_label": "_localdatestr()"
+    },
+    {
+      "label": "today()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L765",
+      "_origin": "ast",
+      "id": "app_today",
+      "community": 6,
+      "norm_label": "today()"
+    },
+    {
+      "label": "fmtDate()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L766",
+      "_origin": "ast",
+      "id": "app_fmtdate",
+      "community": 6,
+      "norm_label": "fmtdate()"
+    },
+    {
+      "label": "DB",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L771",
+      "_origin": "ast",
+      "id": "app_db",
+      "community": 0,
+      "norm_label": "db"
+    },
+    {
+      "label": "Notif",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L867",
+      "_origin": "ast",
+      "id": "app_notif",
+      "community": 0,
+      "norm_label": "notif"
+    },
+    {
+      "label": "Hydration",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L899",
+      "_origin": "ast",
+      "id": "app_hydration",
+      "community": 0,
+      "norm_label": "hydration"
+    },
+    {
+      "label": "MealReminder",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L955",
+      "_origin": "ast",
+      "id": "app_mealreminder",
+      "community": 0,
+      "norm_label": "mealreminder"
+    },
+    {
+      "label": "DarkMode",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L996",
+      "_origin": "ast",
+      "id": "app_darkmode",
+      "community": 0,
+      "norm_label": "darkmode"
+    },
+    {
+      "label": "Fasting",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1034",
+      "_origin": "ast",
+      "id": "app_fasting",
+      "community": 0,
+      "norm_label": "fasting"
+    },
+    {
+      "label": "FoodAPI",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1058",
+      "_origin": "ast",
+      "id": "app_foodapi",
+      "community": 0,
+      "norm_label": "foodapi"
+    },
+    {
+      "label": "Charts",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1147",
+      "_origin": "ast",
+      "id": "app_charts",
+      "community": 0,
+      "norm_label": "charts"
+    },
+    {
+      "label": "toast()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1261",
+      "_origin": "ast",
+      "id": "app_toast",
+      "community": 0,
+      "norm_label": "toast()"
+    },
+    {
+      "label": "toastUndo()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1271",
+      "_origin": "ast",
+      "id": "app_toastundo",
+      "community": 0,
+      "norm_label": "toastundo()"
+    },
+    {
+      "label": "esc()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1296",
+      "_origin": "ast",
+      "id": "app_esc",
+      "community": 0,
+      "norm_label": "esc()"
+    },
+    {
+      "label": "_FORBIDDEN_KEYS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1299",
+      "_origin": "ast",
+      "id": "app_forbidden_keys",
+      "community": 0,
+      "norm_label": "_forbidden_keys"
+    },
+    {
+      "label": "sanitizeUntrusted()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1300",
+      "_origin": "ast",
+      "id": "app_sanitizeuntrusted",
+      "community": 7,
+      "norm_label": "sanitizeuntrusted()"
+    },
+    {
+      "label": "MCPSync",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1314",
+      "_origin": "ast",
+      "id": "app_mcpsync",
+      "community": 0,
+      "norm_label": "mcpsync"
+    },
+    {
+      "label": "mergeClientServer()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1363",
+      "_origin": "ast",
+      "id": "app_mergeclientserver",
+      "community": 7,
+      "norm_label": "mergeclientserver()"
+    },
+    {
+      "label": "CloudSync",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1427",
+      "_origin": "ast",
+      "id": "app_cloudsync",
+      "community": 0,
+      "norm_label": "cloudsync"
+    },
+    {
+      "label": "calcStreaks()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1555",
+      "_origin": "ast",
+      "id": "app_calcstreaks",
+      "community": 6,
+      "norm_label": "calcstreaks()"
+    },
+    {
+      "label": "calcPrediction()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1612",
+      "_origin": "ast",
+      "id": "app_calcprediction",
+      "community": 0,
+      "norm_label": "calcprediction()"
+    },
+    {
+      "label": "calcWellnessCorrelations()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1684",
+      "_origin": "ast",
+      "id": "app_calcwellnesscorrelations",
+      "community": 0,
+      "norm_label": "calcwellnesscorrelations()"
+    },
+    {
+      "label": "generateWeeklyInsights()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1729",
+      "_origin": "ast",
+      "id": "app_generateweeklyinsights",
+      "community": 6,
+      "norm_label": "generateweeklyinsights()"
+    },
+    {
+      "label": "BENCHMARK_LMS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1851",
+      "_origin": "ast",
+      "id": "app_benchmark_lms",
+      "community": 0,
+      "norm_label": "benchmark_lms"
+    },
+    {
+      "label": "Benchmark",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1911",
+      "_origin": "ast",
+      "id": "app_benchmark",
+      "community": 0,
+      "norm_label": "benchmark"
+    },
+    {
+      "label": "LIFT_TIERS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L2017",
+      "_origin": "ast",
+      "id": "app_lift_tiers",
+      "community": 0,
+      "norm_label": "lift_tiers"
+    },
+    {
+      "label": "LIFT_STANDARDS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L2025",
+      "_origin": "ast",
+      "id": "app_lift_standards",
+      "community": 0,
+      "norm_label": "lift_standards"
+    },
+    {
+      "label": "Strength",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L2045",
+      "_origin": "ast",
+      "id": "app_strength",
+      "community": 0,
+      "norm_label": "strength"
+    },
+    {
+      "label": "App",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L2078",
+      "_origin": "ast",
+      "id": "app_app",
+      "community": 0,
+      "norm_label": "app"
+    },
+    {
+      "label": "generate-config.sh",
+      "file_type": "code",
+      "source_file": "generate-config.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "_origin": "ast",
+      "id": "generate_config",
+      "community": 9,
+      "norm_label": "generate-config.sh"
+    },
+    {
+      "label": "generate-config.sh script",
+      "file_type": "code",
+      "source_file": "generate-config.sh",
+      "source_location": "L1",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "_origin": "ast",
+      "id": "f_proyectos_pwa_app_pwa_app_generate_config_sh__entry",
+      "community": 9,
+      "norm_label": "generate-config.sh script"
+    },
+    {
+      "label": "manifest.json",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "manifest",
+      "community": 2,
+      "norm_label": "manifest.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "manifest_name",
+      "community": 2,
+      "norm_label": "name"
+    },
+    {
+      "label": "short_name",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "manifest_short_name",
+      "community": 2,
+      "norm_label": "short_name"
+    },
+    {
+      "label": "description",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "manifest_description",
+      "community": 2,
+      "norm_label": "description"
+    },
+    {
+      "label": "start_url",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "manifest_start_url",
+      "community": 2,
+      "norm_label": "start_url"
+    },
+    {
+      "label": "scope",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "manifest_scope",
+      "community": 2,
+      "norm_label": "scope"
+    },
+    {
+      "label": "display",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "manifest_display",
+      "community": 2,
+      "norm_label": "display"
+    },
+    {
+      "label": "orientation",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "manifest_orientation",
+      "community": 2,
+      "norm_label": "orientation"
+    },
+    {
+      "label": "theme_color",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "manifest_theme_color",
+      "community": 2,
+      "norm_label": "theme_color"
+    },
+    {
+      "label": "background_color",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "manifest_background_color",
+      "community": 2,
+      "norm_label": "background_color"
+    },
+    {
+      "label": "icons",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "manifest_icons",
+      "community": 2,
+      "norm_label": "icons"
+    },
+    {
+      "label": "categories",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L25",
+      "_origin": "ast",
+      "id": "manifest_categories",
+      "community": 2,
+      "norm_label": "categories"
+    },
+    {
+      "label": "lang",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "manifest_lang",
+      "community": 2,
+      "norm_label": "lang"
+    },
+    {
+      "label": "shortcuts",
+      "file_type": "code",
+      "source_file": "manifest.json",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "manifest_shortcuts",
+      "community": 2,
+      "norm_label": "shortcuts"
+    },
+    {
+      "label": "data.js",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "mcp_server_data",
+      "community": 3,
+      "norm_label": "data.js"
+    },
+    {
+      "label": "__dir",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "mcp_server_data_dir",
+      "community": 3,
+      "norm_label": "__dir"
+    },
+    {
+      "label": "DATA_DIR",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "mcp_server_data_data_dir",
+      "community": 3,
+      "norm_label": "data_dir"
+    },
+    {
+      "label": "DATA_FILE",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "mcp_server_data_data_file",
+      "community": 3,
+      "norm_label": "data_file"
+    },
+    {
+      "label": "DEFAULTS",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "mcp_server_data_defaults",
+      "community": 3,
+      "norm_label": "defaults"
+    },
+    {
+      "label": "ensureDir()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "mcp_server_data_ensuredir",
+      "community": 3,
+      "norm_label": "ensuredir()"
+    },
+    {
+      "label": "today()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "mcp_server_data_today",
+      "community": 3,
+      "norm_label": "today()"
+    },
+    {
+      "label": "getData()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L39",
+      "_origin": "ast",
+      "id": "mcp_server_data_getdata",
+      "community": 3,
+      "norm_label": "getdata()"
+    },
+    {
+      "label": "saveData()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L52",
+      "_origin": "ast",
+      "id": "mcp_server_data_savedata",
+      "community": 3,
+      "norm_label": "savedata()"
+    },
+    {
+      "label": "FORBIDDEN_KEYS",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L58",
+      "_origin": "ast",
+      "id": "mcp_server_data_forbidden_keys",
+      "community": 3,
+      "norm_label": "forbidden_keys"
+    },
+    {
+      "label": "sanitize()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "mcp_server_data_sanitize",
+      "community": 3,
+      "norm_label": "sanitize()"
+    },
+    {
+      "label": "mergeSync()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L71",
+      "_origin": "ast",
+      "id": "mcp_server_data_mergesync",
+      "community": 3,
+      "norm_label": "mergesync()"
+    },
+    {
+      "label": "calcTDEE()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L156",
+      "_origin": "ast",
+      "id": "mcp_server_data_calctdee",
+      "community": 3,
+      "norm_label": "calctdee()"
+    },
+    {
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "mcp_server_package",
+      "community": 1,
+      "norm_label": "package.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "mcp_server_package_name",
+      "community": 1,
+      "norm_label": "name"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "mcp_server_package_version",
+      "community": 1,
+      "norm_label": "version"
+    },
+    {
+      "label": "description",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "mcp_server_package_description",
+      "community": 1,
+      "norm_label": "description"
+    },
+    {
+      "label": "type",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "mcp_server_package_type",
+      "community": 1,
+      "norm_label": "type"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "mcp_server_package_main",
+      "community": 1,
+      "norm_label": "main"
+    },
+    {
+      "label": "scripts",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "mcp_server_package_scripts",
+      "community": 1,
+      "norm_label": "scripts"
+    },
+    {
+      "label": "start",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "mcp_server_package_scripts_start",
+      "community": 1,
+      "norm_label": "start"
+    },
+    {
+      "label": "dev",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "mcp_server_package_scripts_dev",
+      "community": 1,
+      "norm_label": "dev"
+    },
+    {
+      "label": "dependencies",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "mcp_server_package_dependencies",
+      "community": 1,
+      "norm_label": "dependencies"
+    },
+    {
+      "label": "@modelcontextprotocol/sdk",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "mcp_server_package_dependencies_modelcontextprotocol_sdk",
+      "community": 1,
+      "norm_label": "@modelcontextprotocol/sdk"
+    },
+    {
+      "label": "cors",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "mcp_server_package_dependencies_cors",
+      "community": 1,
+      "norm_label": "cors"
+    },
+    {
+      "label": "express",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "mcp_server_package_dependencies_express",
+      "community": 1,
+      "norm_label": "express"
+    },
+    {
+      "label": "zod",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "mcp_server_package_dependencies_zod",
+      "community": 1,
+      "norm_label": "zod"
+    },
+    {
+      "label": "engines",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "mcp_server_package_engines",
+      "community": 1,
+      "norm_label": "engines"
+    },
+    {
+      "label": "node",
+      "file_type": "code",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "mcp_server_package_engines_node",
+      "community": 1,
+      "norm_label": "node"
+    },
+    {
+      "label": "server.js",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "mcp_server_server",
+      "community": 5,
+      "norm_label": "server.js"
+    },
+    {
+      "label": "ALLOWED_ORIGINS",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "mcp_server_server_allowed_origins",
+      "community": 5,
+      "norm_label": "allowed_origins"
+    },
+    {
+      "label": "requireAuth()",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "mcp_server_server_requireauth",
+      "community": 5,
+      "norm_label": "requireauth()"
+    },
+    {
+      "label": "mcp",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "mcp_server_server_mcp",
+      "community": 5,
+      "norm_label": "mcp"
+    },
+    {
+      "label": "app",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L373",
+      "_origin": "ast",
+      "id": "mcp_server_server_app",
+      "community": 5,
+      "norm_label": "app"
+    },
+    {
+      "label": "safeDate()",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L388",
+      "_origin": "ast",
+      "id": "mcp_server_server_safedate",
+      "community": 5,
+      "norm_label": "safedate()"
+    },
+    {
+      "label": "transport",
+      "file_type": "code",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L451",
+      "_origin": "ast",
+      "id": "mcp_server_server_transport",
+      "community": 5,
+      "norm_label": "transport"
+    },
+    {
+      "label": "sw.js",
+      "file_type": "code",
+      "source_file": "sw.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "sw",
+      "community": 10,
+      "norm_label": "sw.js"
+    },
+    {
+      "label": "SHELL",
+      "file_type": "code",
+      "source_file": "sw.js",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "sw_shell",
+      "community": 10,
+      "norm_label": "shell"
+    },
+    {
+      "label": "CLAUDE.md",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude",
+      "community": 8,
+      "norm_label": "claude.md"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "claude_graphify",
+      "community": 8,
+      "norm_label": "graphify"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "mcp_server_readme",
+      "community": 4,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "LifeTrack MCP Server",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "mcp_server_readme_lifetrack_mcp_server",
+      "community": 4,
+      "norm_label": "lifetrack mcp server"
+    },
+    {
+      "label": "Requisitos",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "mcp_server_readme_requisitos",
+      "community": 4,
+      "norm_label": "requisitos"
+    },
+    {
+      "label": "Instalaci\u00f3n",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "mcp_server_readme_instalaci\u00f3n",
+      "community": 4,
+      "norm_label": "instalacion"
+    },
+    {
+      "label": "Iniciar servidor",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "mcp_server_readme_iniciar_servidor",
+      "community": 4,
+      "norm_label": "iniciar servidor"
+    },
+    {
+      "label": "Configurar Claude Desktop",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "mcp_server_readme_configurar_claude_desktop",
+      "community": 4,
+      "norm_label": "configurar claude desktop"
+    },
+    {
+      "label": "Configurar Claude Code",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "mcp_server_readme_configurar_claude_code",
+      "community": 4,
+      "norm_label": "configurar claude code"
+    },
+    {
+      "label": "Configurar la PWA Android",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "mcp_server_readme_configurar_la_pwa_android",
+      "community": 4,
+      "norm_label": "configurar la pwa android"
+    },
+    {
+      "label": "Herramientas MCP disponibles",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L62",
+      "_origin": "ast",
+      "id": "mcp_server_readme_herramientas_mcp_disponibles",
+      "community": 4,
+      "norm_label": "herramientas mcp disponibles"
+    },
+    {
+      "label": "Ejemplo de uso en Claude",
+      "file_type": "document",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L76",
+      "_origin": "ast",
+      "id": "mcp_server_readme_ejemplo_de_uso_en_claude",
+      "community": 4,
+      "norm_label": "ejemplo de uso en claude"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L743",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_activities",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L2078",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1911",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_benchmark",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1851",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_benchmark_lms",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1612",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_calcprediction",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L286",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_calcrecipemicros",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1555",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_calcstreaks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1684",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_calcwellnesscorrelations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1147",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_charts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1427",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_cloudsync",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_cutting_styles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L996",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_darkmode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_days_full",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_days_short",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L771",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1296",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_esc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1034",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_fasting",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L766",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_fmtdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1058",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_foodapi",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1299",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_forbidden_keys",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1729",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_generateweeklyinsights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L899",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_hydration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L236",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_ingredient_micros",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_ingredients",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L2025",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_lift_standards",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L2017",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_lift_tiers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L758",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_localdatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1314",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_mcpsync",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_meal_slots",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L955",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_mealreminder",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1363",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_mergeclientserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_micro_keys",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_micros",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_months",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_moods",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L867",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_notif",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_prep_foods",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L298",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_recipe_amounts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L149",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_recipe_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L473",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_recipe_steps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1300",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_sanitizeuntrusted",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_slot_fractions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L2045",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_strength",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1261",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_toast",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1271",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_toastundo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L765",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_today",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L766",
+      "weight": 1.0,
+      "source": "app_fmtdate",
+      "target": "app_localdatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L765",
+      "weight": 1.0,
+      "source": "app_today",
+      "target": "app_localdatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1584",
+      "weight": 1.0,
+      "source": "app_calcstreaks",
+      "target": "app_fmtdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1776",
+      "weight": 1.0,
+      "source": "app_generateweeklyinsights",
+      "target": "app_fmtdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1364",
+      "weight": 1.0,
+      "source": "app_mergeclientserver",
+      "target": "app_sanitizeuntrusted",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "generate-config.sh",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "generate_config",
+      "target": "f_proyectos_pwa_app_pwa_app_generate_config_sh__entry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_background_color",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_categories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_description",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_display",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_icons",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_lang",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_orientation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_scope",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_short_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_shortcuts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_start_url",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "manifest.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "manifest",
+      "target": "manifest_theme_color",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_calctdee",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_data_dir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_data_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_defaults",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_dir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_ensuredir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_forbidden_keys",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_getdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_mergesync",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_sanitize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_savedata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_today",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "mcp_server_data_getdata",
+      "target": "mcp_server_data_ensuredir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "mcp_server_data_savedata",
+      "target": "mcp_server_data_ensuredir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "mcp_server_data_mergesync",
+      "target": "mcp_server_data_sanitize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_dependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_description",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_engines",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_scripts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_type",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "mcp_server_package",
+      "target": "mcp_server_package_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "mcp_server_package_scripts",
+      "target": "mcp_server_package_scripts_dev",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "mcp_server_package_scripts",
+      "target": "mcp_server_package_scripts_start",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "mcp_server_package_dependencies",
+      "target": "mcp_server_package_dependencies_cors",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "mcp_server_package_dependencies",
+      "target": "mcp_server_package_dependencies_express",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "mcp_server_package_dependencies",
+      "target": "mcp_server_package_dependencies_modelcontextprotocol_sdk",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "mcp_server_package_dependencies",
+      "target": "mcp_server_package_dependencies_zod",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "mcp_server_package_engines",
+      "target": "mcp_server_package_engines_node",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_allowed_origins",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L373",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_mcp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_requireauth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L388",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_safedate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/server.js",
+      "source_location": "L451",
+      "weight": 1.0,
+      "source": "mcp_server_server",
+      "target": "mcp_server_server_transport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "sw.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "sw",
+      "target": "sw_shell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "claude",
+      "target": "claude_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "mcp_server_readme",
+      "target": "mcp_server_readme_lifetrack_mcp_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_configurar_claude_code",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_configurar_claude_desktop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_configurar_la_pwa_android",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_ejemplo_de_uso_en_claude",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_herramientas_mcp_disponibles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_iniciar_servidor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_instalaci\u00f3n",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "mcp_server_readme_lifetrack_mcp_server",
+      "target": "mcp_server_readme_requisitos",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "55d5f6cb2c9a597e61fe63b889da76320c7624ee"
+}

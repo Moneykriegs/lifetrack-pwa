@@ -1,0 +1,72 @@
+{
+  "app.js": {
+    "mtime": 1780525667.8176591,
+    "ast_hash": "a2737cd793a87579766097f005861651",
+    "semantic_hash": ""
+  },
+  "generate-config.sh": {
+    "mtime": 1779739557.149249,
+    "ast_hash": "366024ea7e2850fdb7736ca3f8fe9e00",
+    "semantic_hash": ""
+  },
+  "manifest.json": {
+    "mtime": 1779765857.7812283,
+    "ast_hash": "284e8303dc2579f1be455260eb389fb2",
+    "semantic_hash": ""
+  },
+  "mcp-server/data.js": {
+    "mtime": 1780354538.3192663,
+    "ast_hash": "81d2c67c4f9c51e4ae5cee5c8ebce06c",
+    "semantic_hash": ""
+  },
+  "mcp-server/package.json": {
+    "mtime": 1779313170.49014,
+    "ast_hash": "017256957a2a858cb5be717aeea389f5",
+    "semantic_hash": ""
+  },
+  "mcp-server/server.js": {
+    "mtime": 1780352787.5823367,
+    "ast_hash": "a9282f9bd6df425f43d11da65a150dda",
+    "semantic_hash": ""
+  },
+  "supabase-schema.sql": {
+    "mtime": 1779738284.9297485,
+    "ast_hash": "07d735fd4adc1ca767425901aefbc8ad",
+    "semantic_hash": ""
+  },
+  "supabase/rls-policies.sql": {
+    "mtime": 1780352899.9291806,
+    "ast_hash": "6a58241da313d39feddac939f8cef5d5",
+    "semantic_hash": ""
+  },
+  "sw.js": {
+    "mtime": 1780450819.78025,
+    "ast_hash": "3286a7a952b213adb042d99bc16359fb",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1781039200.5840826,
+    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1780524891.5408971,
+    "ast_hash": "20fab84d20198e47f1e503d537a209f2",
+    "semantic_hash": ""
+  },
+  "mcp-server/README.md": {
+    "mtime": 1779313170.479633,
+    "ast_hash": "bd96e114064c3ff3192cfa99f6c7c0f6",
+    "semantic_hash": ""
+  },
+  "icons/icon-maskable.svg": {
+    "mtime": 1779313170.50624,
+    "ast_hash": "61ac2fc274bad859f8b8242efb9f4ce3",
+    "semantic_hash": ""
+  },
+  "icons/icon.svg": {
+    "mtime": 1779313170.5122516,
+    "ast_hash": "d2520e2311823f7ccd6adf29e30cbc55",
+    "semantic_hash": ""
+  }
+}
