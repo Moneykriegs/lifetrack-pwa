@@ -227,7 +227,7 @@
       "label": "Notif",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L867",
+      "source_location": "L947",
       "_origin": "ast",
       "id": "app_notif",
       "community": 0,
@@ -237,7 +237,7 @@
       "label": "Hydration",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L899",
+      "source_location": "L979",
       "_origin": "ast",
       "id": "app_hydration",
       "community": 0,
@@ -247,7 +247,7 @@
       "label": "MealReminder",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L955",
+      "source_location": "L1035",
       "_origin": "ast",
       "id": "app_mealreminder",
       "community": 0,
@@ -257,7 +257,7 @@
       "label": "DarkMode",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L996",
+      "source_location": "L1076",
       "_origin": "ast",
       "id": "app_darkmode",
       "community": 0,
@@ -267,7 +267,7 @@
       "label": "Fasting",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1034",
+      "source_location": "L1114",
       "_origin": "ast",
       "id": "app_fasting",
       "community": 0,
@@ -277,7 +277,7 @@
       "label": "FoodAPI",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1058",
+      "source_location": "L1138",
       "_origin": "ast",
       "id": "app_foodapi",
       "community": 0,
@@ -287,7 +287,7 @@
       "label": "Charts",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1147",
+      "source_location": "L1227",
       "_origin": "ast",
       "id": "app_charts",
       "community": 0,
@@ -297,7 +297,7 @@
       "label": "toast()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1261",
+      "source_location": "L1341",
       "_origin": "ast",
       "id": "app_toast",
       "community": 0,
@@ -307,7 +307,7 @@
       "label": "toastUndo()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1271",
+      "source_location": "L1351",
       "_origin": "ast",
       "id": "app_toastundo",
       "community": 0,
@@ -317,7 +317,7 @@
       "label": "esc()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1296",
+      "source_location": "L1376",
       "_origin": "ast",
       "id": "app_esc",
       "community": 0,
@@ -327,17 +327,27 @@
       "label": "_FORBIDDEN_KEYS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1299",
+      "source_location": "L1379",
       "_origin": "ast",
       "id": "app_forbidden_keys",
       "community": 0,
       "norm_label": "_forbidden_keys"
     },
     {
+      "label": "_NUMERIC_KEYS",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1381",
+      "_origin": "ast",
+      "id": "app_numeric_keys",
+      "community": 0,
+      "norm_label": "_numeric_keys"
+    },
+    {
       "label": "sanitizeUntrusted()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1300",
+      "source_location": "L1382",
       "_origin": "ast",
       "id": "app_sanitizeuntrusted",
       "community": 7,
@@ -347,17 +357,37 @@
       "label": "MCPSync",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1314",
+      "source_location": "L1401",
       "_origin": "ast",
       "id": "app_mcpsync",
       "community": 0,
       "norm_label": "mcpsync"
     },
     {
+      "label": "unionEntries()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1451",
+      "_origin": "ast",
+      "id": "app_unionentries",
+      "community": 7,
+      "norm_label": "unionentries()"
+    },
+    {
+      "label": "unionDayLog()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1462",
+      "_origin": "ast",
+      "id": "app_uniondaylog",
+      "community": 7,
+      "norm_label": "uniondaylog()"
+    },
+    {
       "label": "mergeClientServer()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1363",
+      "source_location": "L1470",
       "_origin": "ast",
       "id": "app_mergeclientserver",
       "community": 7,
@@ -367,7 +397,7 @@
       "label": "CloudSync",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1427",
+      "source_location": "L1538",
       "_origin": "ast",
       "id": "app_cloudsync",
       "community": 0,
@@ -377,7 +407,7 @@
       "label": "calcStreaks()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1555",
+      "source_location": "L1682",
       "_origin": "ast",
       "id": "app_calcstreaks",
       "community": 6,
@@ -387,7 +417,7 @@
       "label": "calcPrediction()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1612",
+      "source_location": "L1739",
       "_origin": "ast",
       "id": "app_calcprediction",
       "community": 0,
@@ -397,7 +427,7 @@
       "label": "calcWellnessCorrelations()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1684",
+      "source_location": "L1811",
       "_origin": "ast",
       "id": "app_calcwellnesscorrelations",
       "community": 0,
@@ -407,7 +437,7 @@
       "label": "generateWeeklyInsights()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1729",
+      "source_location": "L1856",
       "_origin": "ast",
       "id": "app_generateweeklyinsights",
       "community": 6,
@@ -417,7 +447,7 @@
       "label": "BENCHMARK_LMS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1851",
+      "source_location": "L1978",
       "_origin": "ast",
       "id": "app_benchmark_lms",
       "community": 0,
@@ -427,7 +457,7 @@
       "label": "Benchmark",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1911",
+      "source_location": "L2038",
       "_origin": "ast",
       "id": "app_benchmark",
       "community": 0,
@@ -437,7 +467,7 @@
       "label": "LIFT_TIERS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2017",
+      "source_location": "L2144",
       "_origin": "ast",
       "id": "app_lift_tiers",
       "community": 0,
@@ -447,7 +477,7 @@
       "label": "LIFT_STANDARDS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2025",
+      "source_location": "L2152",
       "_origin": "ast",
       "id": "app_lift_standards",
       "community": 0,
@@ -457,7 +487,7 @@
       "label": "Strength",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2045",
+      "source_location": "L2172",
       "_origin": "ast",
       "id": "app_strength",
       "community": 0,
@@ -467,7 +497,7 @@
       "label": "App",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2078",
+      "source_location": "L2205",
       "_origin": "ast",
       "id": "app_app",
       "community": 0,
@@ -752,10 +782,30 @@
       "norm_label": "sanitize()"
     },
     {
+      "label": "unionEntries()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "mcp_server_data_unionentries",
+      "community": 3,
+      "norm_label": "unionentries()"
+    },
+    {
+      "label": "unionDayLog()",
+      "file_type": "code",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L83",
+      "_origin": "ast",
+      "id": "mcp_server_data_uniondaylog",
+      "community": 3,
+      "norm_label": "uniondaylog()"
+    },
+    {
       "label": "mergeSync()",
       "file_type": "code",
       "source_file": "mcp-server/data.js",
-      "source_location": "L71",
+      "source_location": "L92",
       "_origin": "ast",
       "id": "mcp_server_data_mergesync",
       "community": 3,
@@ -765,7 +815,7 @@
       "label": "calcTDEE()",
       "file_type": "code",
       "source_file": "mcp-server/data.js",
-      "source_location": "L156",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "mcp_server_data_calctdee",
       "community": 3,
@@ -1002,6 +1052,146 @@
       "norm_label": "transport"
     },
     {
+      "label": "db.test.mjs",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "test_db_test",
+      "community": 11,
+      "norm_label": "db.test.mjs"
+    },
+    {
+      "label": "here",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "test_db_test_here",
+      "community": 11,
+      "norm_label": "here"
+    },
+    {
+      "label": "addEventListener()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "test_db_test_addeventlistener",
+      "community": 11,
+      "norm_label": "addeventlistener()"
+    },
+    {
+      "label": "removeEventListener()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "test_db_test_removeeventlistener",
+      "community": 11,
+      "norm_label": "removeeventlistener()"
+    },
+    {
+      "label": "getElementById()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "test_db_test_getelementbyid",
+      "community": 11,
+      "norm_label": "getelementbyid()"
+    },
+    {
+      "label": "querySelectorAll()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L25",
+      "_origin": "ast",
+      "id": "test_db_test_queryselectorall",
+      "community": 11,
+      "norm_label": "queryselectorall()"
+    },
+    {
+      "label": "querySelector()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "test_db_test_queryselector",
+      "community": 11,
+      "norm_label": "queryselector()"
+    },
+    {
+      "label": "createElement()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "test_db_test_createelement",
+      "community": 11,
+      "norm_label": "createelement()"
+    },
+    {
+      "label": "appendChild()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "test_db_test_appendchild",
+      "community": 11,
+      "norm_label": "appendchild()"
+    },
+    {
+      "label": "setAttribute()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "test_db_test_setattribute",
+      "community": 11,
+      "norm_label": "setattribute()"
+    },
+    {
+      "label": "add()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "test_db_test_add",
+      "community": 11,
+      "norm_label": "add()"
+    },
+    {
+      "label": "remove()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "test_db_test_remove",
+      "community": 11,
+      "norm_label": "remove()"
+    },
+    {
+      "label": "toggle()",
+      "file_type": "code",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "test_db_test_toggle",
+      "community": 11,
+      "norm_label": "toggle()"
+    },
+    {
+      "label": "merge.test.mjs",
+      "file_type": "code",
+      "source_file": "mcp-server/test/merge.test.mjs",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "test_merge_test",
+      "community": 3,
+      "norm_label": "merge.test.mjs"
+    },
+    {
       "label": "sw.js",
       "file_type": "code",
       "source_file": "sw.js",
@@ -1149,9 +1339,9 @@
       "source_file": "app.js",
       "source_location": "L743",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_activities",
-      "confidence_score": 1.0
+      "target": "app_activities"
     },
     {
       "relation": "contains",
@@ -1159,9 +1349,9 @@
       "source_file": "app.js",
       "source_location": "L2078",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_app",
-      "confidence_score": 1.0
+      "target": "app_app"
     },
     {
       "relation": "contains",
@@ -1169,9 +1359,9 @@
       "source_file": "app.js",
       "source_location": "L1911",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_benchmark",
-      "confidence_score": 1.0
+      "target": "app_benchmark"
     },
     {
       "relation": "contains",
@@ -1179,9 +1369,9 @@
       "source_file": "app.js",
       "source_location": "L1851",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_benchmark_lms",
-      "confidence_score": 1.0
+      "target": "app_benchmark_lms"
     },
     {
       "relation": "contains",
@@ -1189,9 +1379,9 @@
       "source_file": "app.js",
       "source_location": "L1612",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_calcprediction",
-      "confidence_score": 1.0
+      "target": "app_calcprediction"
     },
     {
       "relation": "contains",
@@ -1199,9 +1389,9 @@
       "source_file": "app.js",
       "source_location": "L286",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_calcrecipemicros",
-      "confidence_score": 1.0
+      "target": "app_calcrecipemicros"
     },
     {
       "relation": "contains",
@@ -1209,9 +1399,9 @@
       "source_file": "app.js",
       "source_location": "L1555",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_calcstreaks",
-      "confidence_score": 1.0
+      "target": "app_calcstreaks"
     },
     {
       "relation": "contains",
@@ -1219,9 +1409,9 @@
       "source_file": "app.js",
       "source_location": "L1684",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_calcwellnesscorrelations",
-      "confidence_score": 1.0
+      "target": "app_calcwellnesscorrelations"
     },
     {
       "relation": "contains",
@@ -1229,9 +1419,9 @@
       "source_file": "app.js",
       "source_location": "L1147",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_charts",
-      "confidence_score": 1.0
+      "target": "app_charts"
     },
     {
       "relation": "contains",
@@ -1239,9 +1429,9 @@
       "source_file": "app.js",
       "source_location": "L1427",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_cloudsync",
-      "confidence_score": 1.0
+      "target": "app_cloudsync"
     },
     {
       "relation": "contains",
@@ -1249,9 +1439,9 @@
       "source_file": "app.js",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_cutting_styles",
-      "confidence_score": 1.0
+      "target": "app_cutting_styles"
     },
     {
       "relation": "contains",
@@ -1259,9 +1449,9 @@
       "source_file": "app.js",
       "source_location": "L996",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_darkmode",
-      "confidence_score": 1.0
+      "target": "app_darkmode"
     },
     {
       "relation": "contains",
@@ -1269,9 +1459,9 @@
       "source_file": "app.js",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_days_full",
-      "confidence_score": 1.0
+      "target": "app_days_full"
     },
     {
       "relation": "contains",
@@ -1279,9 +1469,9 @@
       "source_file": "app.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_days_short",
-      "confidence_score": 1.0
+      "target": "app_days_short"
     },
     {
       "relation": "contains",
@@ -1289,9 +1479,9 @@
       "source_file": "app.js",
       "source_location": "L771",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_db",
-      "confidence_score": 1.0
+      "target": "app_db"
     },
     {
       "relation": "contains",
@@ -1299,9 +1489,9 @@
       "source_file": "app.js",
       "source_location": "L1296",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_esc",
-      "confidence_score": 1.0
+      "target": "app_esc"
     },
     {
       "relation": "contains",
@@ -1309,9 +1499,9 @@
       "source_file": "app.js",
       "source_location": "L1034",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_fasting",
-      "confidence_score": 1.0
+      "target": "app_fasting"
     },
     {
       "relation": "contains",
@@ -1319,9 +1509,9 @@
       "source_file": "app.js",
       "source_location": "L766",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_fmtdate",
-      "confidence_score": 1.0
+      "target": "app_fmtdate"
     },
     {
       "relation": "contains",
@@ -1329,9 +1519,9 @@
       "source_file": "app.js",
       "source_location": "L1058",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_foodapi",
-      "confidence_score": 1.0
+      "target": "app_foodapi"
     },
     {
       "relation": "contains",
@@ -1339,9 +1529,9 @@
       "source_file": "app.js",
       "source_location": "L1299",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_forbidden_keys",
-      "confidence_score": 1.0
+      "target": "app_forbidden_keys"
     },
     {
       "relation": "contains",
@@ -1349,9 +1539,9 @@
       "source_file": "app.js",
       "source_location": "L1729",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_generateweeklyinsights",
-      "confidence_score": 1.0
+      "target": "app_generateweeklyinsights"
     },
     {
       "relation": "contains",
@@ -1359,9 +1549,9 @@
       "source_file": "app.js",
       "source_location": "L899",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_hydration",
-      "confidence_score": 1.0
+      "target": "app_hydration"
     },
     {
       "relation": "contains",
@@ -1369,9 +1559,9 @@
       "source_file": "app.js",
       "source_location": "L236",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_ingredient_micros",
-      "confidence_score": 1.0
+      "target": "app_ingredient_micros"
     },
     {
       "relation": "contains",
@@ -1379,9 +1569,9 @@
       "source_file": "app.js",
       "source_location": "L97",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_ingredients",
-      "confidence_score": 1.0
+      "target": "app_ingredients"
     },
     {
       "relation": "contains",
@@ -1389,9 +1579,9 @@
       "source_file": "app.js",
       "source_location": "L2025",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_lift_standards",
-      "confidence_score": 1.0
+      "target": "app_lift_standards"
     },
     {
       "relation": "contains",
@@ -1399,9 +1589,9 @@
       "source_file": "app.js",
       "source_location": "L2017",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_lift_tiers",
-      "confidence_score": 1.0
+      "target": "app_lift_tiers"
     },
     {
       "relation": "contains",
@@ -1409,9 +1599,9 @@
       "source_file": "app.js",
       "source_location": "L758",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_localdatestr",
-      "confidence_score": 1.0
+      "target": "app_localdatestr"
     },
     {
       "relation": "contains",
@@ -1419,9 +1609,9 @@
       "source_file": "app.js",
       "source_location": "L1314",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_mcpsync",
-      "confidence_score": 1.0
+      "target": "app_mcpsync"
     },
     {
       "relation": "contains",
@@ -1429,9 +1619,9 @@
       "source_file": "app.js",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_meal_slots",
-      "confidence_score": 1.0
+      "target": "app_meal_slots"
     },
     {
       "relation": "contains",
@@ -1439,9 +1629,9 @@
       "source_file": "app.js",
       "source_location": "L955",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_mealreminder",
-      "confidence_score": 1.0
+      "target": "app_mealreminder"
     },
     {
       "relation": "contains",
@@ -1449,9 +1639,9 @@
       "source_file": "app.js",
       "source_location": "L1363",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_mergeclientserver",
-      "confidence_score": 1.0
+      "target": "app_mergeclientserver"
     },
     {
       "relation": "contains",
@@ -1459,9 +1649,9 @@
       "source_file": "app.js",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_micro_keys",
-      "confidence_score": 1.0
+      "target": "app_micro_keys"
     },
     {
       "relation": "contains",
@@ -1469,9 +1659,9 @@
       "source_file": "app.js",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_micros",
-      "confidence_score": 1.0
+      "target": "app_micros"
     },
     {
       "relation": "contains",
@@ -1479,9 +1669,9 @@
       "source_file": "app.js",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_months",
-      "confidence_score": 1.0
+      "target": "app_months"
     },
     {
       "relation": "contains",
@@ -1489,9 +1679,9 @@
       "source_file": "app.js",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_moods",
-      "confidence_score": 1.0
+      "target": "app_moods"
     },
     {
       "relation": "contains",
@@ -1499,8 +1689,18 @@
       "source_file": "app.js",
       "source_location": "L867",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_notif",
+      "target": "app_notif"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1381",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_numeric_keys",
       "confidence_score": 1.0
     },
     {
@@ -1509,9 +1709,9 @@
       "source_file": "app.js",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_prep_foods",
-      "confidence_score": 1.0
+      "target": "app_prep_foods"
     },
     {
       "relation": "contains",
@@ -1519,9 +1719,9 @@
       "source_file": "app.js",
       "source_location": "L298",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_recipe_amounts",
-      "confidence_score": 1.0
+      "target": "app_recipe_amounts"
     },
     {
       "relation": "contains",
@@ -1529,9 +1729,9 @@
       "source_file": "app.js",
       "source_location": "L149",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_recipe_db",
-      "confidence_score": 1.0
+      "target": "app_recipe_db"
     },
     {
       "relation": "contains",
@@ -1539,9 +1739,9 @@
       "source_file": "app.js",
       "source_location": "L473",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_recipe_steps",
-      "confidence_score": 1.0
+      "target": "app_recipe_steps"
     },
     {
       "relation": "contains",
@@ -1549,9 +1749,9 @@
       "source_file": "app.js",
       "source_location": "L1300",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_sanitizeuntrusted",
-      "confidence_score": 1.0
+      "target": "app_sanitizeuntrusted"
     },
     {
       "relation": "contains",
@@ -1559,9 +1759,9 @@
       "source_file": "app.js",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_slot_fractions",
-      "confidence_score": 1.0
+      "target": "app_slot_fractions"
     },
     {
       "relation": "contains",
@@ -1569,9 +1769,9 @@
       "source_file": "app.js",
       "source_location": "L2045",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_strength",
-      "confidence_score": 1.0
+      "target": "app_strength"
     },
     {
       "relation": "contains",
@@ -1579,9 +1779,9 @@
       "source_file": "app.js",
       "source_location": "L1261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_toast",
-      "confidence_score": 1.0
+      "target": "app_toast"
     },
     {
       "relation": "contains",
@@ -1589,9 +1789,9 @@
       "source_file": "app.js",
       "source_location": "L1271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_toastundo",
-      "confidence_score": 1.0
+      "target": "app_toastundo"
     },
     {
       "relation": "contains",
@@ -1599,8 +1799,28 @@
       "source_file": "app.js",
       "source_location": "L765",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_today",
+      "target": "app_today"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1462",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_uniondaylog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1451",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_unionentries",
       "confidence_score": 1.0
     },
     {
@@ -1610,9 +1830,9 @@
       "source_file": "app.js",
       "source_location": "L766",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_fmtdate",
-      "target": "app_localdatestr",
-      "confidence_score": 1.0
+      "target": "app_localdatestr"
     },
     {
       "relation": "calls",
@@ -1621,9 +1841,9 @@
       "source_file": "app.js",
       "source_location": "L765",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_today",
-      "target": "app_localdatestr",
-      "confidence_score": 1.0
+      "target": "app_localdatestr"
     },
     {
       "relation": "calls",
@@ -1632,9 +1852,9 @@
       "source_file": "app.js",
       "source_location": "L1584",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_calcstreaks",
-      "target": "app_fmtdate",
-      "confidence_score": 1.0
+      "target": "app_fmtdate"
     },
     {
       "relation": "calls",
@@ -1643,9 +1863,9 @@
       "source_file": "app.js",
       "source_location": "L1776",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_generateweeklyinsights",
-      "target": "app_fmtdate",
-      "confidence_score": 1.0
+      "target": "app_fmtdate"
     },
     {
       "relation": "calls",
@@ -1654,8 +1874,30 @@
       "source_file": "app.js",
       "source_location": "L1364",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_mergeclientserver",
-      "target": "app_sanitizeuntrusted",
+      "target": "app_sanitizeuntrusted"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1530",
+      "weight": 1.0,
+      "source": "app_mergeclientserver",
+      "target": "app_unionentries",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
+      "source_location": "L1478",
+      "weight": 1.0,
+      "source": "app_mergeclientserver",
+      "target": "app_uniondaylog",
       "confidence_score": 1.0
     },
     {
@@ -1664,9 +1906,9 @@
       "source_file": "generate-config.sh",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "generate_config",
-      "target": "f_proyectos_pwa_app_pwa_app_generate_config_sh__entry",
-      "confidence_score": 1.0
+      "target": "f_proyectos_pwa_app_pwa_app_generate_config_sh__entry"
     },
     {
       "relation": "contains",
@@ -1674,9 +1916,9 @@
       "source_file": "manifest.json",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_background_color",
-      "confidence_score": 1.0
+      "target": "manifest_background_color"
     },
     {
       "relation": "contains",
@@ -1684,9 +1926,9 @@
       "source_file": "manifest.json",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_categories",
-      "confidence_score": 1.0
+      "target": "manifest_categories"
     },
     {
       "relation": "contains",
@@ -1694,9 +1936,9 @@
       "source_file": "manifest.json",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_description",
-      "confidence_score": 1.0
+      "target": "manifest_description"
     },
     {
       "relation": "contains",
@@ -1704,9 +1946,9 @@
       "source_file": "manifest.json",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_display",
-      "confidence_score": 1.0
+      "target": "manifest_display"
     },
     {
       "relation": "contains",
@@ -1714,9 +1956,9 @@
       "source_file": "manifest.json",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_icons",
-      "confidence_score": 1.0
+      "target": "manifest_icons"
     },
     {
       "relation": "contains",
@@ -1724,9 +1966,9 @@
       "source_file": "manifest.json",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_lang",
-      "confidence_score": 1.0
+      "target": "manifest_lang"
     },
     {
       "relation": "contains",
@@ -1734,9 +1976,9 @@
       "source_file": "manifest.json",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_name",
-      "confidence_score": 1.0
+      "target": "manifest_name"
     },
     {
       "relation": "contains",
@@ -1744,9 +1986,9 @@
       "source_file": "manifest.json",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_orientation",
-      "confidence_score": 1.0
+      "target": "manifest_orientation"
     },
     {
       "relation": "contains",
@@ -1754,9 +1996,9 @@
       "source_file": "manifest.json",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_scope",
-      "confidence_score": 1.0
+      "target": "manifest_scope"
     },
     {
       "relation": "contains",
@@ -1764,9 +2006,9 @@
       "source_file": "manifest.json",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_short_name",
-      "confidence_score": 1.0
+      "target": "manifest_short_name"
     },
     {
       "relation": "contains",
@@ -1774,9 +2016,9 @@
       "source_file": "manifest.json",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_shortcuts",
-      "confidence_score": 1.0
+      "target": "manifest_shortcuts"
     },
     {
       "relation": "contains",
@@ -1784,9 +2026,9 @@
       "source_file": "manifest.json",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_start_url",
-      "confidence_score": 1.0
+      "target": "manifest_start_url"
     },
     {
       "relation": "contains",
@@ -1794,9 +2036,9 @@
       "source_file": "manifest.json",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "manifest",
-      "target": "manifest_theme_color",
-      "confidence_score": 1.0
+      "target": "manifest_theme_color"
     },
     {
       "relation": "contains",
@@ -1804,9 +2046,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_calctdee",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_calctdee"
     },
     {
       "relation": "contains",
@@ -1814,9 +2056,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_data_dir",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_data_dir"
     },
     {
       "relation": "contains",
@@ -1824,9 +2066,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_data_file",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_data_file"
     },
     {
       "relation": "contains",
@@ -1834,9 +2076,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_defaults",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_defaults"
     },
     {
       "relation": "contains",
@@ -1844,9 +2086,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_dir",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_dir"
     },
     {
       "relation": "contains",
@@ -1854,9 +2096,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_ensuredir",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_ensuredir"
     },
     {
       "relation": "contains",
@@ -1864,9 +2106,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_forbidden_keys",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_forbidden_keys"
     },
     {
       "relation": "contains",
@@ -1874,9 +2116,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_getdata",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_getdata"
     },
     {
       "relation": "contains",
@@ -1884,9 +2126,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_mergesync",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_mergesync"
     },
     {
       "relation": "contains",
@@ -1894,9 +2136,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_sanitize",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_sanitize"
     },
     {
       "relation": "contains",
@@ -1904,9 +2146,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_savedata",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_savedata"
     },
     {
       "relation": "contains",
@@ -1914,8 +2156,28 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_today",
+      "target": "mcp_server_data_today"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_uniondaylog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "mcp_server_data",
+      "target": "mcp_server_data_unionentries",
       "confidence_score": 1.0
     },
     {
@@ -1925,7 +2187,18 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
+      "target": "mcp_server_data"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/merge.test.mjs",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "test_merge_test",
       "target": "mcp_server_data",
       "confidence_score": 1.0
     },
@@ -1936,9 +2209,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data_getdata",
-      "target": "mcp_server_data_ensuredir",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_ensuredir"
     },
     {
       "relation": "calls",
@@ -1947,9 +2220,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data_savedata",
-      "target": "mcp_server_data_ensuredir",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_ensuredir"
     },
     {
       "relation": "calls",
@@ -1958,8 +2231,41 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L73",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data_mergesync",
-      "target": "mcp_server_data_sanitize",
+      "target": "mcp_server_data_sanitize"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "mcp_server_data_mergesync",
+      "target": "mcp_server_data_unionentries",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/data.js",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "mcp_server_data_mergesync",
+      "target": "mcp_server_data_uniondaylog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/merge.test.mjs",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "test_merge_test",
+      "target": "mcp_server_data_mergesync",
       "confidence_score": 1.0
     },
     {
@@ -1968,9 +2274,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_dependencies",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_dependencies"
     },
     {
       "relation": "contains",
@@ -1978,9 +2284,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_description",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_description"
     },
     {
       "relation": "contains",
@@ -1988,9 +2294,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_engines",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_engines"
     },
     {
       "relation": "contains",
@@ -1998,9 +2304,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_main",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_main"
     },
     {
       "relation": "contains",
@@ -2008,9 +2314,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_name",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_name"
     },
     {
       "relation": "contains",
@@ -2018,9 +2324,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_scripts",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_scripts"
     },
     {
       "relation": "contains",
@@ -2028,9 +2334,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_type",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_type"
     },
     {
       "relation": "contains",
@@ -2038,9 +2344,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package",
-      "target": "mcp_server_package_version",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_version"
     },
     {
       "relation": "contains",
@@ -2048,9 +2354,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_scripts",
-      "target": "mcp_server_package_scripts_dev",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_scripts_dev"
     },
     {
       "relation": "contains",
@@ -2058,9 +2364,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_scripts",
-      "target": "mcp_server_package_scripts_start",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_scripts_start"
     },
     {
       "relation": "contains",
@@ -2068,9 +2374,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_dependencies",
-      "target": "mcp_server_package_dependencies_cors",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_dependencies_cors"
     },
     {
       "relation": "contains",
@@ -2078,9 +2384,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_dependencies",
-      "target": "mcp_server_package_dependencies_express",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_dependencies_express"
     },
     {
       "relation": "contains",
@@ -2088,9 +2394,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_dependencies",
-      "target": "mcp_server_package_dependencies_modelcontextprotocol_sdk",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_dependencies_modelcontextprotocol_sdk"
     },
     {
       "relation": "contains",
@@ -2098,9 +2404,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_dependencies",
-      "target": "mcp_server_package_dependencies_zod",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_dependencies_zod"
     },
     {
       "relation": "contains",
@@ -2108,9 +2414,9 @@
       "source_file": "mcp-server/package.json",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_package_engines",
-      "target": "mcp_server_package_engines_node",
-      "confidence_score": 1.0
+      "target": "mcp_server_package_engines_node"
     },
     {
       "relation": "contains",
@@ -2118,9 +2424,9 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_allowed_origins",
-      "confidence_score": 1.0
+      "target": "mcp_server_server_allowed_origins"
     },
     {
       "relation": "contains",
@@ -2128,9 +2434,9 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L373",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_app",
-      "confidence_score": 1.0
+      "target": "mcp_server_server_app"
     },
     {
       "relation": "contains",
@@ -2138,9 +2444,9 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_mcp",
-      "confidence_score": 1.0
+      "target": "mcp_server_server_mcp"
     },
     {
       "relation": "contains",
@@ -2148,9 +2454,9 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_requireauth",
-      "confidence_score": 1.0
+      "target": "mcp_server_server_requireauth"
     },
     {
       "relation": "contains",
@@ -2158,9 +2464,9 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L388",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_safedate",
-      "confidence_score": 1.0
+      "target": "mcp_server_server_safedate"
     },
     {
       "relation": "contains",
@@ -2168,8 +2474,128 @@
       "source_file": "mcp-server/server.js",
       "source_location": "L451",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_server",
-      "target": "mcp_server_server_transport",
+      "target": "mcp_server_server_transport"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_addeventlistener",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_appendchild",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_createelement",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_getelementbyid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_here",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_queryselector",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_queryselectorall",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_remove",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_removeeventlistener",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_setattribute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "mcp-server/test/db.test.mjs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "test_db_test",
+      "target": "test_db_test_toggle",
       "confidence_score": 1.0
     },
     {
@@ -2178,9 +2604,9 @@
       "source_file": "sw.js",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sw",
-      "target": "sw_shell",
-      "confidence_score": 1.0
+      "target": "sw_shell"
     },
     {
       "relation": "contains",
@@ -2188,9 +2614,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude",
-      "target": "claude_graphify",
-      "confidence_score": 1.0
+      "target": "claude_graphify"
     },
     {
       "relation": "contains",
@@ -2198,9 +2624,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme",
-      "target": "mcp_server_readme_lifetrack_mcp_server",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_lifetrack_mcp_server"
     },
     {
       "relation": "contains",
@@ -2208,9 +2634,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_configurar_claude_code",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_configurar_claude_code"
     },
     {
       "relation": "contains",
@@ -2218,9 +2644,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_configurar_claude_desktop",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_configurar_claude_desktop"
     },
     {
       "relation": "contains",
@@ -2228,9 +2654,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_configurar_la_pwa_android",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_configurar_la_pwa_android"
     },
     {
       "relation": "contains",
@@ -2238,9 +2664,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L76",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_ejemplo_de_uso_en_claude",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_ejemplo_de_uso_en_claude"
     },
     {
       "relation": "contains",
@@ -2248,9 +2674,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_herramientas_mcp_disponibles",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_herramientas_mcp_disponibles"
     },
     {
       "relation": "contains",
@@ -2258,9 +2684,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_iniciar_servidor",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_iniciar_servidor"
     },
     {
       "relation": "contains",
@@ -2268,9 +2694,9 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_instalaci\u00f3n",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_instalaci\u00f3n"
     },
     {
       "relation": "contains",
@@ -2278,11 +2704,11 @@
       "source_file": "mcp-server/README.md",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_readme_lifetrack_mcp_server",
-      "target": "mcp_server_readme_requisitos",
-      "confidence_score": 1.0
+      "target": "mcp_server_readme_requisitos"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "55d5f6cb2c9a597e61fe63b889da76320c7624ee"
+  "built_at_commit": "05dad7fc03f1c7fcb4c44a2424c4cedec883234c"
 }

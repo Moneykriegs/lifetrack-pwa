@@ -770,7 +770,21 @@ const fmtDate = d  => _localDateStr(d);
 // ================================================================
 const DB = {
   _g(k, d = null) { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : d; } catch { return d; } },
-  _s(k, v)        { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.warn(e); } },
+  _s(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); }
+    catch(e) {
+      console.warn(e);
+      // Surface quota errors — silently losing data is worse than a toast
+      if (typeof toast === 'function') toast('⚠️ No se pudo guardar — almacenamiento lleno', 'error');
+      return;
+    }
+    // Single seam: every successful data write schedules a debounced cloud
+    // push, so no mutation can be forgotten. Skipped during syncFull (its
+    // own push already covers the merged saves).
+    if (typeof CloudSync !== 'undefined' && CloudSync.userId && !CloudSync._syncingFull) {
+      CloudSync.schedulePush();
+    }
+  },
 
   tasks()         { return this._g('lt_tasks', []); },
   saveTasks(v)    { this._s('lt_tasks', v); },
@@ -795,7 +809,37 @@ const DB = {
     if (!entry.ts) entry = { ...entry, ts: new Date().toISOString() };
     l[d].push(entry); this.saveFoodLog(l);
   },
-  removeFood(idx) { const d=this._d(), l=this.foodLog(); if(l[d]){l[d].splice(idx,1); this.saveFoodLog(l);} },
+  // Remove by stable id (not array index — indexes go stale if a background
+  // sync re-orders the day's entries between render and click)
+  removeFood(id) {
+    const d=this._d(), l=this.foodLog();
+    if (!l[d]) return null;
+    const i = l[d].findIndex(e => String(e.id) === String(id));
+    if (i < 0) return null;
+    const [entry] = l[d].splice(i, 1);
+    this.saveFoodLog(l);
+    return entry;
+  },
+
+  // One-time migration: stamp ids on legacy entries so id-based removal
+  // and the sync union always have a stable key to work with
+  migrateEntryIds() {
+    let changed = false;
+    const stamp = (log) => {
+      Object.values(log).forEach(entries => {
+        (entries || []).forEach((e, i) => {
+          if (e && typeof e === 'object' && e.id == null) {
+            e.id = `mig_${Date.now()}_${i}_${Math.random().toString(36).slice(2,8)}`;
+            changed = true;
+          }
+        });
+      });
+      return log;
+    };
+    const food = stamp(this.foodLog());
+    const ex   = stamp(this.exerciseLog());
+    if (changed) { this.saveFoodLog(food); this.saveExerciseLog(ex); }
+  },
 
   waterLog()      { return this._g('lt_water', {}); },
   saveWaterLog(v) { this._s('lt_water', v); },
@@ -832,8 +876,20 @@ const DB = {
   exerciseLog()      { return this._g('lt_exercise', {}); },
   saveExerciseLog(v) { this._s('lt_exercise', v); },
   todayExercise()    { return (this.exerciseLog())[today()] || []; },
-  addExercise(entry) { const l=this.exerciseLog(); if(!l[today()])l[today()]=[]; l[today()].push(entry); this.saveExerciseLog(l); },
-  removeExercise(idx){ const l=this.exerciseLog(); if(l[today()]){l[today()].splice(idx,1); this.saveExerciseLog(l);} },
+  addExercise(entry) {
+    const l=this.exerciseLog(); if(!l[today()])l[today()]=[];
+    if (entry.id == null) entry = { ...entry, id: `ex_${Date.now()}_${Math.random().toString(36).slice(2,8)}` };
+    l[today()].push(entry); this.saveExerciseLog(l);
+  },
+  removeExercise(id){
+    const d=today(), l=this.exerciseLog();
+    if (!l[d]) return null;
+    const i = l[d].findIndex(e => String(e.id) === String(id));
+    if (i < 0) return null;
+    const [entry] = l[d].splice(i, 1);
+    this.saveExerciseLog(l);
+    return entry;
+  },
 
   wellness()             { return this._g('lt_wellness', {}); },
   saveWellness(v)        { this._s('lt_wellness', v); },
@@ -1321,12 +1377,19 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 // Strip prototype-pollution vectors from data received over the network.
 const _FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+// Numeric fields that poison reduces/charts with NaN if they arrive as strings/garbage
+const _NUMERIC_KEYS = new Set(['kcal', 'prot', 'carbs', 'fat', 'qty', 'ml', 'kg', 'kcalBurned', 'duration']);
 function sanitizeUntrusted(value, depth = 0) {
   if (depth > 8 || value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) return value.map(v => sanitizeUntrusted(v, depth + 1));
   const clean = {};
   for (const [k, v] of Object.entries(value)) {
     if (_FORBIDDEN_KEYS.has(k)) continue;
+    if (_NUMERIC_KEYS.has(k) && v != null && typeof v !== 'number') {
+      const n = parseFloat(v);
+      clean[k] = Number.isFinite(n) ? n : 0;
+      continue;
+    }
     clean[k] = sanitizeUntrusted(v, depth + 1);
   }
   return clean;
@@ -2202,6 +2265,7 @@ const App = {
   // ── init ──────────────────────────────────────────────────
   async init() {
     this.registerSW();
+    DB.migrateEntryIds(); // stamp ids on legacy entries (one-time, no-op after)
     DarkMode.init();
     this.bindNav();
     this.bindInstall();
@@ -2236,7 +2300,13 @@ const App = {
     setTimeout(() => this.checkOverdueTasks(), 1500); // after first render
     setInterval(() => this.checkOverdueTasks(), 60_000); // every minute
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) this.checkOverdueTasks();
+      if (document.hidden) return;
+      this.checkOverdueTasks();
+      // setTimeout/setInterval freeze while the PWA is backgrounded on mobile;
+      // re-arm all notification schedules whenever we come back to foreground
+      Notif.scheduleAll();
+      Hydration.start();
+      MealReminder.start();
     });
 
     // Sync button (works with both CloudSync and MCPSync)
@@ -4311,19 +4381,16 @@ const App = {
           <div class="log-item-detail">${f.source==='recipe_db' ? `×${f.qty} porción` : `${f.qty}g`} · P:${f.prot||0}g C:${f.carbs||0}g G:${f.fat||0}g${(f.isRecipe||f.isRecipeDb)?' 📖':''}</div>
         </div>
         <span class="log-item-kcal">${f.kcal}</span>
-        <button class="btn-remove" data-remove="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="btn-remove" data-remove="${esc(String(f.id ?? i))}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>`).join('');
     list.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{
-      const idx = parseInt(btn.dataset.remove);
-      const all = DB.foodLog();
-      const day = today();
-      const entry = (all[day] || [])[idx];
-      DB.removeFood(idx);
+      const day = DB._d(); // respect retro-logging date, not always today
+      const entry = DB.removeFood(btn.dataset.remove);
       this.renderFoodLog(); this.updateFoodBar();
       if(this.view==='dashboard') this.renderDashboard();
       if (entry) toastUndo(`Eliminado: ${entry.name}`, () => {
         const cur = DB.foodLog(); if (!cur[day]) cur[day] = [];
-        cur[day].splice(idx, 0, entry);
+        cur[day].push(entry);
         DB.saveFoodLog(cur);
         this.renderFoodLog(); this.updateFoodBar();
         if (this.view === 'dashboard') this.renderDashboard();
@@ -6028,20 +6095,17 @@ const App = {
           <div class="exercise-item-name">${esc(e.name)}</div>
           <div class="exercise-item-detail">${e.duration} min · ${e.kcalBurned} kcal${e.note ? ' · '+esc(e.note) : ''}</div>
         </div>
-        <button class="btn-remove" data-ex-remove="${i}">
+        <button class="btn-remove" data-ex-remove="${esc(String(e.id ?? i))}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>`).join('');
     logEl.querySelectorAll('[data-ex-remove]').forEach(btn => btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.exRemove);
       const day = today();
-      const cur = DB.exerciseLog();
-      const entry = (cur[day] || [])[idx];
-      DB.removeExercise(idx);
+      const entry = DB.removeExercise(btn.dataset.exRemove);
       this.renderExercise(); this.renderDashboard();
       if (entry) toastUndo(`Eliminado: ${entry.activity || 'Ejercicio'}`, () => {
         const lat = DB.exerciseLog(); if (!lat[day]) lat[day] = [];
-        lat[day].splice(idx, 0, entry);
+        lat[day].push(entry);
         DB.saveExerciseLog(lat);
         this.renderExercise(); this.renderDashboard();
         toast('Restaurado ✓', 'success');

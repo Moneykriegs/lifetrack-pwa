@@ -1,7 +1,7 @@
 {
   "app.js": {
-    "mtime": 1780525667.8176591,
-    "ast_hash": "a2737cd793a87579766097f005861651",
+    "mtime": 1781049968.8489857,
+    "ast_hash": "c1c1774cf357b4305055d0c63baaa86b",
     "semantic_hash": ""
   },
   "generate-config.sh": {
@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "mcp-server/data.js": {
-    "mtime": 1780354538.3192663,
-    "ast_hash": "81d2c67c4f9c51e4ae5cee5c8ebce06c",
+    "mtime": 1781039813.2699308,
+    "ast_hash": "10b062f7ffe95ddcb28de772a058b68c",
     "semantic_hash": ""
   },
   "mcp-server/package.json": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1780450819.78025,
-    "ast_hash": "3286a7a952b213adb042d99bc16359fb",
+    "mtime": 1781049979.6802685,
+    "ast_hash": "fae588c9acd37eb9b0d20ddde519f597",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -67,6 +67,16 @@
   "icons/icon.svg": {
     "mtime": 1779313170.5122516,
     "ast_hash": "d2520e2311823f7ccd6adf29e30cbc55",
+    "semantic_hash": ""
+  },
+  "mcp-server/test/db.test.mjs": {
+    "mtime": 1781050292.5396912,
+    "ast_hash": "cc67e78569d5695d0cbb20f26e1a1d14",
+    "semantic_hash": ""
+  },
+  "mcp-server/test/merge.test.mjs": {
+    "mtime": 1781039837.7975962,
+    "ast_hash": "815c221007113b2ed94b4d3dab0f94b0",
     "semantic_hash": ""
   }
 }
