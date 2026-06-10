@@ -1477,6 +1477,8 @@ const CloudSync = {
   userId:   null,
   user:     null,   // { id, email, name, avatar }
   _pushTimer: null,
+  _serverVersion: 0,  // last version seen from the server (optimistic concurrency)
+  _syncingFull: false,
 
   /** Returns 'online' | 'offline-cached' | false */
   init() {
@@ -1527,31 +1529,54 @@ const CloudSync = {
     this.user   = null;
   },
 
-  /** Push local data to Supabase (fire-and-forget OK) */
+  /** Push local data to Supabase with optimistic concurrency.
+   *  Only writes if the server still has the version we last pulled;
+   *  on conflict (another device wrote in between) falls back to a
+   *  full pull→merge→push instead of clobbering the other write. */
   async push() {
     if (!this.sb || !this.userId) return false;
     const payload = DB.snapshot();
-    const { error } = await this.sb
+    const nextV = (this._serverVersion || 0) + 1;
+
+    // Conditional update: matches 0 rows if someone else bumped the version
+    const { data, error } = await this.sb
       .from('user_data')
-      .upsert({ user_id: this.userId, data: payload }, { onConflict: 'user_id' });
-    return !error;
+      .update({ data: payload, version: nextV })
+      .eq('user_id', this.userId)
+      .eq('version', this._serverVersion || 0)
+      .select('version');
+    if (error) { console.warn('CloudSync push:', error); return false; }
+    if (data && data.length) { this._serverVersion = nextV; return true; }
+
+    // No row matched — either first ever push (no row) or version conflict
+    const ins = await this.sb
+      .from('user_data')
+      .insert({ user_id: this.userId, data: payload, version: nextV });
+    if (!ins.error) { this._serverVersion = nextV; return true; }
+
+    // Row exists with a different version → another device wrote. Merge.
+    if (this._syncingFull) return false; // already inside syncFull, don't recurse
+    return this.syncFull();
   },
 
-  /** Pull from Supabase */
+  /** Pull from Supabase (also records the server version for the next push) */
   async pull() {
     if (!this.sb || !this.userId) return null;
     const { data, error } = await this.sb
       .from('user_data')
-      .select('data')
+      .select('data, version')
       .eq('user_id', this.userId)
       .maybeSingle();
     if (error) { console.warn('CloudSync pull:', error); return null; }
+    if (data) this._serverVersion = data.version || 0;
     return data?.data ?? null;
   },
 
   /** Full bidirectional sync: pull → merge → save local → push merged */
   async syncFull() {
     if (!this.sb || !this.userId) return false;
+    if (this._syncingFull) return false; // re-entrancy guard (push falls back here on conflict)
+    this._syncingFull = true;
     try {
       const serverData = await this.pull();
       const localData  = DB.snapshot();
@@ -1572,6 +1597,7 @@ const CloudSync = {
       await this.push();
       return true;
     } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }
+    finally { this._syncingFull = false; }
   },
 
   /** Debounced push — call after any data mutation */
