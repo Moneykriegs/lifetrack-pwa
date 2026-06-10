@@ -1,7 +1,7 @@
 {
   "app.js": {
-    "mtime": 1781049968.8489857,
-    "ast_hash": "c1c1774cf357b4305055d0c63baaa86b",
+    "mtime": 1781051381.9937649,
+    "ast_hash": "76f46105a555314afe3853f8f34b2df0",
     "semantic_hash": ""
   },
   "generate-config.sh": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1781049979.6802685,
-    "ast_hash": "fae588c9acd37eb9b0d20ddde519f597",
+    "mtime": 1781051404.492396,
+    "ast_hash": "ea49bb0a353f8773cafcc378dc35f9c3",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1780524891.5408971,
-    "ast_hash": "20fab84d20198e47f1e503d537a209f2",
+    "mtime": 1781051354.214614,
+    "ast_hash": "45aced9ad0a86310fc18f10340b5d037",
     "semantic_hash": ""
   },
   "mcp-server/README.md": {

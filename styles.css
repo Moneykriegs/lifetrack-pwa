@@ -2284,3 +2284,18 @@ svg { display: block; flex-shrink: 0; }
   background: linear-gradient(135deg, #f59e0b, #ef4444);
   color: white;
 }
+
+/* ================================================================
+   ONE-TAP FOOD CHIPS (favorites / common / yesterday)
+   ================================================================ */
+.fav-chip { position: relative; padding-right: 30px; }
+.fav-edit {
+  position: absolute; top: 50%; right: 5px; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%; font-size: 11px;
+  color: var(--text-muted); background: var(--card);
+  border: 1px solid var(--border);
+}
+.fav-edit:hover { color: var(--primary); border-color: var(--primary); }
+.fav-chip:active { transform: scale(.96); }

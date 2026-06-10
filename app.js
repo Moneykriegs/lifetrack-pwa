@@ -3844,6 +3844,8 @@ const App = {
     // Recipe detail modal
     document.getElementById('modal-recipe-detail').addEventListener('click', e => { if(e.target===e.currentTarget) this.closeModal('modal-recipe-detail'); });
     document.getElementById('btn-close-recipe-detail').addEventListener('click', () => this.closeModal('modal-recipe-detail'));
+    // Repeat yesterday
+    document.getElementById('btn-repeat-yesterday')?.addEventListener('click', () => this._repeatYesterdayAll());
   },
 
   renderFood() {
@@ -3851,11 +3853,63 @@ const App = {
     this._renderDiaryDate();
     this.renderFoodLog();
     this.updateFoodBar();
+    this.renderYesterdayFoods();
     this.renderFavoriteFoods();
     this.renderCommonFoods();
     this.renderFoodQueue();
     if(this.recipesOpen) this.renderRecipes();
     this.updatePlanBadge();
+  },
+
+  // ── "Ayer comiste" — the lowest-friction repeat path ─────────────
+  _yesterdayKey() {
+    const cur = this._foodDate || today();
+    const d = new Date(cur + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    return fmtDate(d);
+  },
+
+  renderYesterdayFoods() {
+    const section = document.getElementById('food-yesterday');
+    if (!section) return;
+    const yEntries = (DB.foodLog())[this._yesterdayKey()] || [];
+    if (!yEntries.length) { section.style.display = 'none'; return; }
+
+    section.style.display = '';
+    const totalKcal = yEntries.reduce((a, e) => a + (e.kcal || 0), 0);
+    const btnAll = document.getElementById('btn-repeat-yesterday');
+    if (btnAll) btnAll.textContent = `+ Añadir todo (${totalKcal} kcal)`;
+
+    const listEl = document.getElementById('food-yesterday-list');
+    listEl.innerHTML = yEntries.slice(0, 12).map((e, i) => `
+      <button class="fav-chip" data-yday-idx="${i}" title="Añadir ${esc(e.name)}">
+        <span class="fav-name">${esc(e.name)}</span>
+        <span class="fav-kcal">${e.kcal} kcal</span>
+      </button>`).join('');
+    listEl.querySelectorAll('[data-yday-idx]').forEach((btn, i) => {
+      btn.addEventListener('click', () => this._instantAddFood(yEntries[i]));
+    });
+  },
+
+  _repeatYesterdayAll() {
+    const yEntries = (DB.foodLog())[this._yesterdayKey()] || [];
+    if (!yEntries.length) return;
+    const before = DB.todayFood().length;
+    yEntries.forEach(e => {
+      const clean = { ...e };
+      delete clean.id; delete clean.ts;
+      DB.addFood(clean);
+    });
+    const totalKcal = yEntries.reduce((a, e) => a + (e.kcal || 0), 0);
+    this.renderFoodLog(); this.updateFoodBar();
+    if (this.view === 'dashboard') this.renderDashboard();
+    toastUndo(`✓ ${yEntries.length} alimentos añadidos · ${totalKcal} kcal`, () => {
+      // Remove exactly the entries we just appended
+      const d = DB._d(), log = DB.foodLog();
+      if (log[d]) { log[d] = log[d].slice(0, before); DB.saveFoodLog(log); }
+      this.renderFoodLog(); this.updateFoodBar();
+      if (this.view === 'dashboard') this.renderDashboard();
+    });
   },
 
   // ── DIARY DATE NAVIGATOR (retro-logging) ──────────────────────
@@ -3947,6 +4001,22 @@ const App = {
       .slice(0, 8);
   },
 
+  // One-tap add: log the entry immediately with its last-used portion.
+  // Undo toast covers the mis-tap case — cheaper than a confirm modal.
+  _instantAddFood(entry) {
+    const clean = { ...entry };
+    delete clean.id; delete clean.ts; // DB.addFood stamps fresh ones
+    DB.addFood(clean);
+    const added = DB.todayFood().slice(-1)[0];
+    this.renderFoodLog(); this.updateFoodBar();
+    if (this.view === 'dashboard') this.renderDashboard();
+    toastUndo(`✓ ${clean.name} · ${clean.kcal} kcal`, () => {
+      if (added) DB.removeFood(added.id);
+      this.renderFoodLog(); this.updateFoodBar();
+      if (this.view === 'dashboard') this.renderDashboard();
+    });
+  },
+
   renderFavoriteFoods() {
     const favs    = this._getFavoriteFoods();
     const section = document.getElementById('food-favorites');
@@ -3956,19 +4026,23 @@ const App = {
     section.style.display = '';
     const listEl = document.getElementById('food-favorites-list');
     listEl.innerHTML = favs.map((f, i) => `
-      <button class="fav-chip" data-fav-idx="${i}" title="${esc(f.name)}">
+      <button class="fav-chip" data-fav-idx="${i}" title="Añadir ${esc(f.name)} (${f.last.qty}g)">
         <span class="fav-name">${esc(f.name)}</span>
         <span class="fav-meta">
           <span class="fav-qty">${f.last.qty}g</span>
           <span class="fav-kcal">${f.last.kcal} kcal</span>
         </span>
+        <span class="fav-edit" data-fav-edit="${i}" title="Ajustar cantidad">✎</span>
       </button>`).join('');
     listEl.querySelectorAll('[data-fav-idx]').forEach((btn, i) => {
-      btn.addEventListener('click', () => this._addFavoriteFood(favs[i]));
+      btn.addEventListener('click', () => this._instantAddFood(favs[i].last));
+    });
+    listEl.querySelectorAll('[data-fav-edit]').forEach((el, i) => {
+      el.addEventListener('click', e => { e.stopPropagation(); this._editFavoriteFood(favs[i]); });
     });
   },
 
-  _addFavoriteFood(fav) {
+  _editFavoriteFood(fav) {
     const e = fav.last;
     const qty = e.qty || 100;
     const factor = 100 / qty;
@@ -4027,19 +4101,30 @@ const App = {
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${esc(cat)}</div>
         <div class="fav-row">
           ${foods.map(f => `
-            <button class="fav-chip" data-common-food="${esc(f.id)}" title="${esc(f.name)}">
+            <button class="fav-chip" data-common-food="${esc(f.id)}" title="Añadir ${esc(f.name)} (${f.qty}g)">
               <span class="fav-name">${esc(f.name)}</span>
               <span class="fav-kcal">${f.kcal} kcal</span>
+              <span class="fav-edit" data-common-edit="${esc(f.id)}" title="Ajustar cantidad">✎</span>
             </button>`).join('')}
         </div>
       </div>`).join('');
 
+    // Tap = instant add of the standard portion; ✎ = open modal to adjust grams
     listEl.querySelectorAll('[data-common-food]').forEach(btn => {
       btn.addEventListener('click', () => {
         const pf = PREP_FOODS.find(f => f.id === btn.dataset.commonFood);
         if (!pf) return;
-        const item = this._prepFoodToModal(pf);
-        this.openFoodModal(item);
+        this._instantAddFood({
+          name: pf.name, brand: 'Alimento común', qty: pf.qty,
+          kcal: pf.kcal, prot: pf.prot, carbs: pf.carbs, fat: pf.fat,
+        });
+      });
+    });
+    listEl.querySelectorAll('[data-common-edit]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const pf = PREP_FOODS.find(f => f.id === el.dataset.commonEdit);
+        if (pf) this.openFoodModal(this._prepFoodToModal(pf));
       });
     });
   },

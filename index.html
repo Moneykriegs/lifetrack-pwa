@@ -355,6 +355,15 @@
         <div id="common-foods-list" style="display:none"></div>
       </div>
 
+      <!-- Repetir ayer (sólo si ayer hubo registro) -->
+      <div id="food-yesterday" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+          <span>🔁 Ayer comiste</span>
+          <button id="btn-repeat-yesterday" style="background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;color:var(--primary);text-transform:none;letter-spacing:0;padding:2px 4px">+ Añadir todo</button>
+        </div>
+        <div id="food-yesterday-list" class="fav-row"></div>
+      </div>
+
       <!-- Favoritos / quick-add (sólo si hay historial) -->
       <div id="food-favorites" style="display:none;margin-bottom:10px">
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:5px">⭐ Tus favoritos</div>
