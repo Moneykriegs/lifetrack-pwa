@@ -1,4 +1,4 @@
-const CACHE = 'lifetrack-v40';
+const CACHE = 'lifetrack-v41';
 const SHELL = [
   './index.html',
   './styles.css',
@@ -26,11 +26,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Open Food Facts: network-first, fallback to empty
+  // Open Food Facts: network-first. The fallback is FLAGGED so the app can
+  // tell "service unavailable" apart from a genuine empty result.
   if (url.hostname.includes('openfoodfacts')) {
     e.respondWith(
-      fetch(e.request, { signal: AbortSignal.timeout(8000) })
-        .catch(() => new Response(JSON.stringify({ products: [] }), {
+      fetch(e.request, { signal: AbortSignal.timeout(10000) })
+        .catch(() => new Response(JSON.stringify({ products: [], _fallback: true }), {
           headers: { 'Content-Type': 'application/json' }
         }))
     );

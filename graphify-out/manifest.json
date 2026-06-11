@@ -1,7 +1,7 @@
 {
   "app.js": {
-    "mtime": 1781051381.9937649,
-    "ast_hash": "76f46105a555314afe3853f8f34b2df0",
+    "mtime": 1781143440.6357744,
+    "ast_hash": "0f75cc0ac8888c83964d2e7bb8d39598",
     "semantic_hash": ""
   },
   "generate-config.sh": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1781051404.492396,
-    "ast_hash": "ea49bb0a353f8773cafcc378dc35f9c3",
+    "mtime": 1781143406.140932,
+    "ast_hash": "2255a30c2c0bafdc9d071b33fa066166",
     "semantic_hash": ""
   },
   "CLAUDE.md": {

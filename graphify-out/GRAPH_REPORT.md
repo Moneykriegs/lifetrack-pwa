@@ -1,16 +1,16 @@
-# Graph Report - pwa-app  (2026-06-09)
+# Graph Report - pwa-app  (2026-06-10)
 
 ## Corpus Check
-- 13 files · ~40,400 words
+- 13 files · ~41,545 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 132 nodes · 136 edges · 12 communities (8 shown, 4 thin omitted)
+- 133 nodes · 137 edges · 12 communities (8 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `05dad7fc`
+- Built from commit: `7a666e6f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -91,7 +91,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `DAYS_SHORT`, `DAYS_FULL`, `MONTHS` to the rest of the system?**
   _80 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**

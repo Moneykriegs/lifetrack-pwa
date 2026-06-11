@@ -287,7 +287,7 @@
       "label": "Charts",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1227",
+      "source_location": "L1270",
       "_origin": "ast",
       "id": "app_charts",
       "community": 0,
@@ -297,7 +297,7 @@
       "label": "toast()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1341",
+      "source_location": "L1384",
       "_origin": "ast",
       "id": "app_toast",
       "community": 0,
@@ -307,7 +307,7 @@
       "label": "toastUndo()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1351",
+      "source_location": "L1394",
       "_origin": "ast",
       "id": "app_toastundo",
       "community": 0,
@@ -317,17 +317,27 @@
       "label": "esc()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1376",
+      "source_location": "L1419",
       "_origin": "ast",
       "id": "app_esc",
       "community": 0,
       "norm_label": "esc()"
     },
     {
+      "label": "normTxt()",
+      "file_type": "code",
+      "source_file": "app.js",
+      "source_location": "L1421",
+      "_origin": "ast",
+      "id": "app_normtxt",
+      "community": 0,
+      "norm_label": "normtxt()"
+    },
+    {
       "label": "_FORBIDDEN_KEYS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1379",
+      "source_location": "L1424",
       "_origin": "ast",
       "id": "app_forbidden_keys",
       "community": 0,
@@ -337,7 +347,7 @@
       "label": "_NUMERIC_KEYS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1381",
+      "source_location": "L1426",
       "_origin": "ast",
       "id": "app_numeric_keys",
       "community": 0,
@@ -347,7 +357,7 @@
       "label": "sanitizeUntrusted()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1382",
+      "source_location": "L1427",
       "_origin": "ast",
       "id": "app_sanitizeuntrusted",
       "community": 7,
@@ -357,7 +367,7 @@
       "label": "MCPSync",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1401",
+      "source_location": "L1446",
       "_origin": "ast",
       "id": "app_mcpsync",
       "community": 0,
@@ -367,7 +377,7 @@
       "label": "unionEntries()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1451",
+      "source_location": "L1496",
       "_origin": "ast",
       "id": "app_unionentries",
       "community": 7,
@@ -377,7 +387,7 @@
       "label": "unionDayLog()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1462",
+      "source_location": "L1507",
       "_origin": "ast",
       "id": "app_uniondaylog",
       "community": 7,
@@ -387,7 +397,7 @@
       "label": "mergeClientServer()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1470",
+      "source_location": "L1515",
       "_origin": "ast",
       "id": "app_mergeclientserver",
       "community": 7,
@@ -397,7 +407,7 @@
       "label": "CloudSync",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1538",
+      "source_location": "L1583",
       "_origin": "ast",
       "id": "app_cloudsync",
       "community": 0,
@@ -407,7 +417,7 @@
       "label": "calcStreaks()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1682",
+      "source_location": "L1727",
       "_origin": "ast",
       "id": "app_calcstreaks",
       "community": 6,
@@ -417,7 +427,7 @@
       "label": "calcPrediction()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1739",
+      "source_location": "L1784",
       "_origin": "ast",
       "id": "app_calcprediction",
       "community": 0,
@@ -427,7 +437,7 @@
       "label": "calcWellnessCorrelations()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1811",
+      "source_location": "L1856",
       "_origin": "ast",
       "id": "app_calcwellnesscorrelations",
       "community": 0,
@@ -437,7 +447,7 @@
       "label": "generateWeeklyInsights()",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1856",
+      "source_location": "L1901",
       "_origin": "ast",
       "id": "app_generateweeklyinsights",
       "community": 6,
@@ -447,7 +457,7 @@
       "label": "BENCHMARK_LMS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L1978",
+      "source_location": "L2023",
       "_origin": "ast",
       "id": "app_benchmark_lms",
       "community": 0,
@@ -457,7 +467,7 @@
       "label": "Benchmark",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2038",
+      "source_location": "L2083",
       "_origin": "ast",
       "id": "app_benchmark",
       "community": 0,
@@ -467,7 +477,7 @@
       "label": "LIFT_TIERS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2144",
+      "source_location": "L2189",
       "_origin": "ast",
       "id": "app_lift_tiers",
       "community": 0,
@@ -477,7 +487,7 @@
       "label": "LIFT_STANDARDS",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2152",
+      "source_location": "L2197",
       "_origin": "ast",
       "id": "app_lift_standards",
       "community": 0,
@@ -487,7 +497,7 @@
       "label": "Strength",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2172",
+      "source_location": "L2217",
       "_origin": "ast",
       "id": "app_strength",
       "community": 0,
@@ -497,7 +507,7 @@
       "label": "App",
       "file_type": "code",
       "source_file": "app.js",
-      "source_location": "L2205",
+      "source_location": "L2250",
       "_origin": "ast",
       "id": "app_app",
       "community": 0,
@@ -1687,6 +1697,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app.js",
+      "source_location": "L1421",
+      "weight": 1.0,
+      "source": "app",
+      "target": "app_normtxt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app.js",
       "source_location": "L867",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -1699,9 +1719,9 @@
       "source_file": "app.js",
       "source_location": "L1381",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_numeric_keys",
-      "confidence_score": 1.0
+      "target": "app_numeric_keys"
     },
     {
       "relation": "contains",
@@ -1809,9 +1829,9 @@
       "source_file": "app.js",
       "source_location": "L1462",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_uniondaylog",
-      "confidence_score": 1.0
+      "target": "app_uniondaylog"
     },
     {
       "relation": "contains",
@@ -1819,9 +1839,9 @@
       "source_file": "app.js",
       "source_location": "L1451",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app",
-      "target": "app_unionentries",
-      "confidence_score": 1.0
+      "target": "app_unionentries"
     },
     {
       "relation": "calls",
@@ -1885,9 +1905,9 @@
       "source_file": "app.js",
       "source_location": "L1530",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_mergeclientserver",
-      "target": "app_unionentries",
-      "confidence_score": 1.0
+      "target": "app_unionentries"
     },
     {
       "relation": "calls",
@@ -1896,9 +1916,9 @@
       "source_file": "app.js",
       "source_location": "L1478",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_mergeclientserver",
-      "target": "app_uniondaylog",
-      "confidence_score": 1.0
+      "target": "app_uniondaylog"
     },
     {
       "relation": "contains",
@@ -2166,9 +2186,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_uniondaylog",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_uniondaylog"
     },
     {
       "relation": "contains",
@@ -2176,9 +2196,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data",
-      "target": "mcp_server_data_unionentries",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_unionentries"
     },
     {
       "relation": "imports_from",
@@ -2198,9 +2218,9 @@
       "source_file": "mcp-server/test/merge.test.mjs",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_merge_test",
-      "target": "mcp_server_data",
-      "confidence_score": 1.0
+      "target": "mcp_server_data"
     },
     {
       "relation": "calls",
@@ -2242,9 +2262,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L164",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data_mergesync",
-      "target": "mcp_server_data_unionentries",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_unionentries"
     },
     {
       "relation": "calls",
@@ -2253,9 +2273,9 @@
       "source_file": "mcp-server/data.js",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "mcp_server_data_mergesync",
-      "target": "mcp_server_data_uniondaylog",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_uniondaylog"
     },
     {
       "relation": "imports",
@@ -2264,9 +2284,9 @@
       "source_file": "mcp-server/test/merge.test.mjs",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_merge_test",
-      "target": "mcp_server_data_mergesync",
-      "confidence_score": 1.0
+      "target": "mcp_server_data_mergesync"
     },
     {
       "relation": "contains",
@@ -2484,9 +2504,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_add",
-      "confidence_score": 1.0
+      "target": "test_db_test_add"
     },
     {
       "relation": "contains",
@@ -2494,9 +2514,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_addeventlistener",
-      "confidence_score": 1.0
+      "target": "test_db_test_addeventlistener"
     },
     {
       "relation": "contains",
@@ -2504,9 +2524,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_appendchild",
-      "confidence_score": 1.0
+      "target": "test_db_test_appendchild"
     },
     {
       "relation": "contains",
@@ -2514,9 +2534,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_createelement",
-      "confidence_score": 1.0
+      "target": "test_db_test_createelement"
     },
     {
       "relation": "contains",
@@ -2524,9 +2544,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_getelementbyid",
-      "confidence_score": 1.0
+      "target": "test_db_test_getelementbyid"
     },
     {
       "relation": "contains",
@@ -2534,9 +2554,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_here",
-      "confidence_score": 1.0
+      "target": "test_db_test_here"
     },
     {
       "relation": "contains",
@@ -2544,9 +2564,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_queryselector",
-      "confidence_score": 1.0
+      "target": "test_db_test_queryselector"
     },
     {
       "relation": "contains",
@@ -2554,9 +2574,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_queryselectorall",
-      "confidence_score": 1.0
+      "target": "test_db_test_queryselectorall"
     },
     {
       "relation": "contains",
@@ -2564,9 +2584,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_remove",
-      "confidence_score": 1.0
+      "target": "test_db_test_remove"
     },
     {
       "relation": "contains",
@@ -2574,9 +2594,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_removeeventlistener",
-      "confidence_score": 1.0
+      "target": "test_db_test_removeeventlistener"
     },
     {
       "relation": "contains",
@@ -2584,9 +2604,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_setattribute",
-      "confidence_score": 1.0
+      "target": "test_db_test_setattribute"
     },
     {
       "relation": "contains",
@@ -2594,9 +2614,9 @@
       "source_file": "mcp-server/test/db.test.mjs",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "test_db_test",
-      "target": "test_db_test_toggle",
-      "confidence_score": 1.0
+      "target": "test_db_test_toggle"
     },
     {
       "relation": "contains",
@@ -2710,5 +2730,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "05dad7fc03f1c7fcb4c44a2424c4cedec883234c"
+  "built_at_commit": "7a666e6fec3307e5af35478058647c4484becfd4"
 }

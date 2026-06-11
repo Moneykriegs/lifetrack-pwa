@@ -1139,27 +1139,62 @@ const FoodAPI = {
   cache: {},
   MICRO_FIELDS: MICRO_KEYS.map(k => MICROS[k].apiKey).join(','),
 
-  async search(q) {
-    if (this.cache[q]) return this.cache[q];
+  // How well a normalized name matches a normalized query (higher = better)
+  relevance(name, q) {
+    if (!q) return 0;
+    if (name === q) return 100;
+    if (name.startsWith(q)) return 80;
+    const words = name.split(/\s+/);
+    if (words.some(w => w.startsWith(q))) return 60;
+    if (name.includes(q)) return 40;
+    // Multi-word query: count word-prefix hits ("pollo asa" → "pollo asado")
+    const qWords = q.split(/\s+/).filter(Boolean);
+    if (qWords.length > 1) {
+      const hits = qWords.filter(qw => words.some(w => w.startsWith(qw))).length;
+      return hits === qWords.length ? 55 : hits * 12;
+    }
+    return 0;
+  },
+
+  _lastOffCall: 0,
+  OFF_MIN_INTERVAL_MS: 4000, // OFF rate-limits search to ~10/min; stay well under
+
+  async search(q, signal) {
+    const cacheKey = normTxt(q);
+    if (this.cache[cacheKey]) return this.cache[cacheKey];
+
+    // Client-side throttle: rapid successive queries wait their turn instead
+    // of burning the rate limit and getting empty responses back
+    const wait = this._lastOffCall + this.OFF_MIN_INTERVAL_MS - Date.now();
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    if (signal?.aborted) { const e = new Error('aborted'); e.name = 'AbortError'; throw e; }
+    this._lastOffCall = Date.now();
+
+    // lc=es prefers Spanish product names; sort_by=unique_scans_n ranks by
+    // real-world popularity instead of OFF's arbitrary default order
     const url = `https://world.openfoodfacts.org/cgi/search.pl?` +
-      `search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20` +
-      `&fields=product_name,nutriments,brands`;
-    const res  = await fetch(url);
+      `search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=30` +
+      `&lc=es&sort_by=unique_scans_n&fields=product_name,product_name_es,nutriments,brands`;
+    const res  = await fetch(url, { signal });
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
+    // Service-worker fallback (network failed / rate-limited) — not a real "no results"
+    if (data._fallback) throw new Error('OFF unavailable');
 
-    const list = (data.products || [])
-      .filter(p => p.product_name && (p.nutriments?.['energy-kcal_100g'] ?? -1) >= 0)
-      .slice(0, 15)
+    const nq = normTxt(q);
+    let list = (data.products || [])
+      .filter(p => (p.product_name_es || p.product_name) && (p.nutriments?.['energy-kcal_100g'] ?? -1) >= 0)
       .map(p => {
         const n = p.nutriments || {};
+        const name = (p.product_name_es || p.product_name || '').slice(0, 55);
         const item = {
-          name:   (p.product_name||'').slice(0,55),
+          name,
           brand:  (p.brands||'').split(',')[0].trim(),
           kcal:   Math.round(n['energy-kcal_100g'] || 0),
           prot:   +((n.proteins_100g||0).toFixed(1)),
           carbs:  +((n.carbohydrates_100g||0).toFixed(1)),
           fat:    +((n.fat_100g||0).toFixed(1)),
+          _rel:   this.relevance(normTxt(name), nq),
         };
         // Micros per 100g
         MICRO_KEYS.forEach(k => {
@@ -1168,7 +1203,15 @@ const FoodAPI = {
         return item;
       });
 
-    this.cache[q] = list;
+    // Prefer items whose NAME matches the query; popularity (API order) breaks
+    // ties. Only fall back to non-matching items if nothing matches at all.
+    const matching = list.filter(i => i._rel > 0 || normTxt(i.brand).includes(nq));
+    list = (matching.length ? matching : list)
+      .sort((a, b) => b._rel - a._rel)
+      .slice(0, 15);
+
+    // Never cache empties: a rate-limited/flaky response shouldn't stick
+    if (list.length) this.cache[cacheKey] = list;
     return list;
   },
 
@@ -1374,6 +1417,8 @@ function toastUndo(msg, onUndo, type = 'info') {
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Accent-insensitive lowercase normalization ("Plátano" → "platano")
+function normTxt(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
 
 // Strip prototype-pollution vectors from data received over the network.
 const _FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -3757,8 +3802,15 @@ const App = {
     document.getElementById('food-search').addEventListener('input',e=>{
       clearTimeout(this.searchTimer);
       const q=e.target.value.trim();
-      if(q.length<2){document.getElementById('food-results').innerHTML='';return;}
-      this.searchTimer=setTimeout(()=>this.searchFood(q),600);
+      if(q.length<2){
+        document.getElementById('food-results').innerHTML='';
+        this._searchToken = (this._searchToken || 0) + 1; // invalidate in-flight
+        if (this._searchAbort) this._searchAbort.abort();
+        return;
+      }
+      // Local results appear on every keystroke; network waits for a pause
+      this._renderSearchResults(this._searchLocalFoods(q), null, q);
+      this.searchTimer=setTimeout(()=>this.searchFood(q),450);
     });
     document.getElementById('modal-food-detail').addEventListener('click',e=>{if(e.target===e.currentTarget)this.closeFoodModal();});
     document.getElementById('btn-close-food').addEventListener('click',()=>this.closeFoodModal());
@@ -4172,29 +4224,119 @@ const App = {
     if (this.view === 'dashboard') this.renderDashboard();
   },
 
-  async searchFood(q) {
-    const spinner=document.getElementById('search-spinner');
-    const results=document.getElementById('food-results');
-    spinner.classList.add('visible'); results.innerHTML='';
-    try {
-      const items=await FoodAPI.search(q);
-      if(!items.length){ results.innerHTML=`<p class="text-muted text-center" style="padding:16px">Sin resultados para "${esc(q)}"</p>`; return; }
-      results.innerHTML=items.map((item,i)=>`
-        <div class="food-result-item" data-idx="${i}">
+  // Search the user's own data first: past log entries + common foods.
+  // Instant (no network), accent-insensitive, portion already known → one tap.
+  _searchLocalFoods(q) {
+    const nq = normTxt(q);
+    const out = [], seen = new Set();
+    // History: newest first, unique by normalized name
+    const log = DB.foodLog();
+    Object.keys(log).sort().reverse().slice(0, 120).forEach(date => {
+      (log[date] || []).forEach(e => {
+        if (!e.name) return;
+        const key = normTxt(e.name);
+        if (seen.has(key)) return;
+        const rel = FoodAPI.relevance(key, nq);
+        if (rel <= 0) return;
+        seen.add(key);
+        out.push({ src: 'history', score: rel + 10, entry: e });
+      });
+    });
+    // Common foods (standard portions)
+    PREP_FOODS.forEach(pf => {
+      const key = normTxt(pf.name);
+      if (seen.has(key)) return;
+      const rel = FoodAPI.relevance(key, nq);
+      if (rel <= 0) return;
+      out.push({ src: 'common', score: rel + 5, entry: pf });
+    });
+    return out.sort((a, b) => b.score - a.score).slice(0, 6);
+  },
+
+  _renderSearchResults(local, offItems, q, failed = false) {
+    const results = document.getElementById('food-results');
+    let html = '';
+
+    if (local.length) {
+      html += `<div class="search-section-hd">📒 Tus alimentos</div>`;
+      html += local.map((l, i) => {
+        const e = l.entry;
+        const isCommon = l.src === 'common';
+        const qtyLabel = isCommon ? `${e.qty}g · porción` : `${e.qty || 100}g · última vez`;
+        return `
+        <div class="food-result-item local-result" data-local-idx="${i}" title="Añadir al instante">
+          <div class="food-kcal-badge"><span class="food-kcal-value">${e.kcal}</span><span class="food-kcal-unit">kcal</span></div>
+          <div style="flex:1;min-width:0">
+            <div class="food-name">${esc(e.name)}</div>
+            <div class="food-brand">${qtyLabel}</div>
+            <div class="food-macros"><span>P:${e.prot||0}g</span><span>C:${e.carbs||0}g</span><span>G:${e.fat||0}g</span></div>
+          </div>
+          <button class="food-add-btn instant" title="Añadir ya">⚡</button>
+        </div>`;
+      }).join('');
+    }
+
+    if (offItems === null) {
+      html += `<div class="search-section-hd">🌐 Open Food Facts <span class="search-loading-dot">buscando…</span></div>`;
+    } else if (failed) {
+      html += `<p class="text-muted text-center" style="padding:10px;font-size:12px">⏳ Búsqueda online no disponible (servicio ocupado o sin conexión). ${local.length ? 'Mostrando tus alimentos.' : 'Intenta de nuevo en unos segundos.'}</p>`;
+    } else if (offItems.length) {
+      html += `<div class="search-section-hd">🌐 Open Food Facts</div>`;
+      html += offItems.map((item, i) => `
+        <div class="food-result-item" data-off-idx="${i}">
           <div class="food-kcal-badge"><span class="food-kcal-value">${item.kcal}</span><span class="food-kcal-unit">kcal</span></div>
           <div style="flex:1;min-width:0">
             <div class="food-name">${esc(item.name)}</div>
             ${item.brand?`<div class="food-brand">${esc(item.brand)}</div>`:''}
-            <div class="food-macros">
-              <span>P:${item.prot}g</span><span>C:${item.carbs}g</span><span>G:${item.fat}g</span>
-            </div>
+            <div class="food-macros"><span>P:${item.prot}g</span><span>C:${item.carbs}g</span><span>G:${item.fat}g</span></div>
           </div>
           <button class="food-add-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
         </div>`).join('');
-      results.querySelectorAll('.food-result-item').forEach((el,i)=>el.addEventListener('click',()=>this.openFoodModal(items[i])));
-    } catch(e) {
-      results.innerHTML=`<p class="text-muted text-center" style="padding:16px">Error al buscar. Comprueba tu conexión.</p>`;
-    } finally { spinner.classList.remove('visible'); }
+    } else if (!local.length) {
+      html = `<p class="text-muted text-center" style="padding:16px">Sin resultados para "${esc(q)}"</p>`;
+    }
+
+    results.innerHTML = html;
+
+    results.querySelectorAll('[data-local-idx]').forEach(el => {
+      el.addEventListener('click', () => {
+        const l = local[+el.dataset.localIdx];
+        if (l.src === 'common') {
+          const pf = l.entry;
+          this._instantAddFood({ name: pf.name, brand: 'Alimento común', qty: pf.qty, kcal: pf.kcal, prot: pf.prot, carbs: pf.carbs, fat: pf.fat });
+        } else {
+          this._instantAddFood(l.entry);
+        }
+      });
+    });
+    results.querySelectorAll('[data-off-idx]').forEach(el => {
+      el.addEventListener('click', () => this.openFoodModal(offItems[+el.dataset.offIdx]));
+    });
+  },
+
+  async searchFood(q) {
+    const spinner = document.getElementById('search-spinner');
+    const token = this._searchToken = (this._searchToken || 0) + 1;
+
+    // 1) Local results render instantly
+    const local = this._searchLocalFoods(q);
+    this._renderSearchResults(local, null, q);
+
+    // 2) Network search — cancel the previous in-flight request so a slow
+    //    stale response can never overwrite newer results
+    if (this._searchAbort) this._searchAbort.abort();
+    this._searchAbort = new AbortController();
+    spinner.classList.add('visible');
+    try {
+      const items = await FoodAPI.search(q, this._searchAbort.signal);
+      if (token !== this._searchToken) return; // superseded by a newer search
+      this._renderSearchResults(local, items, q);
+    } catch (e) {
+      if (e.name === 'AbortError' || token !== this._searchToken) return;
+      this._renderSearchResults(local, [], q, true);
+    } finally {
+      if (token === this._searchToken) spinner.classList.remove('visible');
+    }
   },
 
   // ── BARCODE SCANNER ────────────────────────────────────────
