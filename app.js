@@ -3750,6 +3750,30 @@ const App = {
   // ================================================================
   _liftPick: 'squat',
 
+  // Tiny e1RM progression sparkline for a lift (empty string if <2 sessions).
+  _liftSparkline(liftId) {
+    const hist = Strength.progress(DB.liftHistory(liftId));
+    if (hist.length < 2) return '';
+    const W = 120, H = 26, pad = 3;
+    const es = hist.map(h => h.e1rm || 0);
+    const min = Math.min(...es), max = Math.max(...es), span = (max - min) || 1;
+    const pts = hist.map((h, i) => {
+      const x = pad + (i / (hist.length - 1)) * (W - 2 * pad);
+      const y = pad + (1 - (h.e1rm - min) / span) * (H - 2 * pad);
+      return [x, y];
+    });
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    const last = pts[pts.length - 1];
+    const gain = es[es.length - 1] - es[0];
+    return `<div class="lift-spark-wrap">
+      <svg viewBox="0 0 ${W} ${H}" class="lift-spark" preserveAspectRatio="none">
+        <path d="${line}" fill="none" stroke="var(--primary)" stroke-width="1.5"/>
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.5" fill="var(--primary)"/>
+      </svg>
+      <span class="lift-spark-gain" style="color:${gain >= 0 ? 'var(--success)' : 'var(--danger,#ef4444)'}">${gain >= 0 ? '+' : ''}${gain} kg</span>
+    </div>`;
+  },
+
   renderStrength() {
     const body = document.getElementById('strength-body');
     const sub  = document.getElementById('strength-sub');
@@ -3807,6 +3831,7 @@ const App = {
             <div class="strength-row-name">${l.label}</div>
             <div class="strength-row-detail">${detail}</div>
             ${barHtml}
+            ${this._liftSparkline(l.id)}
           </div>
           ${badge}
         </div>`;
@@ -3851,9 +3876,10 @@ const App = {
     const reps = parseInt(document.getElementById('lift-reps').value) || 1;
     if (!kg || kg <= 0) { toast('Ingresa el peso levantado', 'error'); return; }
     const e1rm  = Strength.e1rm(kg, reps);
-    const lifts = DB.lifts();
-    lifts[this._liftPick] = { kg, reps, e1rm, date: today() };
-    DB.saveLifts(lifts);
+    // Append to the gym history (also updates the lt_lifts latest cache).
+    const prevBest = (Strength.prs(DB.liftLog())[this._liftPick] || {}).e1rm || 0;
+    DB.addLiftEntry(this._liftPick, { kg, reps, e1rm });
+    const isPR = e1rm > prevBest;
     this.closeModal('modal-lift');
 
     const meta    = LIFT_STANDARDS.lifts.find(l => l.id === this._liftPick);
@@ -3862,7 +3888,8 @@ const App = {
     const bodyKg  = weights.length ? weights[weights.length - 1].kg : null;
     const r       = bodyKg ? Strength.rank(this._liftPick, e1rm, bodyKg, s.gender) : null;
     const tier    = r ? Strength.tier(r.idx) : null;
-    toast(`${meta?.emoji || ''} ${meta?.label}: ${e1rm} kg${tier ? ` · ${tier.emoji} ${tier.label}` : ''}`, 'success');
+    const prTag   = isPR ? '🏆 ¡PR! ' : '';
+    toast(`${prTag}${meta?.emoji || ''} ${meta?.label}: ${e1rm} kg${tier ? ` · ${tier.emoji} ${tier.label}` : ''}`, 'success');
     if (this.view === 'progress') this.renderStrength();
     CloudSync.schedulePush();
   },
