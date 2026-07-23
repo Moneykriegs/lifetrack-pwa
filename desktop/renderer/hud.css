@@ -62,11 +62,15 @@ body::before {
 @keyframes scan { 0% { top: -140px } 100% { top: 100% } }
 
 /* ── Titlebar ─────────────────────────────────────────────────── */
+/* Default is NO-drag so every button/tab is reliably clickable; only the
+   brand area and the flex spacer are draggable window handles. This avoids
+   the Electron drag-region hit-test swallowing clicks on titlebar children. */
 .titlebar {
-  height: 44px; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px; -webkit-app-region: drag;
+  height: 44px; display: flex; align-items: center;
+  padding: 0 14px; -webkit-app-region: no-drag;
 }
-.tb-brand { display: flex; align-items: center; gap: 9px; }
+.tb-drag { flex: 1; align-self: stretch; -webkit-app-region: drag; }
+.tb-brand { display: flex; align-items: center; gap: 9px; -webkit-app-region: drag; }
 .tb-dot {
   width: 9px; height: 9px; border-radius: 50%;
   background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
