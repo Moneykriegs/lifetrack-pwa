@@ -187,9 +187,10 @@ const HUD = {
     document.getElementById('water-pace').setAttribute('y1', paceY);
     document.getElementById('water-pace').setAttribute('y2', paceY);
 
-    // Streak
-    const streaks = (typeof calcStreaks === 'function') ? calcStreaks() : { current: 0 };
-    const days = streaks.current ?? streaks.food ?? 0;
+    // Streak — calcStreaks() returns { water, calories, tasks, exercise },
+    // each { best, current, todayOk }. Use the best current streak across all.
+    const streaks = (typeof calcStreaks === 'function') ? calcStreaks() : {};
+    const days = Math.max(0, ...Object.values(streaks).map(v => (v && v.current) || 0));
     document.getElementById('streak-days').textContent = days;
     const flame = document.getElementById('streak-flame');
     flame.style.transform = `scale(${1 + Math.min(days, 30) / 40})`;
