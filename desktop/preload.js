@@ -13,8 +13,11 @@ contextBridge.exposeInMainWorld('desktop', {
   scheduleReminders: (list) => ipcRenderer.send('schedule-reminders', list),
   openOAuth: (url, redirectPrefix) => ipcRenderer.invoke('oauth', { url, redirectPrefix }),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  closeQuickLog: () => ipcRenderer.send('quicklog:close'),
+  dataChanged: () => ipcRenderer.send('data-changed'),
   // main → renderer events
   onReminderFired: (cb) => ipcRenderer.on('reminder-fired', (_e, id) => cb(id)),
   onModeChanged: (cb) => ipcRenderer.on('mode-changed', (_e, mode) => cb(mode)),
   onSystemResumed: (cb) => ipcRenderer.on('system-resumed', () => cb()),
+  onDataChanged: (cb) => ipcRenderer.on('data-changed', () => cb()),
 });

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Quick Log</title>
+  <link rel="stylesheet" href="hud.css">
+  <style>
+    html, body { height: 100%; overflow: hidden; background: transparent; }
+    body::before { border-radius: 14px; }
+    .ql {
+      height: 100%; display: flex; flex-direction: column; gap: 10px;
+      padding: 14px 16px; box-sizing: border-box;
+    }
+    .ql-hd {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; letter-spacing: 2px; color: var(--ink-dim);
+    }
+    .ql-hd .tb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+    .ql-hd b { color: var(--cyan); font-weight: 700; letter-spacing: 3px; }
+    .ql-hd .hint { margin-left: auto; font-size: 10px; opacity: .6; }
+    .ql-water { display: flex; gap: 8px; }
+    .ql-form { display: flex; gap: 8px; }
+    .ql-input {
+      flex: 1; min-width: 0; padding: 9px 12px; border-radius: 8px;
+      background: rgba(53,226,255,0.06); border: 1px solid var(--panel-brd);
+      color: var(--ink); font-size: 13px; font-family: var(--font); outline: none;
+    }
+    .ql-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(53,226,255,.25); }
+    .ql-input::placeholder { color: var(--ink-dim); }
+    .ql-add { flex: 0 0 auto; padding: 9px 16px; }
+  </style>
+</head>
+<body>
+  <div class="ql">
+    <div class="ql-hd">
+      <span class="tb-dot"></span> REGISTRO <b>RÁPIDO</b>
+      <span class="hint">Esc para cerrar</span>
+    </div>
+    <div class="ql-water">
+      <button class="qbtn" data-water="250">💧 +250 ml</button>
+      <button class="qbtn" data-water="500">💧 +500 ml</button>
+    </div>
+    <form class="ql-form" id="ql-form">
+      <input class="ql-input" id="ql-input" type="text" placeholder="ej: Manzana 95" autocomplete="off" autofocus>
+      <button class="qbtn ql-add" type="submit">＋</button>
+    </form>
+  </div>
+
+  <script src="vendor/constants.js"></script>
+  <script src="vendor/db.js"></script>
+  <script src="quicklog.js"></script>
+</body>
+</html>

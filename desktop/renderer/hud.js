@@ -76,6 +76,8 @@ const HUD = {
       d.onModeChanged(mode => document.body.classList.toggle('mini', mode === 'mini'));
       d.onSystemResumed(() => { this.render(); this.pushReminders(); });
       d.onReminderFired(() => this.render());
+      d.onDataChanged(() => this.render()); // quick-log overlay wrote data
+
     }
 
     document.querySelectorAll('[data-water]').forEach(b =>

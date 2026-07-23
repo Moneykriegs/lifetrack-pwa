@@ -3,13 +3,15 @@
 // Frameless translucent window + tray + native notifications + OAuth popup.
 // All privileged work lives here; the renderer talks to it only through the
 // contextBridge API defined in preload.js.
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, powerMonitor, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, powerMonitor, nativeImage, shell, globalShortcut, screen } = require('electron');
 const path = require('path');
 
 const NORMAL_SIZE = { width: 1080, height: 720 };
 const MINI_SIZE = { width: 340, height: 150 };
+const QUICK_SIZE = { width: 360, height: 190 };
 
 let win = null;
+let quickWin = null;
 let tray = null;
 let isMini = false;
 const reminderTimers = new Map(); // id -> timeout
@@ -144,6 +146,43 @@ function openOAuth(authUrl, redirectPrefix) {
   });
 }
 
+// ── Quick-log overlay (global hotkey) ────────────────────────────────────
+function createQuickLogWindow() {
+  quickWin = new BrowserWindow({
+    ...QUICK_SIZE,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    resizable: false,
+    show: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  quickWin.loadFile(path.join(__dirname, 'renderer', 'quicklog.html'));
+  quickWin.on('blur', () => quickWin && quickWin.hide());
+  quickWin.webContents.on('will-navigate', (e) => e.preventDefault());
+  quickWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+}
+
+function toggleQuickLog() {
+  if (!quickWin) createQuickLogWindow();
+  if (quickWin.isVisible()) { quickWin.hide(); return; }
+  // Position near the cursor, clamped to the display's work area.
+  const pt = screen.getCursorScreenPoint();
+  const wa = screen.getDisplayNearestPoint(pt).workArea;
+  const x = Math.min(Math.max(pt.x - QUICK_SIZE.width / 2, wa.x + 8), wa.x + wa.width - QUICK_SIZE.width - 8);
+  const y = Math.min(Math.max(pt.y - 20, wa.y + 8), wa.y + wa.height - QUICK_SIZE.height - 8);
+  quickWin.setPosition(Math.round(x), Math.round(y));
+  quickWin.show();
+  quickWin.focus();
+}
+
 // ── IPC bridge ──────────────────────────────────────────────────────────
 ipcMain.on('win:minimize', () => win && win.minimize());
 ipcMain.on('win:close', () => win && win.hide());
@@ -153,12 +192,17 @@ ipcMain.on('notify', (_e, { title, body }) => showNotification(title, body));
 ipcMain.on('schedule-reminders', (_e, list) => scheduleReminders(list));
 ipcMain.handle('oauth', (_e, { url, redirectPrefix }) => openOAuth(url, redirectPrefix));
 ipcMain.handle('open-external', (_e, url) => shell.openExternal(url));
+ipcMain.on('quicklog:close', () => quickWin && quickWin.hide());
+// A window mutated the shared data — nudge the HUD to re-render immediately.
+ipcMain.on('data-changed', () => win && win.webContents.send('data-changed'));
 
 // ── Lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(() => {
   createWindow();
   createTray();
+  globalShortcut.register('CommandOrControl+Shift+L', toggleQuickLog);
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 app.on('window-all-closed', () => { /* stay alive in tray */ });
 app.on('before-quit', () => { app.isQuitting = true; clearReminders(); });
+app.on('will-quit', () => globalShortcut.unregisterAll());
