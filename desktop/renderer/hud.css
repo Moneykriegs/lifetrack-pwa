@@ -269,3 +269,66 @@ body.mini .assistant { display: none; }
   box-shadow: 0 0 24px rgba(53,226,255,.3); animation: toastIn .3s;
 }
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 10px); } }
+
+/* ── Titlebar tabs ────────────────────────────────────────────── */
+.tb-tabs { display: flex; gap: 2px; margin-left: 14px; -webkit-app-region: no-drag; }
+.tb-tab {
+  background: none; border: none; cursor: pointer; padding: 4px 10px;
+  font-size: 10px; letter-spacing: 2px; color: var(--ink-dim);
+  border-bottom: 2px solid transparent; transition: .15s;
+}
+.tb-tab:hover { color: var(--ink); }
+.tb-tab.on { color: var(--cyan); border-bottom-color: var(--cyan); text-shadow: 0 0 10px rgba(53,226,255,.4); }
+body.mini .tb-tabs { display: none; }
+
+/* ── Analytics view ───────────────────────────────────────────── */
+.analytics { height: calc(100% - 44px); overflow-y: auto; padding: 6px 18px 24px; }
+.analytics[hidden] { display: none; }
+.an-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.an-range { display: flex; gap: 4px; }
+.an-range-btn {
+  cursor: pointer; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  background: rgba(53,226,255,0.06); border: 1px solid var(--panel-brd); color: var(--ink-dim); transition: .15s;
+}
+.an-range-btn.on { color: var(--cyan); border-color: var(--cyan); background: rgba(53,226,255,0.14); }
+
+.an-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.an-wide { grid-column: 1 / -1; }
+.an-svg { width: 100%; height: auto; }
+
+/* kcal bars */
+.an-bar { transition: height .6s cubic-bezier(.2,1,.3,1); }
+.an-goal-line { stroke: var(--amber); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: .8; }
+.an-axis { fill: var(--ink-dim); font-size: 9px; }
+
+/* weight chart */
+.an-wline { fill: none; stroke: var(--cyan); stroke-width: 2; filter: drop-shadow(0 0 4px rgba(53,226,255,.5)); }
+.an-warea { fill: rgba(53,226,255,0.08); stroke: none; }
+.an-wproj { fill: none; stroke: var(--amber); stroke-width: 2; stroke-dasharray: 5 4; }
+.an-wgoal { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: .7; }
+.an-empty { fill: var(--ink-dim); font-size: 11px; }
+
+/* heat strip */
+.an-heat { display: flex; flex-direction: column; gap: 8px; }
+.an-heat-row { display: flex; align-items: center; gap: 8px; }
+.an-heat-label { font-size: 10px; color: var(--ink-dim); width: 46px; letter-spacing: .5px; }
+.an-heat-cells { display: flex; gap: 3px; flex: 1; flex-wrap: wrap; }
+.an-cell { width: 13px; height: 13px; border-radius: 3px; background: rgba(53,226,255,0.08); }
+.an-cell.on { background: var(--cyan); box-shadow: 0 0 6px rgba(53,226,255,.5); }
+.an-cell.p { background: var(--prot); } /* protein-ok tint reused for exercise */
+
+/* correlations */
+.an-corr { display: flex; flex-direction: column; gap: 9px; }
+.an-corr-row { display: flex; align-items: center; gap: 9px; font-size: 11px; }
+.an-corr-row.dim { opacity: .4; }
+.an-corr-label { flex: 1; color: var(--ink); min-width: 0; }
+.an-corr-bar-wrap { width: 60px; height: 5px; background: rgba(53,226,255,0.1); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.an-corr-bar { height: 100%; background: var(--cyan); border-radius: 3px; }
+.an-corr-r { width: 34px; text-align: right; color: var(--cyan); font-weight: 700; flex-shrink: 0; }
+
+/* insights */
+.an-insights { display: flex; flex-direction: column; gap: 10px; }
+.an-ins-row { display: flex; gap: 10px; align-items: flex-start; }
+.an-ins-ico { font-size: 18px; flex-shrink: 0; }
+.an-ins-text { font-size: 12.5px; color: var(--ink); font-weight: 600; }
+.an-ins-sub { font-size: 11px; color: var(--ink-dim); margin-top: 1px; }

@@ -87,6 +87,29 @@ const HUD = {
 
     document.getElementById('ov-local').onclick = () => { localStorage.setItem('lt_skip_auth', '1'); this.start(); };
     document.getElementById('ov-google').onclick = () => this.signInGoogle();
+
+    // View tabs + analytics range
+    document.getElementById('tab-hud').onclick = () => this.setView('hud');
+    document.getElementById('tab-analytics').onclick = () => this.setView('analytics');
+    document.querySelectorAll('#an-range .an-range-btn').forEach(b =>
+      b.onclick = () => {
+        this.anRange = +b.dataset.range;
+        document.querySelectorAll('#an-range .an-range-btn').forEach(x => x.classList.toggle('on', x === b));
+        this.renderAnalytics();
+      });
+  },
+
+  view: 'hud',
+  anRange: 7,
+
+  setView(v) {
+    this.view = v;
+    document.getElementById('hud').hidden = v !== 'hud';
+    document.getElementById('analytics').hidden = v !== 'analytics';
+    document.getElementById('tab-hud').classList.toggle('on', v === 'hud');
+    document.getElementById('tab-analytics').classList.toggle('on', v === 'analytics');
+    document.getElementById('assistant').style.display = v === 'hud' ? '' : 'none';
+    if (v === 'analytics') this.renderAnalytics();
   },
 
   async signInGoogle() {
@@ -206,6 +229,150 @@ const HUD = {
 
     // Assistant
     this.updateAssistant({ rem, goal, kcal, water, wGoal, paceFrac, days, pct });
+
+    // Keep analytics live if it's the active view
+    if (this.view === 'analytics') this.renderAnalytics();
+  },
+
+  // ── Analytics view ────────────────────────────────────────────
+  _lastNDays(n) {
+    const out = [];
+    for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); out.push(fmtDate(d)); }
+    return out;
+  },
+
+  renderAnalytics() {
+    this.anKcalBars();
+    this.anWeightChart();
+    this.anHeatStrip();
+    this.anCorrelations();
+    this.anInsights();
+  },
+
+  anKcalBars() {
+    const days = this._lastNDays(this.anRange);
+    const food = DB.foodLog();
+    const goal = DB.settings().calorieGoal || 2000;
+    const vals = days.map(d => (food[d] || []).reduce((a, f) => a + (f.kcal || 0), 0));
+    const W = 460, H = 150, padB = 18, padT = 8;
+    const maxV = Math.max(goal * 1.2, ...vals, 1);
+    const bw = (W / days.length);
+    const gy = padT + (1 - goal / maxV) * (H - padB - padT);
+    let bars = '';
+    vals.forEach((v, i) => {
+      const bh = (v / maxV) * (H - padB - padT);
+      const x = i * bw + bw * 0.15, w = bw * 0.7;
+      const y = H - padB - bh;
+      const col = v === 0 ? 'rgba(53,226,255,0.12)'
+        : v <= goal ? 'var(--green)' : v <= goal * 1.1 ? 'var(--amber)' : 'var(--red)';
+      bars += `<rect class="an-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col}"/>`;
+    });
+    // sparse day labels
+    let labels = '';
+    const step = this.anRange > 7 ? Math.ceil(days.length / 7) : 1;
+    days.forEach((d, i) => {
+      if (i % step) return;
+      labels += `<text class="an-axis" x="${(i * bw + bw / 2).toFixed(1)}" y="${H - 5}" text-anchor="middle">${d.slice(8)}</text>`;
+    });
+    document.getElementById('an-kcal-bars').innerHTML =
+      bars +
+      `<line class="an-goal-line" x1="0" y1="${gy.toFixed(1)}" x2="${W}" y2="${gy.toFixed(1)}"/>` +
+      `<text class="an-axis" x="2" y="${(gy - 3).toFixed(1)}">meta ${goal}</text>` +
+      labels;
+  },
+
+  anWeightChart() {
+    const svg = document.getElementById('an-weight-chart');
+    const cap = document.getElementById('an-weight-cap');
+    const log = (DB.weightLog() || []).slice(-this.anRange);
+    if (log.length < 2) {
+      svg.innerHTML = `<text class="an-empty" x="150" y="75" text-anchor="middle">Registra tu peso para ver tendencia</text>`;
+      cap.textContent = '';
+      return;
+    }
+    const pred = (typeof calcPrediction === 'function') ? calcPrediction() : null;
+    const W = 300, H = 150, pad = 16;
+    const kgs = log.map(w => w.kg);
+    let min = Math.min(...kgs), max = Math.max(...kgs);
+    if (pred && pred.in4weeks != null) { min = Math.min(min, pred.in4weeks); max = Math.max(max, pred.in4weeks); }
+    if (pred && pred.goalKg) { min = Math.min(min, pred.goalKg); max = Math.max(max, pred.goalKg); }
+    const span = (max - min) || 1;
+    const X = i => pad + (i / (log.length - 1)) * (W - 2 * pad) * 0.72; // leave room for projection
+    const Y = kg => pad + (1 - (kg - min) / span) * (H - 2 * pad);
+    const pts = log.map((w, i) => [X(i), Y(w.kg)]);
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    const area = `${line} L${pts[pts.length - 1][0].toFixed(1)},${H - pad} L${pts[0][0].toFixed(1)},${H - pad} Z`;
+    let extra = '';
+    if (pred && pred.in4weeks != null) {
+      const last = pts[pts.length - 1];
+      const projX = W - pad, projY = Y(pred.in4weeks);
+      extra += `<path class="an-wproj" d="M${last[0].toFixed(1)},${last[1].toFixed(1)} L${projX},${projY.toFixed(1)}"/>`;
+      extra += `<circle cx="${projX}" cy="${projY.toFixed(1)}" r="3" fill="var(--amber)"/>`;
+    }
+    if (pred && pred.goalKg) {
+      const gy = Y(pred.goalKg);
+      extra += `<line class="an-wgoal" x1="0" y1="${gy.toFixed(1)}" x2="${W}" y2="${gy.toFixed(1)}"/>`;
+    }
+    svg.innerHTML = `<path class="an-warea" d="${area}"/><path class="an-wline" d="${line}"/>` +
+      `<circle cx="${pts[pts.length-1][0].toFixed(1)}" cy="${pts[pts.length-1][1].toFixed(1)}" r="3" fill="var(--cyan)"/>` + extra;
+    const lastKg = +kgs[kgs.length - 1].toFixed(1);
+    cap.textContent = `${lastKg} kg`;
+    if (pred && pred.kgPerWeek != null) {
+      const rate = pred.kgPerWeek;
+      // Only show "weeks to goal" when it's a positive, sensible ETA
+      const wk = (pred.weeksToGoal && pred.weeksToGoal > 0) ? ` · meta en ~${pred.weeksToGoal} sem` : '';
+      cap.textContent = `${lastKg} kg · ${rate > 0 ? '+' : ''}${rate}/sem${wk}`;
+    }
+  },
+
+  anHeatStrip() {
+    const days = this._lastNDays(this.anRange);
+    const food = DB.foodLog(), water = DB.waterLog(), ex = DB.exerciseLog();
+    const s = DB.settings();
+    const goal = s.calorieGoal || 2000, wGoal = s.waterGoal || 2500;
+    const rows = [
+      { label: 'Cal', cls: 'on', test: d => { const k = (food[d] || []).reduce((a, f) => a + (f.kcal || 0), 0); return k > 0 && k <= goal * 1.05; } },
+      { label: 'Agua', cls: 'on', test: d => (water[d] || 0) >= wGoal * 0.9 },
+      { label: 'Ejer', cls: 'p', test: d => (ex[d] || []).length > 0 },
+    ];
+    document.getElementById('an-heatstrip').innerHTML = rows.map(r => `
+      <div class="an-heat-row">
+        <span class="an-heat-label">${r.label}</span>
+        <div class="an-heat-cells">
+          ${days.map(d => `<span class="an-cell ${r.test(d) ? r.cls : ''}" title="${d}"></span>`).join('')}
+        </div>
+      </div>`).join('');
+  },
+
+  anCorrelations() {
+    const el = document.getElementById('an-correlations');
+    if (typeof calcWellnessCorrelations !== 'function') { el.innerHTML = ''; return; }
+    const c = calcWellnessCorrelations();
+    const rows = Object.values(c);
+    el.innerHTML = rows.map(row => {
+      const has = row.r != null;
+      const mag = has ? Math.min(Math.abs(row.r), 1) : 0;
+      const rTxt = has ? (row.r > 0 ? '+' : '') + row.r.toFixed(2) : '—';
+      return `<div class="an-corr-row ${has ? '' : 'dim'}" title="${row.desc}">
+        <span class="an-corr-label">${row.label}</span>
+        <span class="an-corr-bar-wrap"><span class="an-corr-bar" style="width:${(mag * 100).toFixed(0)}%;background:${row.r < 0 ? 'var(--amber)' : 'var(--cyan)'}"></span></span>
+        <span class="an-corr-r">${rTxt}</span>
+      </div>`;
+    }).join('');
+  },
+
+  anInsights() {
+    const el = document.getElementById('an-insights');
+    if (typeof generateWeeklyInsights !== 'function') { el.innerHTML = ''; return; }
+    const { insights } = generateWeeklyInsights();
+    el.innerHTML = (insights || []).map(i => `
+      <div class="an-ins-row">
+        <span class="an-ins-ico">${i.icon || '•'}</span>
+        <div>
+          <div class="an-ins-text" style="color:${i.color || 'var(--ink)'}">${i.text}</div>
+          ${i.sub ? `<div class="an-ins-sub">${i.sub}</div>` : ''}
+        </div>
+      </div>`).join('');
   },
 
   setRing(id, r, frac) {

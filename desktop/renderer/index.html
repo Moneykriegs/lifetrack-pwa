@@ -13,6 +13,10 @@
       <span class="tb-dot"></span>
       <span class="tb-name">LIFE<b>TRACK</b></span>
       <span class="tb-sub" id="tb-user">HUD</span>
+      <div class="tb-tabs" id="tb-tabs">
+        <button class="tb-tab on" id="tab-hud">HUD</button>
+        <button class="tb-tab" id="tab-analytics">ANALÍTICA</button>
+      </div>
     </div>
     <div class="tb-controls">
       <button class="tb-btn" id="tb-sync" title="Sincronizar">⟳</button>
@@ -112,6 +116,38 @@
         <div class="meal-rail" id="meal-rail"></div>
       </div>
     </section>
+  </main>
+
+  <!-- ── Analytics view (toggled from the titlebar tabs) ────────────── -->
+  <main class="analytics" id="analytics" hidden>
+    <div class="an-toolbar">
+      <div class="an-range" id="an-range">
+        <button class="an-range-btn on" data-range="7">7 días</button>
+        <button class="an-range-btn" data-range="30">30 días</button>
+      </div>
+    </div>
+    <div class="an-grid">
+      <div class="panel an-wide">
+        <div class="panel-hd">CALORÍAS vs META</div>
+        <svg viewBox="0 0 460 150" class="an-svg" id="an-kcal-bars" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">TENDENCIA DE PESO <span class="panel-hd-val" id="an-weight-cap"></span></div>
+        <svg viewBox="0 0 300 150" class="an-svg" id="an-weight-chart" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">ADHERENCIA</div>
+        <div class="an-heat" id="an-heatstrip"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">CORRELACIONES</div>
+        <div class="an-corr" id="an-correlations"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd">RESUMEN SEMANAL</div>
+        <div class="an-insights" id="an-insights"></div>
+      </div>
+    </div>
   </main>
 
   <!-- Assistant orb + insight ticker -->
