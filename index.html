@@ -1660,6 +1660,11 @@
   </div>
 </div>
 
+<!-- Shared core (also used by the Electron desktop app) — must load before app.js -->
+<script src="shared/constants.js"></script>
+<script src="shared/db.js"></script>
+<script src="shared/core.js"></script>
+<script src="shared/insights.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

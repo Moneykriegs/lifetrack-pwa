@@ -11,7 +11,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 let ctx;
 
 before(async () => {
-  const code = await readFile(join(here, '..', '..', 'app.js'), 'utf8');
+  // app.js was split into shared/ core files (Electron desktop migration).
+  // Load them in the same order the PWA does, concatenated into one script so
+  // top-level function declarations hoist exactly as they did pre-split.
+  const root = join(here, '..', '..');
+  const files = ['shared/constants.js', 'shared/db.js', 'shared/core.js', 'shared/insights.js', 'app.js'];
+  const parts = await Promise.all(files.map(f => readFile(join(root, f), 'utf8')));
+  const code = parts.join('\n;\n');
   const storage = new Map();
   const sandbox = {
     localStorage: {
@@ -37,7 +43,7 @@ before(async () => {
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   ctx = vm.createContext(sandbox);
-  vm.runInContext(code, ctx, { filename: 'app.js' });
+  vm.runInContext(code, ctx, { filename: 'shared+app.js' });
 });
 
 test('addFood stamps a unique id and timestamp', () => {

@@ -1,7 +1,7 @@
 {
   "app.js": {
-    "mtime": 1781143440.6357744,
-    "ast_hash": "0f75cc0ac8888c83964d2e7bb8d39598",
+    "mtime": 1784774892.74887,
+    "ast_hash": "48cf0adf136e5b96060b6b009a119246",
     "semantic_hash": ""
   },
   "generate-config.sh": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "sw.js": {
-    "mtime": 1781143406.140932,
-    "ast_hash": "2255a30c2c0bafdc9d071b33fa066166",
+    "mtime": 1784774954.9701407,
+    "ast_hash": "67cea8ea6aa37eec9e9cb228898bd1fa",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1781051354.214614,
-    "ast_hash": "45aced9ad0a86310fc18f10340b5d037",
+    "mtime": 1784774946.195825,
+    "ast_hash": "9406f8d7dd08812850284aea0f76dae5",
     "semantic_hash": ""
   },
   "mcp-server/README.md": {
@@ -70,13 +70,33 @@
     "semantic_hash": ""
   },
   "mcp-server/test/db.test.mjs": {
-    "mtime": 1781050292.5396912,
-    "ast_hash": "cc67e78569d5695d0cbb20f26e1a1d14",
+    "mtime": 1784774930.217831,
+    "ast_hash": "7cf19eeb801e020190ce8f8f31ab1145",
     "semantic_hash": ""
   },
   "mcp-server/test/merge.test.mjs": {
     "mtime": 1781039837.7975962,
     "ast_hash": "815c221007113b2ed94b4d3dab0f94b0",
+    "semantic_hash": ""
+  },
+  "shared/constants.js": {
+    "mtime": 1784774892.74787,
+    "ast_hash": "0969102de73d1a249f4423a38fe62c17",
+    "semantic_hash": ""
+  },
+  "shared/core.js": {
+    "mtime": 1784774892.74787,
+    "ast_hash": "ceed9e091e5f92480ed16f3d4ba6698c",
+    "semantic_hash": ""
+  },
+  "shared/db.js": {
+    "mtime": 1784774892.74787,
+    "ast_hash": "c78c3359809d95d4a5fef9eb99e4f3f6",
+    "semantic_hash": ""
+  },
+  "shared/insights.js": {
+    "mtime": 1784774892.74787,
+    "ast_hash": "abc388ae934a6a13ba66ce4de58e728e",
     "semantic_hash": ""
   }
 }

@@ -1,7 +1,11 @@
-const CACHE = 'lifetrack-v41';
+const CACHE = 'lifetrack-v42';
 const SHELL = [
   './index.html',
   './styles.css',
+  './shared/constants.js',
+  './shared/db.js',
+  './shared/core.js',
+  './shared/insights.js',
   './app.js',
   './manifest.json',
   './icons/icon.svg',
