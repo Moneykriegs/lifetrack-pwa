@@ -12,7 +12,9 @@ const HUD = {
   _tickerTimer: null,
 
   async init() {
+    this.applyTheme(localStorage.getItem('lt_hud_theme') || '');
     this.bindControls();
+    this.bindSettings();
     this.buildReactorTicks();
 
     // Auth: mirror the PWA's states (online / offline-cached / local).
@@ -61,7 +63,9 @@ const HUD = {
     this.render();
     this.startTicker();
     clearInterval(this._refreshTimer);
-    this._refreshTimer = setInterval(() => this.render(), 30000);
+    this._refreshTimer = setInterval(() => this.render(), this.syncIntervalMs());
+    // Restore always-on-top preference
+    if (window.desktop && localStorage.getItem('lt_hud_ontop')) window.desktop.setAlwaysOnTop(true);
     this.pushReminders();
   },
 
@@ -110,6 +114,64 @@ const HUD = {
     document.getElementById('tab-analytics').classList.toggle('on', v === 'analytics');
     document.getElementById('assistant').style.display = v === 'hud' ? '' : 'none';
     if (v === 'analytics') this.renderAnalytics();
+  },
+
+  // ── Theme + settings ──────────────────────────────────────────
+  applyTheme(theme) {
+    document.documentElement.dataset.theme = theme || '';
+    localStorage.setItem('lt_hud_theme', theme || '');
+  },
+
+  syncIntervalMs() {
+    return (parseInt(localStorage.getItem('lt_hud_sync_interval'), 10) || 30) * 1000;
+  },
+
+  bindSettings() {
+    const pop = document.getElementById('settings-pop');
+    const gear = document.getElementById('tb-settings');
+    gear.onclick = (e) => { e.stopPropagation(); pop.hidden = !pop.hidden; this._syncSettingsUI(); };
+    document.addEventListener('click', (e) => {
+      if (!pop.hidden && !pop.contains(e.target) && e.target !== gear) pop.hidden = true;
+    });
+
+    document.querySelectorAll('#sp-themes .sp-swatch').forEach(sw =>
+      sw.onclick = () => {
+        this.applyTheme(sw.dataset.theme);
+        document.querySelectorAll('#sp-themes .sp-swatch').forEach(x => x.classList.toggle('on', x === sw));
+      });
+
+    document.getElementById('sp-ontop').onchange = (e) => {
+      if (window.desktop) window.desktop.setAlwaysOnTop(e.target.checked);
+      localStorage.setItem('lt_hud_ontop', e.target.checked ? '1' : '');
+    };
+
+    document.getElementById('sp-autostart').onchange = (e) => {
+      if (window.desktop) window.desktop.setAutostart(e.target.checked);
+    };
+
+    document.getElementById('sp-sync').onchange = (e) => {
+      localStorage.setItem('lt_hud_sync_interval', e.target.value);
+      this._rearmRefresh();
+    };
+
+    // Hide desktop-only rows in a plain browser
+    if (!window.desktop) document.getElementById('sp-autostart-row').style.display = 'none';
+  },
+
+  async _syncSettingsUI() {
+    const theme = localStorage.getItem('lt_hud_theme') || '';
+    document.querySelectorAll('#sp-themes .sp-swatch').forEach(x =>
+      x.classList.toggle('on', x.dataset.theme === theme));
+    document.getElementById('sp-ontop').checked = !!localStorage.getItem('lt_hud_ontop');
+    document.getElementById('sp-sync').value = String(parseInt(localStorage.getItem('lt_hud_sync_interval'), 10) || 30);
+    if (window.desktop && window.desktop.getAutostart) {
+      try { document.getElementById('sp-autostart').checked = await window.desktop.getAutostart(); } catch {}
+    }
+  },
+
+  _rearmRefresh() {
+    clearInterval(this._refreshTimer);
+    this._refreshTimer = setInterval(() => this.render(), this.syncIntervalMs());
   },
 
   async signInGoogle() {

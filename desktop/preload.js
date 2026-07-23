@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('desktop', {
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   closeQuickLog: () => ipcRenderer.send('quicklog:close'),
   dataChanged: () => ipcRenderer.send('data-changed'),
+  getAutostart: () => ipcRenderer.invoke('autostart:get'),
+  setAutostart: (on) => ipcRenderer.invoke('autostart:set', on),
   // main → renderer events
   onReminderFired: (cb) => ipcRenderer.on('reminder-fired', (_e, id) => cb(id)),
   onModeChanged: (cb) => ipcRenderer.on('mode-changed', (_e, mode) => cb(mode)),

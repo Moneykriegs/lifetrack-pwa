@@ -37,7 +37,9 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  win.once('ready-to-show', () => win.show());
+  // Honor --hidden (autostart launches minimized to tray).
+  const startHidden = process.argv.includes('--hidden');
+  win.once('ready-to-show', () => { if (!startHidden) win.show(); });
 
   // Hard-deny navigation and popups except our OAuth flow (handled explicitly).
   win.webContents.on('will-navigate', (e) => e.preventDefault());
@@ -195,6 +197,9 @@ ipcMain.handle('open-external', (_e, url) => shell.openExternal(url));
 ipcMain.on('quicklog:close', () => quickWin && quickWin.hide());
 // A window mutated the shared data — nudge the HUD to re-render immediately.
 ipcMain.on('data-changed', () => win && win.webContents.send('data-changed'));
+ipcMain.handle('autostart:get', () => app.getLoginItemSettings().openAtLogin);
+ipcMain.handle('autostart:set', (_e, on) =>
+  app.setLoginItemSettings({ openAtLogin: !!on, args: ['--hidden'] }));
 
 // ── Lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(() => {

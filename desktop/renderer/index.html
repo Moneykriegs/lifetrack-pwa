@@ -20,11 +20,35 @@
     </div>
     <div class="tb-controls">
       <button class="tb-btn" id="tb-sync" title="Sincronizar">⟳</button>
+      <button class="tb-btn" id="tb-settings" title="Ajustes">⚙</button>
       <button class="tb-btn" id="tb-mini" title="Mini-modo">▭</button>
       <button class="tb-btn" id="tb-min" title="Minimizar">—</button>
       <button class="tb-btn tb-close" id="tb-close" title="Cerrar">✕</button>
     </div>
   </header>
+
+  <!-- Settings popover -->
+  <div class="settings-pop" id="settings-pop" hidden>
+    <p class="sp-title">TEMA</p>
+    <div class="sp-row">
+      <div class="sp-swatches" id="sp-themes">
+        <span class="sp-swatch jarvis on" data-theme="" title="Jarvis"></span>
+        <span class="sp-swatch ultron" data-theme="ultron" title="Ultron"></span>
+        <span class="sp-swatch matrix" data-theme="matrix" title="Matrix"></span>
+      </div>
+    </div>
+    <p class="sp-title" style="margin-top:14px">PREFERENCIAS</p>
+    <label class="sp-row"><span>Siempre visible</span><input type="checkbox" class="sp-check" id="sp-ontop"></label>
+    <label class="sp-row" id="sp-autostart-row"><span>Iniciar con Windows</span><input type="checkbox" class="sp-check" id="sp-autostart"></label>
+    <label class="sp-row"><span>Sincronizar cada</span>
+      <select class="sp-select" id="sp-sync">
+        <option value="15">15 s</option>
+        <option value="30" selected>30 s</option>
+        <option value="60">1 min</option>
+        <option value="300">5 min</option>
+      </select>
+    </label>
+  </div>
 
   <!-- Holographic grid backdrop -->
   <div class="grid-bg" aria-hidden="true"></div>
