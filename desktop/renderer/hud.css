@@ -274,11 +274,16 @@ body.mini .assistant { display: none; }
 /* ── Titlebar tabs ────────────────────────────────────────────── */
 .tb-tabs { display: flex; gap: 2px; margin-left: 14px; -webkit-app-region: no-drag; }
 .tb-tab {
-  background: none; border: none; cursor: pointer; padding: 4px 10px;
+  /* Explicit no-drag + a non-transparent background: a transparent no-drag
+     element nested in the draggable titlebar can fail to capture clicks in
+     Electron, which is why the opaque .tb-btn controls worked but these didn't. */
+  -webkit-app-region: no-drag;
+  background: rgba(var(--accent-rgb),0.04); border: none; cursor: pointer; padding: 5px 11px;
+  border-radius: 6px 6px 0 0;
   font-size: 10px; letter-spacing: 2px; color: var(--ink-dim);
   border-bottom: 2px solid transparent; transition: .15s;
 }
-.tb-tab:hover { color: var(--ink); }
+.tb-tab:hover { color: var(--ink); background: rgba(var(--accent-rgb),0.09); }
 .tb-tab.on { color: var(--cyan); border-bottom-color: var(--cyan); text-shadow: 0 0 10px rgba(var(--accent-rgb),.4); }
 body.mini .tb-tabs { display: none; }
 
