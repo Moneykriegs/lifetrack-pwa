@@ -114,6 +114,626 @@
       "norm_label": "app"
     },
     {
+      "label": "copy-shared.js",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_copy_shared",
+      "community": 18,
+      "norm_label": "copy-shared.js"
+    },
+    {
+      "label": "fs",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_fs",
+      "community": 18,
+      "norm_label": "fs"
+    },
+    {
+      "label": "path",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_path",
+      "community": 18,
+      "norm_label": "path"
+    },
+    {
+      "label": "repoRoot",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_reporoot",
+      "community": 18,
+      "norm_label": "reporoot"
+    },
+    {
+      "label": "vendor",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_vendor",
+      "community": 18,
+      "norm_label": "vendor"
+    },
+    {
+      "label": "shared",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_shared",
+      "community": 18,
+      "norm_label": "shared"
+    },
+    {
+      "label": "cfg",
+      "file_type": "code",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "desktop_copy_shared_cfg",
+      "community": 18,
+      "norm_label": "cfg"
+    },
+    {
+      "label": "main.js",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_main",
+      "community": 14,
+      "norm_label": "main.js"
+    },
+    {
+      "label": "{ app, BrowserWindow, ipcMain, Tray, Menu, Notification, powerMonitor, nativeImage, shell, globalShortcut, screen }",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "desktop_main_app_browserwindow_ipcmain_tray_menu_notification_powermonitor_nativeimage_shell_globalshortcut_screen",
+      "community": 14,
+      "norm_label": "{ app, browserwindow, ipcmain, tray, menu, notification, powermonitor, nativeimage, shell, globalshortcut, screen }"
+    },
+    {
+      "label": "path",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "desktop_main_path",
+      "community": 14,
+      "norm_label": "path"
+    },
+    {
+      "label": "NORMAL_SIZE",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "desktop_main_normal_size",
+      "community": 14,
+      "norm_label": "normal_size"
+    },
+    {
+      "label": "MINI_SIZE",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "desktop_main_mini_size",
+      "community": 14,
+      "norm_label": "mini_size"
+    },
+    {
+      "label": "QUICK_SIZE",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "desktop_main_quick_size",
+      "community": 14,
+      "norm_label": "quick_size"
+    },
+    {
+      "label": "reminderTimers",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "desktop_main_remindertimers",
+      "community": 14,
+      "norm_label": "remindertimers"
+    },
+    {
+      "label": "createWindow()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "desktop_main_createwindow",
+      "community": 14,
+      "norm_label": "createwindow()"
+    },
+    {
+      "label": "createTray()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "desktop_main_createtray",
+      "community": 14,
+      "norm_label": "createtray()"
+    },
+    {
+      "label": "showWindow()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L70",
+      "_origin": "ast",
+      "id": "desktop_main_showwindow",
+      "community": 14,
+      "norm_label": "showwindow()"
+    },
+    {
+      "label": "setMiniMode()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L76",
+      "_origin": "ast",
+      "id": "desktop_main_setminimode",
+      "community": 14,
+      "norm_label": "setminimode()"
+    },
+    {
+      "label": "clearReminders()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L87",
+      "_origin": "ast",
+      "id": "desktop_main_clearreminders",
+      "community": 14,
+      "norm_label": "clearreminders()"
+    },
+    {
+      "label": "scheduleReminders()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L92",
+      "_origin": "ast",
+      "id": "desktop_main_schedulereminders",
+      "community": 14,
+      "norm_label": "schedulereminders()"
+    },
+    {
+      "label": "showNotification()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L109",
+      "_origin": "ast",
+      "id": "desktop_main_shownotification",
+      "community": 14,
+      "norm_label": "shownotification()"
+    },
+    {
+      "label": "openOAuth()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L122",
+      "_origin": "ast",
+      "id": "desktop_main_openoauth",
+      "community": 14,
+      "norm_label": "openoauth()"
+    },
+    {
+      "label": "createQuickLogWindow()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L152",
+      "_origin": "ast",
+      "id": "desktop_main_createquicklogwindow",
+      "community": 14,
+      "norm_label": "createquicklogwindow()"
+    },
+    {
+      "label": "toggleQuickLog()",
+      "file_type": "code",
+      "source_file": "desktop/main.js",
+      "source_location": "L175",
+      "_origin": "ast",
+      "id": "desktop_main_togglequicklog",
+      "community": 14,
+      "norm_label": "togglequicklog()"
+    },
+    {
+      "label": "make-icons.ps1",
+      "file_type": "code",
+      "source_file": "desktop/make-icons.ps1",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_make_icons",
+      "community": 19,
+      "norm_label": "make-icons.ps1"
+    },
+    {
+      "label": "New-ReactorBitmap()",
+      "file_type": "code",
+      "source_file": "desktop/make-icons.ps1",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "desktop_make_icons_new_reactorbitmap",
+      "community": 19,
+      "norm_label": "new-reactorbitmap()"
+    },
+    {
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_package",
+      "community": 15,
+      "norm_label": "package.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "desktop_package_name",
+      "community": 15,
+      "norm_label": "name"
+    },
+    {
+      "label": "productName",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "desktop_package_productname",
+      "community": 15,
+      "norm_label": "productname"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "desktop_package_version",
+      "community": 15,
+      "norm_label": "version"
+    },
+    {
+      "label": "description",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "desktop_package_description",
+      "community": 15,
+      "norm_label": "description"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "desktop_package_main",
+      "community": 15,
+      "norm_label": "main"
+    },
+    {
+      "label": "author",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "desktop_package_author",
+      "community": 15,
+      "norm_label": "author"
+    },
+    {
+      "label": "license",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "desktop_package_license",
+      "community": 15,
+      "norm_label": "license"
+    },
+    {
+      "label": "scripts",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "desktop_package_scripts",
+      "community": 15,
+      "norm_label": "scripts"
+    },
+    {
+      "label": "prestart",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "desktop_package_scripts_prestart",
+      "community": 15,
+      "norm_label": "prestart"
+    },
+    {
+      "label": "start",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "desktop_package_scripts_start",
+      "community": 15,
+      "norm_label": "start"
+    },
+    {
+      "label": "predist",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "desktop_package_scripts_predist",
+      "community": 15,
+      "norm_label": "predist"
+    },
+    {
+      "label": "dist",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L13",
+      "_origin": "ast",
+      "id": "desktop_package_scripts_dist",
+      "community": 15,
+      "norm_label": "dist"
+    },
+    {
+      "label": "devDependencies",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "desktop_package_devdependencies",
+      "community": 15,
+      "norm_label": "devdependencies"
+    },
+    {
+      "label": "electron",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "desktop_package_devdependencies_electron",
+      "community": 15,
+      "norm_label": "electron"
+    },
+    {
+      "label": "electron-builder",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "desktop_package_devdependencies_electron_builder",
+      "community": 15,
+      "norm_label": "electron-builder"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "desktop_package_build",
+      "community": 16,
+      "norm_label": "build"
+    },
+    {
+      "label": "appId",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "desktop_package_build_appid",
+      "community": 16,
+      "norm_label": "appid"
+    },
+    {
+      "label": "productName",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "desktop_package_build_productname",
+      "community": 16,
+      "norm_label": "productname"
+    },
+    {
+      "label": "directories",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "desktop_package_build_directories",
+      "community": 16,
+      "norm_label": "directories"
+    },
+    {
+      "label": "output",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "desktop_package_directories_output",
+      "community": 16,
+      "norm_label": "output"
+    },
+    {
+      "label": "files",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "desktop_package_build_files",
+      "community": 16,
+      "norm_label": "files"
+    },
+    {
+      "label": "win",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "desktop_package_build_win",
+      "community": 16,
+      "norm_label": "win"
+    },
+    {
+      "label": "target",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "desktop_package_win_target",
+      "community": 16,
+      "norm_label": "target"
+    },
+    {
+      "label": "icon",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "desktop_package_win_icon",
+      "community": 16,
+      "norm_label": "icon"
+    },
+    {
+      "label": "nsis",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "desktop_package_build_nsis",
+      "community": 16,
+      "norm_label": "nsis"
+    },
+    {
+      "label": "oneClick",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "desktop_package_nsis_oneclick",
+      "community": 16,
+      "norm_label": "oneclick"
+    },
+    {
+      "label": "allowToChangeInstallationDirectory",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "desktop_package_nsis_allowtochangeinstallationdirectory",
+      "community": 16,
+      "norm_label": "allowtochangeinstallationdirectory"
+    },
+    {
+      "label": "createDesktopShortcut",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "desktop_package_nsis_createdesktopshortcut",
+      "community": 16,
+      "norm_label": "createdesktopshortcut"
+    },
+    {
+      "label": "shortcutName",
+      "file_type": "code",
+      "source_file": "desktop/package.json",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "desktop_package_nsis_shortcutname",
+      "community": 16,
+      "norm_label": "shortcutname"
+    },
+    {
+      "label": "preload.js",
+      "file_type": "code",
+      "source_file": "desktop/preload.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_preload",
+      "community": 20,
+      "norm_label": "preload.js"
+    },
+    {
+      "label": "{ contextBridge, ipcRenderer }",
+      "file_type": "code",
+      "source_file": "desktop/preload.js",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "desktop_preload_contextbridge_ipcrenderer",
+      "community": 20,
+      "norm_label": "{ contextbridge, ipcrenderer }"
+    },
+    {
+      "label": "hud.js",
+      "file_type": "code",
+      "source_file": "desktop/renderer/hud.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "renderer_hud",
+      "community": 21,
+      "norm_label": "hud.js"
+    },
+    {
+      "label": "HUD",
+      "file_type": "code",
+      "source_file": "desktop/renderer/hud.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "renderer_hud_hud",
+      "community": 21,
+      "norm_label": "hud"
+    },
+    {
+      "label": "quicklog.js",
+      "file_type": "code",
+      "source_file": "desktop/renderer/quicklog.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "renderer_quicklog",
+      "community": 22,
+      "norm_label": "quicklog.js"
+    },
+    {
+      "label": "QL",
+      "file_type": "code",
+      "source_file": "desktop/renderer/quicklog.js",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "renderer_quicklog_ql",
+      "community": 22,
+      "norm_label": "ql"
+    },
+    {
       "label": "generate-config.sh",
       "file_type": "code",
       "source_file": "generate-config.sh",
@@ -425,7 +1045,7 @@
       "label": "calcTDEE()",
       "file_type": "code",
       "source_file": "mcp-server/data.js",
-      "source_location": "L170",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "mcp_server_data_calctdee",
       "community": 3,
@@ -1085,7 +1705,7 @@
       "label": "unionEntries()",
       "file_type": "code",
       "source_file": "shared/core.js",
-      "source_location": "L85",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "shared_core_unionentries",
       "community": 12,
@@ -1095,7 +1715,7 @@
       "label": "unionDayLog()",
       "file_type": "code",
       "source_file": "shared/core.js",
-      "source_location": "L96",
+      "source_location": "L97",
       "_origin": "ast",
       "id": "shared_core_uniondaylog",
       "community": 12,
@@ -1105,7 +1725,7 @@
       "label": "mergeClientServer()",
       "file_type": "code",
       "source_file": "shared/core.js",
-      "source_location": "L104",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "shared_core_mergeclientserver",
       "community": 12,
@@ -1115,7 +1735,7 @@
       "label": "CloudSync",
       "file_type": "code",
       "source_file": "shared/core.js",
-      "source_location": "L172",
+      "source_location": "L180",
       "_origin": "ast",
       "id": "shared_core_cloudsync",
       "community": 12,
@@ -1280,6 +1900,96 @@
       "id": "claude_graphify",
       "community": 8,
       "norm_label": "graphify"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_readme",
+      "community": 17,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "LifeTrack HUD (Electron desktop)",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "desktop_readme_lifetrack_hud_electron_desktop",
+      "community": 17,
+      "norm_label": "lifetrack hud (electron desktop)"
+    },
+    {
+      "label": "Features",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "desktop_readme_features",
+      "community": 17,
+      "norm_label": "features"
+    },
+    {
+      "label": "Run in development",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "desktop_readme_run_in_development",
+      "community": 17,
+      "norm_label": "run in development"
+    },
+    {
+      "label": "Build a Windows installer",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "desktop_readme_build_a_windows_installer",
+      "community": 17,
+      "norm_label": "build a windows installer"
+    },
+    {
+      "label": "Portable build (no installer, no Developer Mode needed)",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L48",
+      "_origin": "ast",
+      "id": "desktop_readme_portable_build_no_installer_no_developer_mode_needed",
+      "community": 17,
+      "norm_label": "portable build (no installer, no developer mode needed)"
+    },
+    {
+      "label": "Build troubleshooting: \"Cannot create symbolic link\"",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "desktop_readme_build_troubleshooting_cannot_create_symbolic_link",
+      "community": 17,
+      "norm_label": "build troubleshooting: \"cannot create symbolic link\""
+    },
+    {
+      "label": "Architecture",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L79",
+      "_origin": "ast",
+      "id": "desktop_readme_architecture",
+      "community": 17,
+      "norm_label": "architecture"
+    },
+    {
+      "label": "Verifying the HUD without Electron",
+      "file_type": "document",
+      "source_file": "desktop/README.md",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "desktop_readme_verifying_the_hud_without_electron",
+      "community": 17,
+      "norm_label": "verifying the hud without electron"
     },
     {
       "label": "README.md",
@@ -1482,6 +2192,578 @@
       "confidence_score": 1.0,
       "source": "app",
       "target": "app_toastundo"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_cfg",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_fs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_reporoot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_shared",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/copy-shared.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "desktop_copy_shared",
+      "target": "desktop_copy_shared_vendor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_app_browserwindow_ipcmain_tray_menu_notification_powermonitor_nativeimage_shell_globalshortcut_screen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_clearreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_createquicklogwindow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_createtray",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_createwindow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_mini_size",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_normal_size",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_openoauth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_quick_size",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_remindertimers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_schedulereminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_setminimode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_shownotification",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_showwindow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "desktop_main",
+      "target": "desktop_main_togglequicklog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "desktop_main_schedulereminders",
+      "target": "desktop_main_clearreminders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/main.js",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "desktop_main_togglequicklog",
+      "target": "desktop_main_createquicklogwindow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/make-icons.ps1",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "desktop_make_icons",
+      "target": "desktop_make_icons_new_reactorbitmap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_author",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_build",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_description",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_devdependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_license",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_productname",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_scripts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "desktop_package",
+      "target": "desktop_package_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "desktop_package_scripts",
+      "target": "desktop_package_scripts_dist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "desktop_package_scripts",
+      "target": "desktop_package_scripts_predist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "desktop_package_scripts",
+      "target": "desktop_package_scripts_prestart",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "desktop_package_scripts",
+      "target": "desktop_package_scripts_start",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "desktop_package_devdependencies",
+      "target": "desktop_package_devdependencies_electron",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "desktop_package_devdependencies",
+      "target": "desktop_package_devdependencies_electron_builder",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_appid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_directories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_nsis",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_productname",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "desktop_package_build",
+      "target": "desktop_package_build_win",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "desktop_package_build_directories",
+      "target": "desktop_package_directories_output",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "desktop_package_build_win",
+      "target": "desktop_package_win_icon",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "desktop_package_build_win",
+      "target": "desktop_package_win_target",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "desktop_package_build_nsis",
+      "target": "desktop_package_nsis_allowtochangeinstallationdirectory",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "desktop_package_build_nsis",
+      "target": "desktop_package_nsis_createdesktopshortcut",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "desktop_package_build_nsis",
+      "target": "desktop_package_nsis_oneclick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/package.json",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "desktop_package_build_nsis",
+      "target": "desktop_package_nsis_shortcutname",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/preload.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "desktop_preload",
+      "target": "desktop_preload_contextbridge_ipcrenderer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/renderer/hud.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "renderer_hud",
+      "target": "renderer_hud_hud",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/renderer/quicklog.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "renderer_quicklog",
+      "target": "renderer_quicklog_ql",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -2187,9 +3469,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L750",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_activities",
-      "confidence_score": 1.0
+      "target": "shared_constants_activities"
     },
     {
       "relation": "contains",
@@ -2197,9 +3479,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L293",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_calcrecipemicros",
-      "confidence_score": 1.0
+      "target": "shared_constants_calcrecipemicros"
     },
     {
       "relation": "contains",
@@ -2207,9 +3489,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_cutting_styles",
-      "confidence_score": 1.0
+      "target": "shared_constants_cutting_styles"
     },
     {
       "relation": "contains",
@@ -2217,9 +3499,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_days_full",
-      "confidence_score": 1.0
+      "target": "shared_constants_days_full"
     },
     {
       "relation": "contains",
@@ -2227,9 +3509,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_days_short",
-      "confidence_score": 1.0
+      "target": "shared_constants_days_short"
     },
     {
       "relation": "contains",
@@ -2237,9 +3519,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L773",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_fmtdate",
-      "confidence_score": 1.0
+      "target": "shared_constants_fmtdate"
     },
     {
       "relation": "contains",
@@ -2247,9 +3529,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L243",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_ingredient_micros",
-      "confidence_score": 1.0
+      "target": "shared_constants_ingredient_micros"
     },
     {
       "relation": "contains",
@@ -2257,9 +3539,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_ingredients",
-      "confidence_score": 1.0
+      "target": "shared_constants_ingredients"
     },
     {
       "relation": "contains",
@@ -2267,9 +3549,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L765",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_localdatestr",
-      "confidence_score": 1.0
+      "target": "shared_constants_localdatestr"
     },
     {
       "relation": "contains",
@@ -2277,9 +3559,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_meal_slots",
-      "confidence_score": 1.0
+      "target": "shared_constants_meal_slots"
     },
     {
       "relation": "contains",
@@ -2287,9 +3569,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_micro_keys",
-      "confidence_score": 1.0
+      "target": "shared_constants_micro_keys"
     },
     {
       "relation": "contains",
@@ -2297,9 +3579,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_micros",
-      "confidence_score": 1.0
+      "target": "shared_constants_micros"
     },
     {
       "relation": "contains",
@@ -2307,9 +3589,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_months",
-      "confidence_score": 1.0
+      "target": "shared_constants_months"
     },
     {
       "relation": "contains",
@@ -2317,9 +3599,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_moods",
-      "confidence_score": 1.0
+      "target": "shared_constants_moods"
     },
     {
       "relation": "contains",
@@ -2327,9 +3609,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_prep_foods",
-      "confidence_score": 1.0
+      "target": "shared_constants_prep_foods"
     },
     {
       "relation": "contains",
@@ -2337,9 +3619,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L305",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_recipe_amounts",
-      "confidence_score": 1.0
+      "target": "shared_constants_recipe_amounts"
     },
     {
       "relation": "contains",
@@ -2347,9 +3629,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_recipe_db",
-      "confidence_score": 1.0
+      "target": "shared_constants_recipe_db"
     },
     {
       "relation": "contains",
@@ -2357,9 +3639,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L480",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_recipe_steps",
-      "confidence_score": 1.0
+      "target": "shared_constants_recipe_steps"
     },
     {
       "relation": "contains",
@@ -2367,9 +3649,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_slot_fractions",
-      "confidence_score": 1.0
+      "target": "shared_constants_slot_fractions"
     },
     {
       "relation": "contains",
@@ -2377,9 +3659,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L772",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants",
-      "target": "shared_constants_today",
-      "confidence_score": 1.0
+      "target": "shared_constants_today"
     },
     {
       "relation": "calls",
@@ -2388,9 +3670,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L773",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants_fmtdate",
-      "target": "shared_constants_localdatestr",
-      "confidence_score": 1.0
+      "target": "shared_constants_localdatestr"
     },
     {
       "relation": "calls",
@@ -2399,9 +3681,9 @@
       "source_file": "shared/constants.js",
       "source_location": "L772",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_constants_today",
-      "target": "shared_constants_localdatestr",
-      "confidence_score": 1.0
+      "target": "shared_constants_localdatestr"
     },
     {
       "relation": "calls",
@@ -2431,9 +3713,9 @@
       "source_file": "shared/core.js",
       "source_location": "L172",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_cloudsync",
-      "confidence_score": 1.0
+      "target": "shared_core_cloudsync"
     },
     {
       "relation": "contains",
@@ -2441,9 +3723,9 @@
       "source_file": "shared/core.js",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_esc",
-      "confidence_score": 1.0
+      "target": "shared_core_esc"
     },
     {
       "relation": "contains",
@@ -2451,9 +3733,9 @@
       "source_file": "shared/core.js",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_forbidden_keys",
-      "confidence_score": 1.0
+      "target": "shared_core_forbidden_keys"
     },
     {
       "relation": "contains",
@@ -2461,9 +3743,9 @@
       "source_file": "shared/core.js",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_mcpsync",
-      "confidence_score": 1.0
+      "target": "shared_core_mcpsync"
     },
     {
       "relation": "contains",
@@ -2471,9 +3753,9 @@
       "source_file": "shared/core.js",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_mergeclientserver",
-      "confidence_score": 1.0
+      "target": "shared_core_mergeclientserver"
     },
     {
       "relation": "contains",
@@ -2481,9 +3763,9 @@
       "source_file": "shared/core.js",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_normtxt",
-      "confidence_score": 1.0
+      "target": "shared_core_normtxt"
     },
     {
       "relation": "contains",
@@ -2491,9 +3773,9 @@
       "source_file": "shared/core.js",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_numeric_keys",
-      "confidence_score": 1.0
+      "target": "shared_core_numeric_keys"
     },
     {
       "relation": "contains",
@@ -2501,9 +3783,9 @@
       "source_file": "shared/core.js",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_sanitizeuntrusted",
-      "confidence_score": 1.0
+      "target": "shared_core_sanitizeuntrusted"
     },
     {
       "relation": "contains",
@@ -2511,9 +3793,9 @@
       "source_file": "shared/core.js",
       "source_location": "L96",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_uniondaylog",
-      "confidence_score": 1.0
+      "target": "shared_core_uniondaylog"
     },
     {
       "relation": "contains",
@@ -2521,9 +3803,9 @@
       "source_file": "shared/core.js",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core",
-      "target": "shared_core_unionentries",
-      "confidence_score": 1.0
+      "target": "shared_core_unionentries"
     },
     {
       "relation": "calls",
@@ -2532,9 +3814,9 @@
       "source_file": "shared/core.js",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core_mergeclientserver",
-      "target": "shared_core_sanitizeuntrusted",
-      "confidence_score": 1.0
+      "target": "shared_core_sanitizeuntrusted"
     },
     {
       "relation": "calls",
@@ -2543,9 +3825,9 @@
       "source_file": "shared/core.js",
       "source_location": "L164",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core_mergeclientserver",
-      "target": "shared_core_unionentries",
-      "confidence_score": 1.0
+      "target": "shared_core_unionentries"
     },
     {
       "relation": "calls",
@@ -2554,9 +3836,9 @@
       "source_file": "shared/core.js",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_core_mergeclientserver",
-      "target": "shared_core_uniondaylog",
-      "confidence_score": 1.0
+      "target": "shared_core_uniondaylog"
     },
     {
       "relation": "contains",
@@ -2564,9 +3846,9 @@
       "source_file": "shared/db.js",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_db",
-      "target": "shared_db_db",
-      "confidence_score": 1.0
+      "target": "shared_db_db"
     },
     {
       "relation": "contains",
@@ -2574,9 +3856,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L367",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_benchmark",
-      "confidence_score": 1.0
+      "target": "shared_insights_benchmark"
     },
     {
       "relation": "contains",
@@ -2584,9 +3866,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L307",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_benchmark_lms",
-      "confidence_score": 1.0
+      "target": "shared_insights_benchmark_lms"
     },
     {
       "relation": "contains",
@@ -2594,9 +3876,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_calcprediction",
-      "confidence_score": 1.0
+      "target": "shared_insights_calcprediction"
     },
     {
       "relation": "contains",
@@ -2604,9 +3886,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_calcstreaks",
-      "confidence_score": 1.0
+      "target": "shared_insights_calcstreaks"
     },
     {
       "relation": "contains",
@@ -2614,9 +3896,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L140",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_calcwellnesscorrelations",
-      "confidence_score": 1.0
+      "target": "shared_insights_calcwellnesscorrelations"
     },
     {
       "relation": "contains",
@@ -2624,9 +3906,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L185",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_generateweeklyinsights",
-      "confidence_score": 1.0
+      "target": "shared_insights_generateweeklyinsights"
     },
     {
       "relation": "contains",
@@ -2634,9 +3916,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L481",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_lift_standards",
-      "confidence_score": 1.0
+      "target": "shared_insights_lift_standards"
     },
     {
       "relation": "contains",
@@ -2644,9 +3926,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L473",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_lift_tiers",
-      "confidence_score": 1.0
+      "target": "shared_insights_lift_tiers"
     },
     {
       "relation": "contains",
@@ -2654,9 +3936,9 @@
       "source_file": "shared/insights.js",
       "source_location": "L501",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "shared_insights",
-      "target": "shared_insights_strength",
-      "confidence_score": 1.0
+      "target": "shared_insights_strength"
     },
     {
       "relation": "contains",
@@ -2677,6 +3959,86 @@
       "confidence_score": 1.0,
       "source": "claude",
       "target": "claude_graphify"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "desktop_readme",
+      "target": "desktop_readme_lifetrack_hud_electron_desktop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "desktop_readme_lifetrack_hud_electron_desktop",
+      "target": "desktop_readme_architecture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "desktop_readme_lifetrack_hud_electron_desktop",
+      "target": "desktop_readme_build_a_windows_installer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "desktop_readme_lifetrack_hud_electron_desktop",
+      "target": "desktop_readme_features",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "desktop_readme_lifetrack_hud_electron_desktop",
+      "target": "desktop_readme_run_in_development",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "desktop_readme_lifetrack_hud_electron_desktop",
+      "target": "desktop_readme_verifying_the_hud_without_electron",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "desktop_readme_build_a_windows_installer",
+      "target": "desktop_readme_build_troubleshooting_cannot_create_symbolic_link",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "desktop/README.md",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "desktop_readme_build_a_windows_installer",
+      "target": "desktop_readme_portable_build_no_installer_no_developer_mode_needed",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -2770,5 +4132,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "e3637c4b57a32b7d871cfb630308e81d9d5eacdc"
+  "built_at_commit": "1d7c1a6f451855e22f0fb636071ef624479cd6f2"
 }

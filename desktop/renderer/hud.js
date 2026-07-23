@@ -12,6 +12,7 @@ const HUD = {
   _tickerTimer: null,
 
   async init() {
+    if (typeof DB.migrateLiftLog === 'function') DB.migrateLiftLog();
     this.applyTheme(localStorage.getItem('lt_hud_theme') || '');
     this.bindControls();
     this.bindSettings();

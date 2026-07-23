@@ -117,10 +117,54 @@ test('sanitizeUntrusted coerces numeric fields, zeroes garbage', () => {
   assert.equal(s.name, 'X');
 });
 
+test('addLiftEntry appends history and updates the latest cache', () => {
+  const r = vm.runInContext(`(() => {
+    DB.addLiftEntry('squat', { kg: 100, reps: 5, e1rm: 117, date: '2026-06-01' });
+    DB.addLiftEntry('squat', { kg: 110, reps: 3, e1rm: 121, date: '2026-06-08' });
+    const hist = DB.liftHistory('squat');
+    const latest = DB.lifts().squat;
+    return JSON.stringify({ n: hist.length, sorted: hist[0].date < hist[1].date, latestE1rm: latest.e1rm, hasId: !!hist[0].id });
+  })()`, ctx);
+  const { n, sorted, latestE1rm, hasId } = JSON.parse(r);
+  assert.equal(n, 2);
+  assert.equal(sorted, true);
+  assert.equal(latestE1rm, 121);
+  assert.equal(hasId, true);
+});
+
+test('Strength.progress flags PRs and Strength.prs picks the best', () => {
+  const r = vm.runInContext(`(() => {
+    const hist = [
+      { date:'2026-06-01', e1rm:100, kg:90, reps:3 },
+      { date:'2026-06-08', e1rm:95,  kg:85, reps:4 },
+      { date:'2026-06-15', e1rm:110, kg:100, reps:3 },
+    ];
+    const prog = Strength.progress(hist);
+    const prs = Strength.prs({ squat: hist });
+    return JSON.stringify({ prFlags: prog.map(p => p.isPR), bestE1rm: prs.squat.e1rm });
+  })()`, ctx);
+  const { prFlags, bestE1rm } = JSON.parse(r);
+  assert.deepEqual(prFlags, [true, false, true]);
+  assert.equal(bestE1rm, 110);
+});
+
+test('Strength.volume sums sessions, reps and tonnage in range', () => {
+  const r = vm.runInContext(`(() => {
+    const today = new Date(); const d = s => { const x=new Date(today); x.setDate(x.getDate()-s); return x.toISOString().slice(0,10); };
+    const log = { squat: [{date:d(1),kg:100,reps:5},{date:d(2),kg:100,reps:5}], bench: [{date:d(40),kg:80,reps:5}] };
+    return JSON.stringify(Strength.volume(log, 7));
+  })()`, ctx);
+  const v = JSON.parse(r);
+  assert.equal(v.sets, 2);
+  assert.equal(v.reps, 10);
+  assert.equal(v.tonnage, 1000);
+  assert.equal(v.days, 2);
+});
+
 test('DB.snapshot includes every synced domain', () => {
   const r = vm.runInContext(`JSON.stringify(Object.keys(DB.snapshot()).sort())`, ctx);
   assert.deepEqual(JSON.parse(r), [
-    'completions','exerciseLog','foodLog','lifts','mealPlan','pantry',
+    'completions','exerciseLog','foodLog','liftLog','lifts','mealPlan','pantry',
     'recipes','settings','tasks','waterLog','waterTs','weightLog','wellness',
   ]);
 });

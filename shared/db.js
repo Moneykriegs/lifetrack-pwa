@@ -152,6 +152,47 @@ const DB = {
   lifts()                  { return this._g('lt_lifts', {}); },
   saveLifts(v)             { this._s('lt_lifts', v); },
 
+  // Gym progress history: { liftId: [{ id, date, kg, reps, e1rm, ts }] }.
+  // `lts_lifts` (above) still holds the latest entry per lift for the existing
+  // strength ranking; this log is the full time series for progression/PRs.
+  liftLog()                { return this._g('lt_lift_log', {}); },
+  saveLiftLog(v)           { this._s('lt_lift_log', v); },
+  liftHistory(liftId)      { return (this.liftLog())[liftId] || []; },
+  addLiftEntry(liftId, entry) {
+    const log = this.liftLog();
+    if (!log[liftId]) log[liftId] = [];
+    const e = {
+      id: `lf_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      date: entry.date || today(),
+      kg: entry.kg, reps: entry.reps, e1rm: entry.e1rm,
+      ts: new Date().toISOString(),
+    };
+    log[liftId].push(e);
+    log[liftId].sort((a, b) => a.date.localeCompare(b.date));
+    this.saveLiftLog(log);
+    // Keep the "latest" cache in sync so the existing ranking UI still works
+    const latest = log[liftId][log[liftId].length - 1];
+    const lifts = this.lifts();
+    lifts[liftId] = { kg: latest.kg, reps: latest.reps, e1rm: latest.e1rm, date: latest.date };
+    this.saveLifts(lifts);
+    return e;
+  },
+  // One-time seed: if the history is empty but old single-value lifts exist,
+  // create one history entry per lift so progression starts from known data.
+  migrateLiftLog() {
+    const log = this.liftLog();
+    if (Object.keys(log).length) return;
+    const lifts = this.lifts();
+    let seeded = false;
+    Object.entries(lifts).forEach(([id, v]) => {
+      if (v && v.e1rm) {
+        log[id] = [{ id: `lfmig_${id}`, date: v.date || today(), kg: v.kg, reps: v.reps, e1rm: v.e1rm, ts: new Date().toISOString() }];
+        seeded = true;
+      }
+    });
+    if (seeded) this.saveLiftLog(log);
+  },
+
   pantry()                 { return this._g('lt_pantry', []); },
   savePantry(v)            { this._s('lt_pantry', v); },
 
@@ -166,6 +207,7 @@ const DB = {
       weightLog: this.weightLog(), recipes: this.recipes(),
       exerciseLog: this.exerciseLog(), mealPlan: this.mealPlan(),
       wellness: this.wellness(), lifts: this.lifts(), pantry: this.pantry(),
+      liftLog: this.liftLog(),
     };
   },
 

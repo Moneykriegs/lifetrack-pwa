@@ -545,6 +545,7 @@ const App = {
   async init() {
     this.registerSW();
     DB.migrateEntryIds(); // stamp ids on legacy entries (one-time, no-op after)
+    DB.migrateLiftLog();  // seed gym history from legacy single-value lifts (one-time)
     DarkMode.init();
     this.bindNav();
     this.bindInstall();

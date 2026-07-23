@@ -67,6 +67,16 @@ test('exercise and meal plan also union per day', () => {
   assert.equal(merged.mealPlan[day].length, 2);
 });
 
+test('lift history unions per exercise across devices', () => {
+  const merged = mergeSync(
+    { liftLog: { squat: [{ id: 's1', date: '2026-06-01', kg: 100, reps: 5, e1rm: 117 }] } },
+    { liftLog: { squat: [{ id: 's2', date: '2026-06-08', kg: 105, reps: 5, e1rm: 122 }],
+                 bench: [{ id: 'b1', date: '2026-06-08', kg: 80, reps: 5, e1rm: 93 }] } }
+  );
+  assert.equal(merged.liftLog.squat.length, 2);
+  assert.equal(merged.liftLog.bench.length, 1);
+});
+
 test('pantry items union by id across devices', () => {
   const merged = mergeSync(
     { pantry: [{ id: 1, name: 'Pollo' }] },

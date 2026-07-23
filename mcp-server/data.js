@@ -160,10 +160,16 @@ export function mergeSync(serverData, clientData) {
     if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
   });
 
+  // Lift history: entry-level union per lift
+  const liftLog = { ...(s.liftLog || {}) };
+  Object.entries(c.liftLog || {}).forEach(([id, entries]) => {
+    liftLog[id] = liftLog[id] ? unionEntries(liftLog[id], entries) : entries;
+  });
+
   // Pantry: union by item id
   const pantry = unionEntries(s.pantry, c.pantry);
 
-  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, pantry };
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, pantry };
 }
 
 // Calculate estimated TDEE from profile

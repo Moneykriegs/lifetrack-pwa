@@ -526,5 +526,44 @@ const Strength = {
     if (!idxs.length) return null;
     return Math.round(idxs.reduce((a, b) => a + b, 0) / idxs.length);
   },
+
+  // ── Progression / PRs / volume (operate on DB.liftLog()) ────────
+  // Sorted history for one lift, each entry flagged isPR (new all-time e1rm).
+  progress(history) {
+    const rows = [...(history || [])].sort((a, b) => a.date.localeCompare(b.date));
+    let best = 0;
+    return rows.map(r => {
+      const isPR = (r.e1rm || 0) > best;
+      if (isPR) best = r.e1rm;
+      return { ...r, isPR };
+    });
+  },
+
+  // Best e1rm per lift: { liftId: { e1rm, kg, reps, date } }.
+  prs(log) {
+    const out = {};
+    Object.entries(log || {}).forEach(([id, hist]) => {
+      let best = null;
+      (hist || []).forEach(e => { if (!best || (e.e1rm || 0) > best.e1rm) best = e; });
+      if (best) out[id] = { e1rm: best.e1rm, kg: best.kg, reps: best.reps, date: best.date };
+    });
+    return out;
+  },
+
+  // Weekly training volume over the last `days`: sessions, sets, total reps,
+  // tonnage (Σ kg×reps), and distinct training days.
+  volume(log, days = 7) {
+    const cut = new Date(); cut.setDate(cut.getDate() - days + 1);
+    const cutStr = fmtDate(cut);
+    let sets = 0, reps = 0, tonnage = 0;
+    const trainDays = new Set();
+    Object.values(log || {}).forEach(hist => (hist || []).forEach(e => {
+      if (e.date >= cutStr) {
+        sets++; reps += (e.reps || 0); tonnage += (e.kg || 0) * (e.reps || 0);
+        trainDays.add(e.date);
+      }
+    }));
+    return { sets, reps, tonnage: Math.round(tonnage), days: trainDays.size };
+  },
 };
 

@@ -62,6 +62,7 @@ const MCPSync = {
       if (data.mealPlan)    DB.saveMealPlan(data.mealPlan);
       if (data.wellness)    DB.saveWellness(data.wellness);
       if (data.lifts)       DB.saveLifts(data.lifts);
+      if (data.liftLog)     DB.saveLiftLog(data.liftLog);
       if (data.pantry)      DB.savePantry(data.pantry);
       return true;
     } catch(e) { console.warn('MCP sync error:', e); return false; }
@@ -160,10 +161,17 @@ function mergeClientServer(server, client) {
     if (!cur || (entry.date && (!cur.date || entry.date >= cur.date))) lifts[id] = entry;
   });
 
+  // Lift history: entry-level union per lift (same as day logs) so gym
+  // sessions logged on two devices are all kept.
+  const liftLog = { ...(s.liftLog || {}) };
+  Object.entries(c.liftLog || {}).forEach(([id, entries]) => {
+    liftLog[id] = liftLog[id] ? unionEntries(liftLog[id], entries) : entries;
+  });
+
   // Pantry: union by item id (same resurrect-vs-lose trade-off as day logs)
   const pantry = unionEntries(s.pantry, c.pantry);
 
-  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, pantry };
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, pantry };
 }
 
 // ================================================================
@@ -289,8 +297,9 @@ const CloudSync = {
       DB.saveExerciseLog(merged.exerciseLog);
       DB.saveMealPlan(merged.mealPlan);
       DB.saveWellness(merged.wellness);
-      if (merged.lifts)  DB.saveLifts(merged.lifts);
-      if (merged.pantry) DB.savePantry(merged.pantry);
+      if (merged.lifts)   DB.saveLifts(merged.lifts);
+      if (merged.liftLog) DB.saveLiftLog(merged.liftLog);
+      if (merged.pantry)  DB.savePantry(merged.pantry);
       await this.push();
       return true;
     } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }

@@ -1,7 +1,7 @@
 {
   "app.js": {
-    "mtime": 1784774892.74887,
-    "ast_hash": "48cf0adf136e5b96060b6b009a119246",
+    "mtime": 1784835019.147314,
+    "ast_hash": "ac9185323d796f3dc571f7b2221f33bb",
     "semantic_hash": ""
   },
   "generate-config.sh": {
@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "mcp-server/data.js": {
-    "mtime": 1781039813.2699308,
-    "ast_hash": "10b062f7ffe95ddcb28de772a058b68c",
+    "mtime": 1784834959.2107568,
+    "ast_hash": "81f66323aca5f86022bd165dfd203fa0",
     "semantic_hash": ""
   },
   "mcp-server/package.json": {
@@ -70,13 +70,13 @@
     "semantic_hash": ""
   },
   "mcp-server/test/db.test.mjs": {
-    "mtime": 1784774930.217831,
-    "ast_hash": "7cf19eeb801e020190ce8f8f31ab1145",
+    "mtime": 1784834992.131885,
+    "ast_hash": "6724daaae5fa6da6a38cfef7bef9246b",
     "semantic_hash": ""
   },
   "mcp-server/test/merge.test.mjs": {
-    "mtime": 1781039837.7975962,
-    "ast_hash": "815c221007113b2ed94b4d3dab0f94b0",
+    "mtime": 1784834966.6543026,
+    "ast_hash": "0716811a360bfa4ac79283100112234e",
     "semantic_hash": ""
   },
   "shared/constants.js": {
@@ -85,18 +85,73 @@
     "semantic_hash": ""
   },
   "shared/core.js": {
-    "mtime": 1784774892.74787,
-    "ast_hash": "ceed9e091e5f92480ed16f3d4ba6698c",
+    "mtime": 1784834943.125049,
+    "ast_hash": "1589616c1edecf70765631ec9c20e511",
     "semantic_hash": ""
   },
   "shared/db.js": {
-    "mtime": 1784774892.74787,
-    "ast_hash": "c78c3359809d95d4a5fef9eb99e4f3f6",
+    "mtime": 1784834875.1614592,
+    "ast_hash": "3c37e7ce9506b43169c4cbbabbf493a6",
     "semantic_hash": ""
   },
   "shared/insights.js": {
-    "mtime": 1784774892.74787,
-    "ast_hash": "abc388ae934a6a13ba66ce4de58e728e",
+    "mtime": 1784834893.1259978,
+    "ast_hash": "d7b48ce0ca8f838b6d41d859cd3b6607",
+    "semantic_hash": ""
+  },
+  "desktop/copy-shared.js": {
+    "mtime": 1784775075.0064292,
+    "ast_hash": "9c7becd180a64bd760515309f1e07a1a",
+    "semantic_hash": ""
+  },
+  "desktop/main.js": {
+    "mtime": 1784833637.4077375,
+    "ast_hash": "b86318e7e1610b4cefcf25223137d5b0",
+    "semantic_hash": ""
+  },
+  "desktop/make-icons.ps1": {
+    "mtime": 1784775951.6372123,
+    "ast_hash": "f351f33c475276289dc51d51165a5c29",
+    "semantic_hash": ""
+  },
+  "desktop/package.json": {
+    "mtime": 1784775055.467271,
+    "ast_hash": "68b0aa1dfba796da7621518dbbb59f5c",
+    "semantic_hash": ""
+  },
+  "desktop/preload.js": {
+    "mtime": 1784833643.5746527,
+    "ast_hash": "5777c9f317ab6fb242c7a33bd3c3fe5e",
+    "semantic_hash": ""
+  },
+  "desktop/renderer/hud.js": {
+    "mtime": 1784835024.9545515,
+    "ast_hash": "b709ef7c9b760ab2855902b6131da87f",
+    "semantic_hash": ""
+  },
+  "desktop/renderer/quicklog.js": {
+    "mtime": 1784781342.1928122,
+    "ast_hash": "000d731cb51fc8cc1ba0c9a693e75cd5",
+    "semantic_hash": ""
+  },
+  "desktop/README.md": {
+    "mtime": 1784833787.463751,
+    "ast_hash": "9ddfe45e75f185f07e56857401d8291c",
+    "semantic_hash": ""
+  },
+  "desktop/renderer/index.html": {
+    "mtime": 1784781747.121157,
+    "ast_hash": "fe48c472377d945ddc93bbe234d038fb",
+    "semantic_hash": ""
+  },
+  "desktop/renderer/quicklog.html": {
+    "mtime": 1784781216.1986718,
+    "ast_hash": "e2545910a10b57c92fdb413d5589e363",
+    "semantic_hash": ""
+  },
+  "desktop/renderer/assets/tray.png": {
+    "mtime": 1784776039.1656458,
+    "ast_hash": "0d67dfcfba410984f28232afdd024e78",
     "semantic_hash": ""
   }
 }
