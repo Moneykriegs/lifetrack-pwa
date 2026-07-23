@@ -4,6 +4,18 @@ A standalone desktop app with a Jarvis-style HUD, reusing the PWA's shared core
 (`../shared/*.js`) for data, sync, and insights. The mobile PWA is untouched and
 both stay in sync through the same Supabase backend.
 
+## Features
+
+- **HUD dashboard** — arc-reactor calorie gauge, macro rings, water column,
+  streak flames, weight sparkline, meal timeline, assistant orb + insight ticker.
+- **Analytics view** — titlebar tab: calories-vs-goal bars, weight trend +
+  projection, adherence heat-strip, wellness correlations, weekly summary (7/30d).
+- **Global quick-log** — `Ctrl+Shift+L` from any app pops a small overlay to log
+  water or `name kcal` without switching windows.
+- **Themes** — Jarvis (cyan) / Ultron (red) / Matrix (green), via the ⚙ popover.
+- **Autostart** — optionally launch with Windows minimized to the tray.
+- **Tray + native notifications + mini-mode**, always-on-top toggle.
+
 ## Run in development
 
 ```bash
