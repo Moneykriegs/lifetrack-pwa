@@ -16,6 +16,7 @@
       <div class="tb-tabs" id="tb-tabs">
         <button class="tb-tab on" id="tab-hud">HUD</button>
         <button class="tb-tab" id="tab-analytics">ANALÍTICA</button>
+        <button class="tb-tab" id="tab-gym">GIMNASIO</button>
       </div>
     </div>
     <div class="tb-controls">
@@ -170,6 +171,44 @@
       <div class="panel">
         <div class="panel-hd">RESUMEN SEMANAL</div>
         <div class="an-insights" id="an-insights"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Gym progress view ─────────────────────────────────────────── -->
+  <main class="gym" id="gym" hidden>
+    <div class="gym-grid">
+      <div class="panel gym-wide">
+        <div class="panel-hd">PROGRESIÓN 1RM <span class="panel-hd-val" id="gym-lift-name"></span></div>
+        <div class="gym-lift-tabs" id="gym-lift-tabs"></div>
+        <svg viewBox="0 0 460 160" class="an-svg" id="gym-chart" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="panel gym-log">
+        <div class="panel-hd">REGISTRAR SERIE</div>
+        <form class="gym-form" id="gym-form">
+          <div class="gym-inputs">
+            <label>Peso<input type="number" id="gym-kg" min="0" step="0.5" inputmode="decimal" placeholder="kg"></label>
+            <label>Reps<input type="number" id="gym-reps" min="1" max="20" value="5" inputmode="numeric"></label>
+          </div>
+          <div class="gym-e1rm" id="gym-e1rm-hint"></div>
+          <button class="qbtn wide" type="submit">＋ Añadir serie</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">RÉCORDS (1RM est.)</div>
+        <div class="gym-prs" id="gym-prs"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">NIVEL DE FUERZA <span class="panel-hd-val" id="gym-overall"></span></div>
+        <div class="gym-tiers" id="gym-tiers"></div>
+      </div>
+
+      <div class="panel gym-wide">
+        <div class="panel-hd">VOLUMEN (7 días)</div>
+        <div class="gym-vol" id="gym-volume"></div>
       </div>
     </div>
   </main>

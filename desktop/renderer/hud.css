@@ -371,3 +371,54 @@ body.mini .tb-tabs { display: none; }
   background: rgba(var(--accent-rgb),0.08); border: 1px solid var(--panel-brd); color: var(--ink);
   border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: var(--font); cursor: pointer;
 }
+
+/* ── Gym view ─────────────────────────────────────────────────── */
+.gym { height: calc(100% - 44px); overflow-y: auto; padding: 10px 18px 24px; }
+.gym[hidden] { display: none; }
+.gym-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gym-wide { grid-column: 1 / -1; }
+
+.gym-lift-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.gym-lift-tab {
+  cursor: pointer; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  background: rgba(var(--accent-rgb),0.06); border: 1px solid var(--panel-brd); color: var(--ink-dim); transition: .15s;
+}
+.gym-lift-tab.on { color: var(--cyan); border-color: var(--cyan); background: rgba(var(--accent-rgb),0.14); }
+
+.gym-cline { fill: none; stroke: var(--cyan); stroke-width: 2; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb),.5)); }
+.gym-carea { fill: rgba(var(--accent-rgb),0.08); stroke: none; }
+.gym-cdot { fill: var(--cyan); }
+.gym-cpr { fill: var(--amber); stroke: #04070d; stroke-width: 1.5; }
+
+/* log form */
+.gym-form { display: flex; flex-direction: column; gap: 10px; }
+.gym-inputs { display: flex; gap: 10px; }
+.gym-inputs label { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 10px; letter-spacing: 1px; color: var(--ink-dim); }
+.gym-inputs input {
+  padding: 8px 10px; border-radius: 8px; background: rgba(var(--accent-rgb),0.06);
+  border: 1px solid var(--panel-brd); color: var(--ink); font-size: 15px; font-family: var(--font); outline: none;
+}
+.gym-inputs input:focus { border-color: var(--cyan); }
+.gym-e1rm { font-size: 12px; color: var(--cyan); min-height: 16px; }
+
+/* PRs */
+.gym-prs { display: flex; flex-direction: column; gap: 9px; }
+.gym-pr-row { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.gym-pr-emoji { font-size: 16px; }
+.gym-pr-name { flex: 1; color: var(--ink); }
+.gym-pr-val { color: var(--cyan); font-weight: 700; }
+.gym-pr-date { font-size: 10px; color: var(--ink-dim); }
+
+/* tiers */
+.gym-tiers { display: flex; flex-direction: column; gap: 8px; }
+.gym-tier-row { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.gym-tier-name { width: 84px; color: var(--ink); }
+.gym-tier-bar-wrap { flex: 1; height: 6px; background: rgba(var(--accent-rgb),0.1); border-radius: 3px; overflow: hidden; }
+.gym-tier-bar { height: 100%; border-radius: 3px; }
+.gym-tier-badge { font-size: 14px; width: 20px; text-align: center; }
+
+/* volume */
+.gym-vol { display: flex; gap: 18px; }
+.gym-vol-stat { text-align: center; flex: 1; }
+.gym-vol-num { font-size: 22px; font-weight: 800; color: var(--cyan); text-shadow: 0 0 12px rgba(var(--accent-rgb),.4); }
+.gym-vol-lbl { font-size: 10px; letter-spacing: 1px; color: var(--ink-dim); margin-top: 2px; }

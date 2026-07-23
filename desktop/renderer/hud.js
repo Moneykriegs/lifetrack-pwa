@@ -96,6 +96,21 @@ const HUD = {
     // View tabs + analytics range
     document.getElementById('tab-hud').onclick = () => this.setView('hud');
     document.getElementById('tab-analytics').onclick = () => this.setView('analytics');
+    document.getElementById('tab-gym').onclick = () => this.setView('gym');
+
+    // Gym log form
+    const gymForm = document.getElementById('gym-form');
+    if (gymForm) {
+      gymForm.onsubmit = (e) => { e.preventDefault(); this.logLiftSet(); };
+      const upd = () => {
+        const kg = parseFloat(document.getElementById('gym-kg').value);
+        const reps = parseInt(document.getElementById('gym-reps').value, 10) || 1;
+        const e = (kg && reps > 1 && typeof Strength !== 'undefined') ? Strength.e1rm(kg, reps) : null;
+        document.getElementById('gym-e1rm-hint').textContent = e ? `1RM estimado: ${e} kg` : '';
+      };
+      document.getElementById('gym-kg').oninput = upd;
+      document.getElementById('gym-reps').oninput = upd;
+    }
     document.querySelectorAll('#an-range .an-range-btn').forEach(b =>
       b.onclick = () => {
         this.anRange = +b.dataset.range;
@@ -109,12 +124,13 @@ const HUD = {
 
   setView(v) {
     this.view = v;
-    document.getElementById('hud').hidden = v !== 'hud';
-    document.getElementById('analytics').hidden = v !== 'analytics';
-    document.getElementById('tab-hud').classList.toggle('on', v === 'hud');
-    document.getElementById('tab-analytics').classList.toggle('on', v === 'analytics');
+    ['hud', 'analytics', 'gym'].forEach(id => {
+      document.getElementById(id).hidden = id !== v;
+      document.getElementById('tab-' + id).classList.toggle('on', id === v);
+    });
     document.getElementById('assistant').style.display = v === 'hud' ? '' : 'none';
     if (v === 'analytics') this.renderAnalytics();
+    if (v === 'gym') this.renderGym();
   },
 
   // ── Theme + settings ──────────────────────────────────────────
@@ -436,6 +452,118 @@ const HUD = {
           ${i.sub ? `<div class="an-ins-sub">${i.sub}</div>` : ''}
         </div>
       </div>`).join('');
+  },
+
+  // ── Gym view ──────────────────────────────────────────────────
+  gymLift: 'squat',
+
+  _liftDefs() {
+    return (typeof LIFT_STANDARDS !== 'undefined' && LIFT_STANDARDS.lifts) || [
+      { id: 'squat', label: 'Sentadilla', emoji: '🦵' }, { id: 'bench', label: 'Press banca', emoji: '🏋️' },
+      { id: 'deadlift', label: 'Peso muerto', emoji: '🪨' }, { id: 'ohp', label: 'Press militar', emoji: '💪' },
+    ];
+  },
+
+  renderGym() {
+    const defs = this._liftDefs();
+    // Lift selector tabs
+    const tabsEl = document.getElementById('gym-lift-tabs');
+    tabsEl.innerHTML = defs.map(l =>
+      `<button class="gym-lift-tab ${l.id === this.gymLift ? 'on' : ''}" data-lift="${l.id}">${l.emoji} ${l.label}</button>`).join('');
+    tabsEl.querySelectorAll('[data-lift]').forEach(b =>
+      b.onclick = () => { this.gymLift = b.dataset.lift; this.renderGym(); });
+
+    this.gymChart();
+    this.gymPRs();
+    this.gymTiers();
+    this.gymVolume();
+  },
+
+  gymChart() {
+    const svg = document.getElementById('gym-chart');
+    const def = this._liftDefs().find(l => l.id === this.gymLift);
+    document.getElementById('gym-lift-name').textContent = def ? def.label : '';
+    const hist = (typeof Strength !== 'undefined')
+      ? Strength.progress(DB.liftHistory(this.gymLift))
+      : DB.liftHistory(this.gymLift);
+    if (!hist || hist.length < 1) {
+      svg.innerHTML = `<text class="an-empty" x="230" y="80" text-anchor="middle">Aún no registras este ejercicio</text>`;
+      return;
+    }
+    if (hist.length === 1) {
+      const e = hist[0];
+      svg.innerHTML = `<circle class="gym-cpr" cx="230" cy="80" r="5"/><text class="an-empty" x="230" y="110" text-anchor="middle">${e.e1rm} kg · registra más para ver la curva</text>`;
+      return;
+    }
+    const W = 460, H = 160, pad = 20;
+    const es = hist.map(h => h.e1rm || 0);
+    const min = Math.min(...es) * 0.95, max = Math.max(...es) * 1.05, span = (max - min) || 1;
+    const X = i => pad + (i / (hist.length - 1)) * (W - 2 * pad);
+    const Y = e => pad + (1 - (e - min) / span) * (H - 2 * pad);
+    const pts = hist.map((h, i) => [X(i), Y(h.e1rm)]);
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    const area = `${line} L${pts[pts.length-1][0].toFixed(1)},${H-pad} L${pts[0][0].toFixed(1)},${H-pad} Z`;
+    const dots = hist.map((h, i) =>
+      `<circle class="${h.isPR ? 'gym-cpr' : 'gym-cdot'}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="${h.isPR ? 4 : 2.5}"><title>${h.date}: ${h.e1rm} kg${h.isPR ? ' (PR)' : ''}</title></circle>`).join('');
+    svg.innerHTML = `<path class="gym-carea" d="${area}"/><path class="gym-cline" d="${line}"/>${dots}`;
+  },
+
+  gymPRs() {
+    const el = document.getElementById('gym-prs');
+    const prs = (typeof Strength !== 'undefined') ? Strength.prs(DB.liftLog()) : {};
+    const defs = this._liftDefs();
+    el.innerHTML = defs.map(l => {
+      const pr = prs[l.id];
+      return `<div class="gym-pr-row">
+        <span class="gym-pr-emoji">${l.emoji}</span>
+        <span class="gym-pr-name">${l.label}</span>
+        ${pr ? `<span class="gym-pr-val">${pr.e1rm} kg</span><span class="gym-pr-date">${pr.date.slice(5)}</span>`
+              : `<span class="gym-pr-date">— sin datos</span>`}
+      </div>`;
+    }).join('');
+  },
+
+  gymTiers() {
+    const el = document.getElementById('gym-tiers');
+    if (typeof Strength === 'undefined') { el.innerHTML = ''; return; }
+    const s = DB.settings();
+    const bodyKg = (DB.weightLog().slice(-1)[0] || {}).kg || s.weightGoal || null;
+    const sex = s.gender || 'male';
+    const lifts = DB.lifts();
+    const overall = Strength.tier(Strength.overall(lifts, bodyKg, sex));
+    document.getElementById('gym-overall').textContent = overall ? `${overall.emoji} ${overall.label}` : '';
+    el.innerHTML = this._liftDefs().map(l => {
+      const entry = lifts[l.id];
+      const r = entry ? Strength.rank(l.id, entry.e1rm, bodyKg, sex) : null;
+      const tier = r ? Strength.tier(r.idx) : null;
+      const pct = r ? Math.min(100, Math.max(6, ((r.idx + 1) / 5) * 100)) : 0;
+      return `<div class="gym-tier-row">
+        <span class="gym-tier-name">${l.label}</span>
+        <span class="gym-tier-bar-wrap"><span class="gym-tier-bar" style="width:${pct}%;background:${tier ? tier.color : 'var(--ink-dim)'}"></span></span>
+        <span class="gym-tier-badge">${tier ? tier.emoji : '·'}</span>
+      </div>`;
+    }).join('');
+  },
+
+  gymVolume() {
+    const el = document.getElementById('gym-volume');
+    const v = (typeof Strength !== 'undefined') ? Strength.volume(DB.liftLog(), 7) : { sets: 0, reps: 0, tonnage: 0, days: 0 };
+    const stat = (n, l) => `<div class="gym-vol-stat"><div class="gym-vol-num">${n}</div><div class="gym-vol-lbl">${l}</div></div>`;
+    el.innerHTML = stat(v.days, 'DÍAS') + stat(v.sets, 'SERIES') + stat(v.reps, 'REPS') + stat(v.tonnage.toLocaleString(), 'KG TOTAL');
+  },
+
+  logLiftSet() {
+    const kg = parseFloat(document.getElementById('gym-kg').value);
+    const reps = parseInt(document.getElementById('gym-reps').value, 10) || 1;
+    if (!kg || kg <= 0) { this.toast('Ingresa el peso'); return; }
+    const e1rm = (typeof Strength !== 'undefined') ? Strength.e1rm(kg, reps) : Math.round(kg);
+    DB.addLiftEntry(this.gymLift, { kg, reps, e1rm });
+    document.getElementById('gym-kg').value = '';
+    document.getElementById('gym-e1rm-hint').textContent = '';
+    if (window.desktop) window.desktop.dataChanged();
+    this.renderGym();
+    const def = this._liftDefs().find(l => l.id === this.gymLift);
+    this.toast(`✓ ${def ? def.label : ''} ${kg}kg×${reps} · 1RM ${e1rm}`);
   },
 
   setRing(id, r, frac) {
