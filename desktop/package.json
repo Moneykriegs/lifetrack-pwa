@@ -1,0 +1,40 @@
+{
+  "name": "lifetrack-desktop",
+  "productName": "LifeTrack HUD",
+  "version": "1.0.0",
+  "description": "LifeTrack desktop — Jarvis-style HUD (Electron)",
+  "main": "main.js",
+  "author": "LifeTrack",
+  "license": "MIT",
+  "scripts": {
+    "prestart": "node copy-shared.js",
+    "start": "electron .",
+    "predist": "node copy-shared.js",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^31.7.6",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.lifetrack.hud",
+    "productName": "LifeTrack HUD",
+    "directories": { "output": "dist" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "!renderer/vendor/.gitkeep"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "LifeTrack HUD"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+# LifeTrack HUD (Electron desktop)
+
+A standalone desktop app with a Jarvis-style HUD, reusing the PWA's shared core
+(`../shared/*.js`) for data, sync, and insights. The mobile PWA is untouched and
+both stay in sync through the same Supabase backend.
+
+## Run in development
+
+```bash
+cd desktop
+npm install          # first time only (downloads Electron)
+npm start            # runs copy-shared.js then launches Electron
+```
+
+`npm start` first runs `copy-shared.js`, which copies `../shared/*.js` and your
+local `../supabase-config.js` into `renderer/vendor/` (gitignored). Without a
+`supabase-config.js` the app still runs in **local-only mode** (no cloud sync).
+
+## Build a Windows installer
+
+```bash
+cd desktop
+npm run dist         # electron-builder → dist/LifeTrack HUD Setup x.y.z.exe
+```
+
+Provide an icon at `build/icon.ico` before building (optional; a default is used
+otherwise). A tray icon can be placed at `renderer/assets/tray.png`.
+
+## Architecture
+
+- **main.js** — frameless translucent window, tray, native notifications,
+  main-process reminder timers (survive a hidden window / sleep via `powerMonitor`),
+  and the Google OAuth popup. All privileged work lives here.
+- **preload.js** — exposes a minimal `window.desktop` bridge (contextIsolation on,
+  nodeIntegration off, sandbox on).
+- **renderer/** — the HUD. `hud.js` reuses `DB`, `CloudSync`, `calcStreaks`,
+  `generateWeeklyInsights` from the shared core. It feature-detects `window.desktop`,
+  so `renderer/index.html` also runs in a plain browser for quick visual iteration.
+
+## Verifying the HUD without Electron
+
+Serve the repo root and open `desktop/renderer/index.html` in a browser after
+running `node copy-shared.js`. Native bits (window controls, notifications, OAuth
+popup) no-op gracefully; the dashboard, gauges, orb, and insights all render.

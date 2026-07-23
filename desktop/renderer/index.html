@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LifeTrack HUD</title>
+  <link rel="stylesheet" href="hud.css">
+</head>
+<body>
+  <!-- ── Custom titlebar (drag region) ─────────────────────────────── -->
+  <header class="titlebar">
+    <div class="tb-brand">
+      <span class="tb-dot"></span>
+      <span class="tb-name">LIFE<b>TRACK</b></span>
+      <span class="tb-sub" id="tb-user">HUD</span>
+    </div>
+    <div class="tb-controls">
+      <button class="tb-btn" id="tb-sync" title="Sincronizar">⟳</button>
+      <button class="tb-btn" id="tb-mini" title="Mini-modo">▭</button>
+      <button class="tb-btn" id="tb-min" title="Minimizar">—</button>
+      <button class="tb-btn tb-close" id="tb-close" title="Cerrar">✕</button>
+    </div>
+  </header>
+
+  <!-- Holographic grid backdrop -->
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <main class="hud" id="hud">
+    <!-- Left rail -->
+    <section class="rail rail-left">
+      <div class="panel water-panel">
+        <div class="panel-hd">HIDRATACIÓN</div>
+        <div class="water-col">
+          <svg viewBox="0 0 80 200" class="water-svg" preserveAspectRatio="none">
+            <defs>
+              <clipPath id="waterClip"><rect x="8" y="8" width="64" height="184" rx="10"/></clipPath>
+            </defs>
+            <rect x="8" y="8" width="64" height="184" rx="10" class="water-tube"/>
+            <g clip-path="url(#waterClip)">
+              <rect id="water-fill" x="8" y="200" width="64" height="0" class="water-liquid"/>
+              <path id="water-wave" class="water-wave" d=""/>
+            </g>
+            <line id="water-pace" x1="6" y1="120" x2="74" y2="120" class="water-pace"/>
+          </svg>
+          <div class="water-read"><span id="water-ml">0</span><small>ml</small></div>
+          <div class="water-goal" id="water-goal">/ 2500 ml</div>
+        </div>
+        <div class="quick-water">
+          <button class="qbtn" data-water="250">+250</button>
+          <button class="qbtn" data-water="500">+500</button>
+        </div>
+      </div>
+
+      <div class="panel streak-panel">
+        <div class="panel-hd">RACHA</div>
+        <div class="streak-flame" id="streak-flame">🔥</div>
+        <div class="streak-count"><span id="streak-days">0</span> <small>días</small></div>
+      </div>
+    </section>
+
+    <!-- Center: arc reactor -->
+    <section class="reactor-wrap">
+      <svg viewBox="0 0 320 320" class="reactor" id="reactor-svg">
+        <defs>
+          <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="var(--glow)" stop-opacity="0.9"/>
+            <stop offset="60%" stop-color="var(--glow)" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="var(--glow)" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- rotating outer ticks -->
+        <g class="reactor-ticks" id="reactor-ticks"></g>
+        <!-- macro rings -->
+        <circle class="mring-track" cx="160" cy="160" r="132"/>
+        <circle class="mring mring-p" id="ring-prot"  cx="160" cy="160" r="132"/>
+        <circle class="mring-track" cx="160" cy="160" r="118"/>
+        <circle class="mring mring-c" id="ring-carbs" cx="160" cy="160" r="118"/>
+        <circle class="mring-track" cx="160" cy="160" r="104"/>
+        <circle class="mring mring-f" id="ring-fat"   cx="160" cy="160" r="104"/>
+        <!-- calorie arc -->
+        <circle class="cal-track" cx="160" cy="160" r="80"/>
+        <circle class="cal-arc" id="cal-arc" cx="160" cy="160" r="80"/>
+        <!-- core glow -->
+        <circle cx="160" cy="160" r="66" fill="url(#coreGlow)" class="core-glow"/>
+      </svg>
+      <div class="reactor-center">
+        <div class="rc-remaining" id="rc-remaining">—</div>
+        <div class="rc-label">kcal restantes</div>
+        <div class="rc-consumed"><span id="rc-consumed">0</span> / <span id="rc-goal">0</span></div>
+        <div class="rc-macros">
+          <span class="mm mm-p"><i></i>P <b id="mm-prot">0</b></span>
+          <span class="mm mm-c"><i></i>C <b id="mm-carbs">0</b></span>
+          <span class="mm mm-f"><i></i>G <b id="mm-fat">0</b></span>
+        </div>
+      </div>
+      <div class="quick-food">
+        <button class="qbtn wide" id="qf-repeat">↻ Repetir ayer</button>
+        <button class="qbtn wide" id="qf-open">＋ Alimento</button>
+      </div>
+    </section>
+
+    <!-- Right rail -->
+    <section class="rail rail-right">
+      <div class="panel weight-panel">
+        <div class="panel-hd">PESO <span class="panel-hd-val" id="weight-latest"></span></div>
+        <svg viewBox="0 0 220 90" class="spark" id="weight-spark" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="panel timeline-panel">
+        <div class="panel-hd">COMIDAS HOY</div>
+        <div class="meal-rail" id="meal-rail"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Assistant orb + insight ticker -->
+  <div class="assistant" id="assistant">
+    <div class="orb" id="orb">
+      <div class="orb-core"></div>
+      <div class="orb-ring"></div>
+    </div>
+    <div class="ticker">
+      <div class="ticker-msg" id="ticker-msg">Iniciando sistemas…</div>
+    </div>
+  </div>
+
+  <!-- Login overlay (shown when cloud sync configured but signed out) -->
+  <div class="overlay" id="login-overlay" hidden>
+    <div class="overlay-card">
+      <div class="ov-logo">◉</div>
+      <h1>LIFETRACK <span>HUD</span></h1>
+      <p>Conecta tu cuenta para sincronizar con tu móvil, o entra en modo local.</p>
+      <button class="ov-btn primary" id="ov-google">Conectar con Google</button>
+      <button class="ov-btn ghost" id="ov-local">Usar sin cuenta →</button>
+    </div>
+  </div>
+
+  <!-- Shared core (copied into vendor/ by copy-shared.js) -->
+  <script src="vendor/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="vendor/constants.js"></script>
+  <script src="vendor/db.js"></script>
+  <script src="vendor/core.js"></script>
+  <script src="vendor/insights.js"></script>
+  <script src="hud.js"></script>
+</body>
+</html>

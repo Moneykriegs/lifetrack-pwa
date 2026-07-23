@@ -4,6 +4,11 @@ supabase-config.js
 # Dependencies
 node_modules/
 mcp-server/node_modules/
+desktop/node_modules/
+
+# Electron desktop build artifacts + generated vendor copies
+desktop/dist/
+desktop/renderer/vendor/
 
 # Server data (local, no compartir)
 mcp-server/data/
