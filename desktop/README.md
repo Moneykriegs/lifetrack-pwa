@@ -33,6 +33,37 @@ pwsh desktop/make-icons.ps1   # or: powershell -File desktop/make-icons.ps1
 Both files are committed so the app builds out-of-the-box; rerun the script to
 regenerate them or drop in your own art anytime.
 
+### Portable build (no installer, no Developer Mode needed)
+
+The unpacked target always works and produces a self-contained, runnable app:
+
+```bash
+cd desktop
+node copy-shared.js
+CSC_IDENTITY_AUTO_DISCOVERY=false ./node_modules/.bin/electron-builder --win dir
+# → dist/win-unpacked/LifeTrack HUD.exe  (double-click to run; copy the folder to share)
+```
+
+Only the **NSIS installer** (`npm run dist`) needs the code-signing tools below.
+
+### Build troubleshooting: "Cannot create symbolic link"
+
+electron-builder unpacks a code-signing bundle that contains macOS symlinks;
+on Windows, creating symlinks needs privilege, so `npm run dist` can fail with
+`Cannot create symbolic link ... El cliente no dispone de un privilegio requerido`.
+Two fixes (either works — we don't sign, so the macOS files are irrelevant):
+
+- **Enable Developer Mode** (recommended, permanent): Settings → Privacy &
+  security → For developers → Developer Mode → On. Then `npm run dist` just works.
+- **Pre-extract the cache once** (no settings change): after a failed run, note
+  the cache id in the error path and extract it with symlinks disabled, then
+  rebuild:
+  ```powershell
+  $c="$env:LOCALAPPDATA\electron-builder\Cache\winCodeSign"
+  & node_modules\7zip-bin\win\x64\7za.exe x -y -snl- "-o$c\<ID>" "$c\<ID>.7z"
+  $env:CSC_IDENTITY_AUTO_DISCOVERY="false"; npm run dist
+  ```
+
 ## Architecture
 
 - **main.js** — frameless translucent window, tray, native notifications,
