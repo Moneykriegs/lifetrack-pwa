@@ -169,6 +169,12 @@ const HUD = {
     document.getElementById('assistant').style.display = v === 'hud' ? '' : 'none';
     if (v === 'analytics') this.renderAnalytics();
     if (v === 'gym') this.renderGym();
+    // Staggered fade+slide entrance for the panels of the newly active view
+    // (re-trigger the animation by removing+re-adding the class next frame).
+    const active = document.getElementById(v);
+    active.classList.remove('view-enter');
+    void active.offsetWidth; // force reflow so the class removal registers
+    active.classList.add('view-enter');
   },
 
   // ── Theme + settings ──────────────────────────────────────────
@@ -466,13 +472,24 @@ const HUD = {
     if (typeof calcWellnessCorrelations !== 'function') { el.innerHTML = ''; return; }
     const c = calcWellnessCorrelations();
     const rows = Object.values(c);
+    // Bipolar bar centered at 0: negative correlations grow left (amber),
+    // positive grow right (cyan) — direction reads at a glance instead of
+    // needing to check the sign of the number.
     el.innerHTML = rows.map(row => {
       const has = row.r != null;
       const mag = has ? Math.min(Math.abs(row.r), 1) : 0;
       const rTxt = has ? (row.r > 0 ? '+' : '') + row.r.toFixed(2) : '—';
+      const halfPct = (mag * 50).toFixed(0);
+      const side = row.r < 0 ? 'neg' : 'pos';
+      const bar = has
+        ? `<span class="an-corr-bipolar">
+             <span class="an-corr-mid"></span>
+             <span class="an-corr-fill ${side}" style="width:${halfPct}%"></span>
+           </span>`
+        : `<span class="an-corr-bipolar"><span class="an-corr-mid"></span></span>`;
       return `<div class="an-corr-row ${has ? '' : 'dim'}" title="${row.desc}">
         <span class="an-corr-label">${row.label}</span>
-        <span class="an-corr-bar-wrap"><span class="an-corr-bar" style="width:${(mag * 100).toFixed(0)}%;background:${row.r < 0 ? 'var(--amber)' : 'var(--cyan)'}"></span></span>
+        ${bar}
         <span class="an-corr-r">${rTxt}</span>
       </div>`;
     }).join('');
@@ -544,9 +561,19 @@ const HUD = {
       svg.innerHTML = `<circle class="gym-cpr" cx="230" cy="80" r="5"/><text class="an-empty" x="230" y="110" text-anchor="middle">${e.e1rm} kg · registra más para ver la curva</text>`;
       return;
     }
+    // Tier threshold reference lines (Bronce→Diamante in e1RM kg for this lift
+    // + bodyweight) so it's immediately visible what the next rank requires.
+    const s = DB.settings();
+    const sex = s.gender === 'female' ? 'female' : 'male';
+    const bodyKg = (DB.weightLog().slice(-1)[0] || {}).kg || null;
+    const thresholdsKg = (bodyKg && typeof LIFT_STANDARDS !== 'undefined' && LIFT_STANDARDS.mult[sex]?.[this.gymLift])
+      ? LIFT_STANDARDS.mult[sex][this.gymLift].map(mult => mult * bodyKg)
+      : [];
+
     const W = 460, H = 160, pad = 20;
     const es = hist.map(h => h.e1rm || 0);
-    const min = Math.min(...es) * 0.95, max = Math.max(...es) * 1.05, span = (max - min) || 1;
+    const domainVals = [...es, ...thresholdsKg];
+    const min = Math.min(...domainVals) * 0.95, max = Math.max(...domainVals) * 1.05, span = (max - min) || 1;
     const X = i => pad + (i / (hist.length - 1)) * (W - 2 * pad);
     const Y = e => pad + (1 - (e - min) / span) * (H - 2 * pad);
     const pts = hist.map((h, i) => [X(i), Y(h.e1rm)]);
@@ -554,7 +581,14 @@ const HUD = {
     const area = `${line} L${pts[pts.length-1][0].toFixed(1)},${H-pad} L${pts[0][0].toFixed(1)},${H-pad} Z`;
     const dots = hist.map((h, i) =>
       `<circle class="${h.isPR ? 'gym-cpr' : 'gym-cdot'}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="${h.isPR ? 4 : 2.5}"><title>${h.date}: ${h.e1rm} kg${h.isPR ? ' (PR)' : ''}</title></circle>`).join('');
-    svg.innerHTML = `<path class="gym-carea" d="${area}"/><path class="gym-cline" d="${line}"/>${dots}`;
+    const tierLines = thresholdsKg.map((kg, i) => {
+      const y = Y(kg);
+      if (y < pad - 4 || y > H - pad + 4) return ''; // off-chart, skip label clutter
+      const tier = (typeof LIFT_TIERS !== 'undefined') ? LIFT_TIERS[i] : null;
+      return `<line class="gym-tier-line" x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/>
+        <text class="gym-tier-line-lbl" x="${W - 4}" y="${(y - 3).toFixed(1)}" text-anchor="end">${tier ? tier.emoji : ''} ${Math.round(kg)}</text>`;
+    }).join('');
+    svg.innerHTML = `${tierLines}<path class="gym-carea" d="${area}"/><path class="gym-cline" d="${line}"/>${dots}`;
   },
 
   gymPRs() {
@@ -581,14 +615,26 @@ const HUD = {
     const lifts = DB.lifts();
     const overall = Strength.tier(Strength.overall(lifts, bodyKg, sex));
     document.getElementById('gym-overall').textContent = overall ? `${overall.emoji} ${overall.label}` : '';
+    // Segmented tier meter: 5 discrete blocks (Bronce→Diamante), fully lit up
+    // to the current tier, with the active block showing partial progress
+    // toward the next one — reads more like a rank ladder than a plain bar.
     el.innerHTML = this._liftDefs().map(l => {
       const entry = lifts[l.id];
       const r = entry ? Strength.rank(l.id, entry.e1rm, bodyKg, sex) : null;
+      const blocks = LIFT_TIERS.map((t, i) => {
+        if (!r || i > r.idx) return `<span class="gym-tier-seg" title="${t.label}"></span>`;
+        if (i < r.idx) return `<span class="gym-tier-seg full" style="background:${t.color}" title="${t.label}"></span>`;
+        // Active block: fill proportional to progress toward the next threshold
+        const m = r.thresholds;
+        const curBase = i >= 0 ? m[i] : 0;
+        const nextThr = i < m.length - 1 ? m[i + 1] : null;
+        const innerPct = nextThr ? Math.min(100, Math.round(((r.ratio - curBase) / (nextThr - curBase)) * 100)) : 100;
+        return `<span class="gym-tier-seg active" style="--fill:${innerPct}%;--seg-color:${t.color}" title="${t.label} (${innerPct}%)"></span>`;
+      }).join('');
       const tier = r ? Strength.tier(r.idx) : null;
-      const pct = r ? Math.min(100, Math.max(6, ((r.idx + 1) / 5) * 100)) : 0;
       return `<div class="gym-tier-row">
         <span class="gym-tier-name">${l.label}</span>
-        <span class="gym-tier-bar-wrap"><span class="gym-tier-bar" style="width:${pct}%;background:${tier ? tier.color : 'var(--ink-dim)'}"></span></span>
+        <span class="gym-tier-segs">${blocks}</span>
         <span class="gym-tier-badge">${tier ? tier.emoji : '·'}</span>
       </div>`;
     }).join('');
@@ -597,8 +643,26 @@ const HUD = {
   gymVolume() {
     const el = document.getElementById('gym-volume');
     const v = (typeof Strength !== 'undefined') ? Strength.volume(DB.liftLog(), 7) : { sets: 0, reps: 0, tonnage: 0, days: 0 };
-    const stat = (n, l) => `<div class="gym-vol-stat"><div class="gym-vol-num">${n}</div><div class="gym-vol-lbl">${l}</div></div>`;
-    el.innerHTML = stat(v.days, 'DÍAS') + stat(v.sets, 'SERIES') + stat(v.reps, 'REPS') + stat(v.tonnage.toLocaleString(), 'KG TOTAL');
+    // Mini circular gauges (same arc technique as the calorie reactor) instead
+    // of plain numbers — normalized against reasonable weekly caps just to
+    // fill the ring; the real number is always shown in the center.
+    const gauge = (val, cap, label, display) => {
+      const R = 26, C = 2 * Math.PI * R;
+      const pct = Math.max(0, Math.min(1, val / cap));
+      return `<div class="gym-vol-stat">
+        <div class="gym-vol-ring-wrap">
+          <svg viewBox="0 0 64 64" class="gym-vol-ring">
+            <circle cx="32" cy="32" r="${R}" class="gvr-track"/>
+            <circle cx="32" cy="32" r="${R}" class="gvr-fill" style="stroke-dasharray:${C};stroke-dashoffset:${(C * (1 - pct)).toFixed(1)}"/>
+          </svg>
+          <div class="gym-vol-num">${display ?? val}</div>
+        </div>
+        <div class="gym-vol-lbl">${label}</div>
+      </div>`;
+    };
+    el.innerHTML =
+      gauge(v.days, 7, 'DÍAS') + gauge(v.sets, 30, 'SERIES') +
+      gauge(v.reps, 300, 'REPS') + gauge(v.tonnage, 10000, 'KG TOTAL', v.tonnage.toLocaleString());
   },
 
   logLiftSet() {

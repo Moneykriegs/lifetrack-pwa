@@ -71,7 +71,7 @@
     <!-- Left rail -->
     <section class="rail rail-left">
       <div class="panel water-panel">
-        <div class="panel-hd">HIDRATACIÓN</div>
+        <div class="panel-hd" data-code="SYS·01"><span class="panel-hd-dot"></span>HIDRATACIÓN</div>
         <div class="water-col">
           <svg viewBox="0 0 80 200" class="water-svg" preserveAspectRatio="none">
             <defs>
@@ -94,7 +94,7 @@
       </div>
 
       <div class="panel streak-panel">
-        <div class="panel-hd">RACHA</div>
+        <div class="panel-hd" data-code="SYS·02"><span class="panel-hd-dot"></span>RACHA</div>
         <div class="streak-flame" id="streak-flame">🔥</div>
         <div class="streak-count"><span id="streak-days">0</span> <small>días</small></div>
       </div>
@@ -144,12 +144,12 @@
     <!-- Right rail -->
     <section class="rail rail-right">
       <div class="panel weight-panel">
-        <div class="panel-hd">PESO <span class="panel-hd-val" id="weight-latest"></span></div>
+        <div class="panel-hd" data-code="SYS·03"><span class="panel-hd-dot"></span>PESO <span class="panel-hd-val" id="weight-latest"></span></div>
         <svg viewBox="0 0 220 90" class="spark" id="weight-spark" preserveAspectRatio="none"></svg>
       </div>
 
       <div class="panel timeline-panel">
-        <div class="panel-hd">COMIDAS HOY</div>
+        <div class="panel-hd" data-code="SYS·04"><span class="panel-hd-dot"></span>COMIDAS HOY</div>
         <div class="meal-rail" id="meal-rail"></div>
       </div>
     </section>
@@ -165,23 +165,23 @@
     </div>
     <div class="an-grid">
       <div class="panel an-wide">
-        <div class="panel-hd">CALORÍAS vs META</div>
+        <div class="panel-hd" data-code="ANL·01"><span class="panel-hd-dot"></span>CALORÍAS vs META</div>
         <svg viewBox="0 0 460 150" class="an-svg" id="an-kcal-bars" preserveAspectRatio="none"></svg>
       </div>
       <div class="panel">
-        <div class="panel-hd">TENDENCIA DE PESO <span class="panel-hd-val" id="an-weight-cap"></span></div>
+        <div class="panel-hd" data-code="ANL·02"><span class="panel-hd-dot"></span>TENDENCIA DE PESO <span class="panel-hd-val" id="an-weight-cap"></span></div>
         <svg viewBox="0 0 300 150" class="an-svg" id="an-weight-chart" preserveAspectRatio="none"></svg>
       </div>
       <div class="panel">
-        <div class="panel-hd">ADHERENCIA</div>
+        <div class="panel-hd" data-code="ANL·03"><span class="panel-hd-dot"></span>ADHERENCIA</div>
         <div class="an-heat" id="an-heatstrip"></div>
       </div>
       <div class="panel">
-        <div class="panel-hd">CORRELACIONES</div>
+        <div class="panel-hd" data-code="ANL·04"><span class="panel-hd-dot"></span>CORRELACIONES</div>
         <div class="an-corr" id="an-correlations"></div>
       </div>
       <div class="panel">
-        <div class="panel-hd">RESUMEN SEMANAL</div>
+        <div class="panel-hd" data-code="ANL·05"><span class="panel-hd-dot"></span>RESUMEN SEMANAL</div>
         <div class="an-insights" id="an-insights"></div>
       </div>
     </div>
@@ -191,13 +191,13 @@
   <main class="gym" id="gym" hidden>
     <div class="gym-grid">
       <div class="panel gym-wide">
-        <div class="panel-hd">PROGRESIÓN 1RM <span class="panel-hd-val" id="gym-lift-name"></span></div>
+        <div class="panel-hd" data-code="GYM·01"><span class="panel-hd-dot"></span>PROGRESIÓN 1RM <span class="panel-hd-val" id="gym-lift-name"></span></div>
         <div class="gym-lift-tabs" id="gym-lift-tabs"></div>
         <svg viewBox="0 0 460 160" class="an-svg" id="gym-chart" preserveAspectRatio="none"></svg>
       </div>
 
       <div class="panel gym-log">
-        <div class="panel-hd">REGISTRAR SERIE</div>
+        <div class="panel-hd" data-code="GYM·02"><span class="panel-hd-dot"></span>REGISTRAR SERIE</div>
         <form class="gym-form" id="gym-form">
           <div class="gym-inputs">
             <label>Peso<input type="number" id="gym-kg" min="0" step="0.5" inputmode="decimal" placeholder="kg"></label>
@@ -209,22 +209,22 @@
       </div>
 
       <div class="panel">
-        <div class="panel-hd">RÉCORDS (1RM est.)</div>
+        <div class="panel-hd" data-code="GYM·03"><span class="panel-hd-dot"></span>RÉCORDS (1RM est.)</div>
         <div class="gym-prs" id="gym-prs"></div>
       </div>
 
       <div class="panel">
-        <div class="panel-hd">NIVEL DE FUERZA <span class="panel-hd-val" id="gym-overall"></span></div>
+        <div class="panel-hd" data-code="GYM·04"><span class="panel-hd-dot"></span>NIVEL DE FUERZA <span class="panel-hd-val" id="gym-overall"></span></div>
         <div class="gym-tiers" id="gym-tiers"></div>
       </div>
 
       <div class="panel gym-wide">
-        <div class="panel-hd">VOLUMEN (7 días)</div>
+        <div class="panel-hd" data-code="GYM·05"><span class="panel-hd-dot"></span>VOLUMEN (7 días)</div>
         <div class="gym-vol" id="gym-volume"></div>
       </div>
 
       <div class="panel gym-wide">
-        <div class="panel-hd">RUTINA SEMANAL <span class="panel-hd-val" id="gym-plan-today-label"></span></div>
+        <div class="panel-hd" data-code="GYM·06"><span class="panel-hd-dot"></span>RUTINA SEMANAL <span class="panel-hd-val" id="gym-plan-today-label"></span></div>
         <div class="gym-plan-days" id="gym-plan-days"></div>
         <div class="gym-plan-list" id="gym-plan-list"></div>
         <div class="gym-plan-actions">
