@@ -494,6 +494,15 @@ const HUD = {
 
   // ── Gym view ──────────────────────────────────────────────────
   gymLift: 'squat',
+  GYM_DAYS: [
+    { id: 'mon', label: 'L' }, { id: 'tue', label: 'M' }, { id: 'wed', label: 'X' },
+    { id: 'thu', label: 'J' }, { id: 'fri', label: 'V' }, { id: 'sat', label: 'S' }, { id: 'sun', label: 'D' },
+  ],
+  _todayDayId() {
+    // JS getDay(): 0=Sun..6=Sat → map to our mon-first ids
+    return ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+  },
+  gymPlanDay: null, // lazily set to today() on first render
 
   _liftDefs() {
     return (typeof LIFT_STANDARDS !== 'undefined' && LIFT_STANDARDS.lifts) || [
@@ -515,6 +524,8 @@ const HUD = {
     this.gymPRs();
     this.gymTiers();
     this.gymVolume();
+    if (!this.gymPlanDay) this.gymPlanDay = this._todayDayId();
+    this.renderGymPlan();
   },
 
   gymChart() {
@@ -602,6 +613,111 @@ const HUD = {
     this.renderGym();
     const def = this._liftDefs().find(l => l.id === this.gymLift);
     this.toast(`✓ ${def ? def.label : ''} ${kg}kg×${reps} · 1RM ${e1rm}`);
+  },
+
+  // Pre-fill the "log a set" form from a planned exercise, then jump to
+  // that lift's tab so the user only has to hit "＋ Añadir serie".
+  quickLogFromPlan(liftId, kg, reps) {
+    this.gymLift = liftId;
+    this.renderGym();
+    document.getElementById('gym-kg').value = kg || '';
+    document.getElementById('gym-reps').value = reps || 5;
+    document.getElementById('gym-reps').dispatchEvent(new Event('input'));
+    document.getElementById('gym-kg').focus();
+  },
+
+  // ── Weekly gym plan (editable routine) ─────────────────────────
+  renderGymPlan() {
+    const day = this.gymPlanDay;
+    const todayId = this._todayDayId();
+
+    // Day selector
+    const daysEl = document.getElementById('gym-plan-days');
+    daysEl.innerHTML = this.GYM_DAYS.map(d =>
+      `<button class="gym-plan-day-btn ${d.id === day ? 'on' : ''} ${d.id === todayId ? 'today' : ''}" data-day="${d.id}">${d.label}</button>`).join('');
+    daysEl.querySelectorAll('[data-day]').forEach(b =>
+      b.onclick = () => { this.gymPlanDay = b.dataset.day; this.renderGymPlan(); });
+
+    document.getElementById('gym-plan-today-label').textContent =
+      day === todayId ? 'HOY' : '';
+
+    // Exercise rows (inline-editable)
+    const exercises = DB.gymPlanDay(day);
+    const listEl = document.getElementById('gym-plan-list');
+    const liftIds = new Set(this._liftDefs().map(l => l.id));
+    if (!exercises.length) {
+      listEl.innerHTML = `<div class="gym-plan-empty">Día de descanso — toca "＋ Ejercicio" para planear algo.</div>`;
+    } else {
+      listEl.innerHTML = exercises.map(e => {
+        // If the exercise name matches a tracked lift, offer the ⚡ quick-log
+        const matchedLift = this._liftDefs().find(l =>
+          l.label.toLowerCase() === (e.name || '').toLowerCase() || l.id === (e.name || '').toLowerCase());
+        const quickBtn = matchedLift
+          ? `<button class="gym-plan-quick" data-quick="${e.id}" data-lift="${matchedLift.id}" title="Registrar esta serie">⚡</button>`
+          : `<span></span>`;
+        return `
+        <div class="gym-plan-row" data-row="${e.id}">
+          <input class="gym-plan-cell" list="gym-exercise-suggestions" data-field="name" value="${esc(e.name || '')}" placeholder="Ejercicio">
+          <input class="gym-plan-cell num" type="number" min="1" max="15" data-field="sets" value="${e.sets ?? 3}" title="Series">
+          <input class="gym-plan-cell num" type="number" min="1" max="30" data-field="reps" value="${e.reps ?? 10}" title="Reps">
+          <input class="gym-plan-cell num" type="number" min="0" step="0.5" data-field="kg" value="${e.kg ?? 0}" title="Peso (kg)">
+          ${quickBtn}
+          <button class="gym-plan-del" data-del="${e.id}" title="Eliminar">✕</button>
+        </div>`;
+      }).join('');
+    }
+
+    // Inline edit: save on blur/Enter
+    listEl.querySelectorAll('.gym-plan-cell').forEach(input => {
+      const row = input.closest('[data-row]');
+      const commit = () => {
+        const field = input.dataset.field;
+        let val = input.value;
+        if (field !== 'name') val = parseFloat(val) || 0;
+        DB.updateGymPlanExercise(day, row.dataset.row, { [field]: val });
+        if (window.desktop) window.desktop.dataChanged();
+        // Re-render on name edits so the ⚡ quick-log affordance appears/
+        // disappears immediately when the name starts/stops matching a
+        // tracked lift (numeric fields don't affect that match, skip re-render
+        // there to avoid disrupting focus while tabbing through sets/reps/kg).
+        if (field === 'name') this.renderGymPlan();
+      };
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') { commit(); input.blur(); } });
+    });
+    listEl.querySelectorAll('[data-del]').forEach(btn =>
+      btn.onclick = () => {
+        DB.removeGymPlanExercise(day, btn.dataset.del);
+        if (window.desktop) window.desktop.dataChanged();
+        this.renderGymPlan();
+      });
+    listEl.querySelectorAll('[data-quick]').forEach(btn =>
+      btn.onclick = () => {
+        // Read live from DB rather than the `exercises` closure — a prior
+        // re-render (e.g. triggered by committing the name field) can leave
+        // this closure holding stale field values (like an old kg/reps).
+        const ex = DB.gymPlanDay(day).find(e => e.id === btn.dataset.quick);
+        this.quickLogFromPlan(btn.dataset.lift, ex?.kg, ex?.reps);
+      });
+
+    // Add / copy controls
+    document.getElementById('gym-plan-add').onclick = () => {
+      DB.addGymPlanExercise(day, { name: '', sets: 3, reps: 10, kg: 0 });
+      if (window.desktop) window.desktop.dataChanged();
+      this.renderGymPlan();
+      const rows = listEl.querySelectorAll('.gym-plan-cell[data-field="name"]');
+      if (rows.length) rows[rows.length - 1].focus();
+    };
+    const copySel = document.getElementById('gym-plan-copy-to');
+    copySel.value = '';
+    copySel.onchange = () => {
+      const to = copySel.value;
+      if (!to) return;
+      DB.copyGymPlanDay(day, to);
+      if (window.desktop) window.desktop.dataChanged();
+      this.toast(`✓ Rutina copiada a ${this.GYM_DAYS.find(d => d.id === to)?.label || to}`);
+      copySel.value = '';
+    };
   },
 
   setRing(id, r, frac) {

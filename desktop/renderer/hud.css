@@ -448,3 +448,41 @@ body.mini .tb-tabs { display: none; }
 .rz-ne { top: 0; right: 0; cursor: nesw-resize; }
 .rz-sw { bottom: 0; left: 0; cursor: nesw-resize; }
 body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
+
+/* ── Weekly gym plan ──────────────────────────────────────────── */
+.gym-plan-days { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.gym-plan-day-btn {
+  cursor: pointer; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: .5px; background: rgba(var(--accent-rgb),0.06); border: 1px solid var(--panel-brd);
+  color: var(--ink-dim); transition: .15s; position: relative;
+}
+.gym-plan-day-btn.on { color: var(--cyan); border-color: var(--cyan); background: rgba(var(--accent-rgb),0.16); }
+.gym-plan-day-btn.today::after {
+  content: ''; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green);
+}
+
+.gym-plan-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.gym-plan-row {
+  display: grid; grid-template-columns: 1fr 60px 60px 70px 28px 28px;
+  gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px;
+  background: rgba(var(--accent-rgb),0.03); border: 1px solid transparent; transition: .15s;
+}
+.gym-plan-row:hover { border-color: var(--panel-brd); }
+.gym-plan-cell {
+  background: none; border: none; color: var(--ink); font-size: 12px; font-family: var(--font);
+  padding: 4px 6px; border-radius: 5px; text-align: left; width: 100%; outline: none;
+}
+.gym-plan-cell:focus { background: rgba(var(--accent-rgb),0.1); box-shadow: 0 0 0 1px var(--cyan); }
+.gym-plan-cell.num { text-align: center; }
+.gym-plan-quick, .gym-plan-del {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--panel-brd);
+  background: rgba(var(--accent-rgb),0.05); color: var(--ink-dim); cursor: pointer; font-size: 12px;
+}
+.gym-plan-quick:hover { color: var(--cyan); border-color: var(--cyan); }
+.gym-plan-del:hover { color: var(--red); border-color: var(--red); }
+.gym-plan-empty { font-size: 12px; color: var(--ink-dim); padding: 10px 4px; }
+
+.gym-plan-actions { display: flex; gap: 10px; }
+.gym-plan-actions .qbtn { flex: 0 0 auto; padding: 8px 16px; }
+.gym-plan-actions .sp-select { flex: 1; max-width: 160px; }

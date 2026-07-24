@@ -63,6 +63,8 @@ const MCPSync = {
       if (data.wellness)    DB.saveWellness(data.wellness);
       if (data.lifts)       DB.saveLifts(data.lifts);
       if (data.liftLog)     DB.saveLiftLog(data.liftLog);
+      if (data.gymPlan)     DB.saveGymPlan(data.gymPlan);
+      if (data.gymPlanTs)   DB.saveGymPlanTs(data.gymPlanTs);
       if (data.pantry)      DB.savePantry(data.pantry);
       return true;
     } catch(e) { console.warn('MCP sync error:', e); return false; }
@@ -168,10 +170,21 @@ function mergeClientServer(server, client) {
     liftLog[id] = liftLog[id] ? unionEntries(liftLog[id], entries) : entries;
   });
 
+  // Gym weekly plan: last-writer-wins per day. A plan is a deliberate edit
+  // (rewrite the whole day's exercise list), not an accumulating log — unioning
+  // would resurrect deleted rows and duplicate edited ones on every sync.
+  const gymPlanTs = { ...(s.gymPlanTs || {}) };
+  const gymPlan   = { ...(s.gymPlan || {}) };
+  Object.entries(c.gymPlan || {}).forEach(([day, exercises]) => {
+    const cTs = (c.gymPlanTs || {})[day] || 0;
+    const sTs = (s.gymPlanTs || {})[day] || 0;
+    if (cTs >= sTs) { gymPlan[day] = exercises; gymPlanTs[day] = cTs; }
+  });
+
   // Pantry: union by item id (same resurrect-vs-lose trade-off as day logs)
   const pantry = unionEntries(s.pantry, c.pantry);
 
-  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, pantry };
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, gymPlan, gymPlanTs, pantry };
 }
 
 // ================================================================
@@ -297,9 +310,11 @@ const CloudSync = {
       DB.saveExerciseLog(merged.exerciseLog);
       DB.saveMealPlan(merged.mealPlan);
       DB.saveWellness(merged.wellness);
-      if (merged.lifts)   DB.saveLifts(merged.lifts);
-      if (merged.liftLog) DB.saveLiftLog(merged.liftLog);
-      if (merged.pantry)  DB.savePantry(merged.pantry);
+      if (merged.lifts)     DB.saveLifts(merged.lifts);
+      if (merged.liftLog)   DB.saveLiftLog(merged.liftLog);
+      if (merged.gymPlan)   DB.saveGymPlan(merged.gymPlan);
+      if (merged.gymPlanTs) DB.saveGymPlanTs(merged.gymPlanTs);
+      if (merged.pantry)    DB.savePantry(merged.pantry);
       await this.push();
       return true;
     } catch(e) { console.warn('CloudSync.syncFull:', e); return false; }

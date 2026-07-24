@@ -164,9 +164,38 @@ test('Strength.volume sums sessions, reps and tonnage in range', () => {
 test('DB.snapshot includes every synced domain', () => {
   const r = vm.runInContext(`JSON.stringify(Object.keys(DB.snapshot()).sort())`, ctx);
   assert.deepEqual(JSON.parse(r), [
-    'completions','exerciseLog','foodLog','liftLog','lifts','mealPlan','pantry',
-    'recipes','settings','tasks','waterLog','waterTs','weightLog','wellness',
+    'completions','exerciseLog','foodLog','gymPlan','gymPlanTs','liftLog','lifts',
+    'mealPlan','pantry','recipes','settings','tasks','waterLog','waterTs',
+    'weightLog','wellness',
   ]);
+});
+
+test('gym plan day CRUD is editable inline (add/update/remove)', () => {
+  const r = vm.runInContext(`(() => {
+    DB.addGymPlanExercise('mon', { name: 'Sentadilla', sets: 4, reps: 8, kg: 100 });
+    const day1 = DB.gymPlanDay('mon');
+    const id = day1[0].id;
+    DB.updateGymPlanExercise('mon', id, { kg: 105 });
+    const updatedKg = DB.gymPlanDay('mon')[0].kg;
+    DB.removeGymPlanExercise('mon', id);
+    return JSON.stringify({ addedCount: day1.length, updatedKg, afterRemove: DB.gymPlanDay('mon').length });
+  })()`, ctx);
+  const { addedCount, updatedKg, afterRemove } = JSON.parse(r);
+  assert.equal(addedCount, 1);
+  assert.equal(updatedKg, 105);
+  assert.equal(afterRemove, 0);
+});
+
+test('copyGymPlanDay duplicates exercises with fresh ids', () => {
+  const r = vm.runInContext(`(() => {
+    DB.addGymPlanExercise('tue', { name: 'Press banca', sets: 3, reps: 10, kg: 60 });
+    DB.copyGymPlanDay('tue', 'thu');
+    const tue = DB.gymPlanDay('tue'), thu = DB.gymPlanDay('thu');
+    return JSON.stringify({ sameName: thu[0].name === tue[0].name, differentId: thu[0].id !== tue[0].id });
+  })()`, ctx);
+  const { sameName, differentId } = JSON.parse(r);
+  assert.equal(sameName, true);
+  assert.equal(differentId, true);
 });
 
 test('client mergeClientServer unions same-day entries', () => {

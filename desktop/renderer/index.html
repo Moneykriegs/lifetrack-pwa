@@ -222,6 +222,28 @@
         <div class="panel-hd">VOLUMEN (7 días)</div>
         <div class="gym-vol" id="gym-volume"></div>
       </div>
+
+      <div class="panel gym-wide">
+        <div class="panel-hd">RUTINA SEMANAL <span class="panel-hd-val" id="gym-plan-today-label"></span></div>
+        <div class="gym-plan-days" id="gym-plan-days"></div>
+        <div class="gym-plan-list" id="gym-plan-list"></div>
+        <div class="gym-plan-actions">
+          <button class="qbtn" id="gym-plan-add">＋ Ejercicio</button>
+          <select class="sp-select" id="gym-plan-copy-to">
+            <option value="">Copiar a…</option>
+            <option value="mon">Lunes</option><option value="tue">Martes</option>
+            <option value="wed">Miércoles</option><option value="thu">Jueves</option>
+            <option value="fri">Viernes</option><option value="sat">Sábado</option>
+            <option value="sun">Domingo</option>
+          </select>
+        </div>
+        <datalist id="gym-exercise-suggestions">
+          <option value="Sentadilla"><option value="Press banca"><option value="Peso muerto">
+          <option value="Press militar"><option value="Remo con barra"><option value="Dominadas">
+          <option value="Curl de bíceps"><option value="Prensa de piernas"><option value="Zancadas">
+          <option value="Elevaciones laterales"><option value="Extensión de tríceps"><option value="Face pull">
+        </datalist>
+      </div>
     </div>
   </main>
 

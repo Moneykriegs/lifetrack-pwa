@@ -166,10 +166,19 @@ export function mergeSync(serverData, clientData) {
     liftLog[id] = liftLog[id] ? unionEntries(liftLog[id], entries) : entries;
   });
 
+  // Gym weekly plan: last-writer-wins per day (deliberate edit, not a log)
+  const gymPlanTs = { ...(s.gymPlanTs || {}) };
+  const gymPlan   = { ...(s.gymPlan || {}) };
+  Object.entries(c.gymPlan || {}).forEach(([day, exercises]) => {
+    const cTs = (c.gymPlanTs || {})[day] || 0;
+    const sTs = (s.gymPlanTs || {})[day] || 0;
+    if (cTs >= sTs) { gymPlan[day] = exercises; gymPlanTs[day] = cTs; }
+  });
+
   // Pantry: union by item id
   const pantry = unionEntries(s.pantry, c.pantry);
 
-  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, pantry };
+  return { settings, tasks, completions, foodLog, waterLog, waterTs, weightLog, recipes, exerciseLog, mealPlan, wellness, lifts, liftLog, gymPlan, gymPlanTs, pantry };
 }
 
 // Calculate estimated TDEE from profile

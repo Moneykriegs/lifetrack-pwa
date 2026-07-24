@@ -77,6 +77,36 @@ test('lift history unions per exercise across devices', () => {
   assert.equal(merged.liftLog.bench.length, 1);
 });
 
+test('gym plan uses last-writer-wins per day (newer timestamp)', () => {
+  const merged = mergeSync(
+    { gymPlan: { mon: [{ id: 's1', name: 'Sentadilla', sets: 4, reps: 8, kg: 100 }] },
+      gymPlanTs: { mon: 1000 } },
+    { gymPlan: { mon: [{ id: 's2', name: 'Sentadilla', sets: 5, reps: 5, kg: 110 }] },
+      gymPlanTs: { mon: 2000 } }
+  );
+  assert.equal(merged.gymPlan.mon.length, 1);
+  assert.equal(merged.gymPlan.mon[0].id, 's2');
+});
+
+test('gym plan keeps server day when client edit is stale', () => {
+  const merged = mergeSync(
+    { gymPlan: { tue: [{ id: 'a', name: 'Press', sets: 3, reps: 10, kg: 60 }] },
+      gymPlanTs: { tue: 5000 } },
+    { gymPlan: { tue: [{ id: 'b', name: 'Press viejo', sets: 3, reps: 10, kg: 50 }] },
+      gymPlanTs: { tue: 1000 } }
+  );
+  assert.equal(merged.gymPlan.tue[0].id, 'a');
+});
+
+test('gym plan does not union — editing a day replaces it, not accumulates', () => {
+  const merged = mergeSync(
+    { gymPlan: { wed: [{ id: 'x', name: 'A' }, { id: 'y', name: 'B' }] }, gymPlanTs: { wed: 1000 } },
+    { gymPlan: { wed: [{ id: 'z', name: 'C' }] }, gymPlanTs: { wed: 2000 } }
+  );
+  assert.equal(merged.gymPlan.wed.length, 1);
+  assert.equal(merged.gymPlan.wed[0].name, 'C');
+});
+
 test('pantry items union by id across devices', () => {
   const merged = mergeSync(
     { pantry: [{ id: 1, name: 'Pollo' }] },

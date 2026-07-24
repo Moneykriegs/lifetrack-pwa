@@ -196,6 +196,35 @@ const DB = {
   pantry()                 { return this._g('lt_pantry', []); },
   savePantry(v)            { this._s('lt_pantry', v); },
 
+  // Weekly gym routine (editable plan): { mon:[{id,name,sets,reps,kg}], tue:[...], ... }.
+  // Last-writer-wins per day (like waterTs) — a plan is a deliberate edit, not
+  // an accumulating log, so unioning entries would duplicate rows on every edit.
+  gymPlan()                { return this._g('lt_gym_plan', {}); },
+  saveGymPlan(v)           { this._s('lt_gym_plan', v); },
+  gymPlanTs()              { return this._g('lt_gym_plan_ts', {}); },
+  saveGymPlanTs(v)         { this._s('lt_gym_plan_ts', v); },
+  gymPlanDay(day)          { return (this.gymPlan())[day] || []; },
+  saveGymPlanDay(day, exercises) {
+    const plan = this.gymPlan(); plan[day] = exercises; this.saveGymPlan(plan);
+    const ts = this.gymPlanTs(); ts[day] = Date.now(); this.saveGymPlanTs(ts);
+  },
+  addGymPlanExercise(day, entry) {
+    const exercises = [...this.gymPlanDay(day)];
+    exercises.push({ id: `gp_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      name: entry.name || '', sets: entry.sets || 3, reps: entry.reps || 10, kg: entry.kg || 0 });
+    this.saveGymPlanDay(day, exercises);
+  },
+  updateGymPlanExercise(day, id, patch) {
+    const exercises = this.gymPlanDay(day).map(e => e.id === id ? { ...e, ...patch } : e);
+    this.saveGymPlanDay(day, exercises);
+  },
+  removeGymPlanExercise(day, id) {
+    this.saveGymPlanDay(day, this.gymPlanDay(day).filter(e => e.id !== id));
+  },
+  copyGymPlanDay(fromDay, toDay) {
+    this.saveGymPlanDay(toDay, this.gymPlanDay(fromDay).map(e => ({ ...e, id: `gp_${Date.now()}_${Math.random().toString(36).slice(2,7)}` })));
+  },
+
   // Canonical sync payload — single source of truth for every sync path
   // (CloudSync.push, CloudSync.syncFull, MCPSync.push). Add new synced
   // domains HERE so they can never drift between paths again.
@@ -207,7 +236,7 @@ const DB = {
       weightLog: this.weightLog(), recipes: this.recipes(),
       exerciseLog: this.exerciseLog(), mealPlan: this.mealPlan(),
       wellness: this.wellness(), lifts: this.lifts(), pantry: this.pantry(),
-      liftLog: this.liftLog(),
+      liftLog: this.liftLog(), gymPlan: this.gymPlan(), gymPlanTs: this.gymPlanTs(),
     };
   },
 
