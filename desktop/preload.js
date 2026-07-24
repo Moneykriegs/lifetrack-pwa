@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('desktop', {
   close: () => ipcRenderer.send('win:close'),
   setMiniMode: (mini) => ipcRenderer.send('win:mini', mini),
   setAlwaysOnTop: (on) => ipcRenderer.send('win:always-on-top', on),
+  maximizeToggle: () => ipcRenderer.send('win:maximize-toggle'),
+  fullscreenToggle: () => ipcRenderer.send('win:fullscreen-toggle'),
+  getWinState: () => ipcRenderer.invoke('win:get-state'),
+  resizeBy: (edge, dx, dy) => ipcRenderer.send('win:resize-by', { edge, dx, dy }),
   notify: (title, body) => ipcRenderer.send('notify', { title, body }),
   scheduleReminders: (list) => ipcRenderer.send('schedule-reminders', list),
   openOAuth: (url, redirectPrefix) => ipcRenderer.invoke('oauth', { url, redirectPrefix }),
@@ -22,4 +26,5 @@ contextBridge.exposeInMainWorld('desktop', {
   onModeChanged: (cb) => ipcRenderer.on('mode-changed', (_e, mode) => cb(mode)),
   onSystemResumed: (cb) => ipcRenderer.on('system-resumed', () => cb()),
   onDataChanged: (cb) => ipcRenderer.on('data-changed', () => cb()),
+  onWinState: (cb) => ipcRenderer.on('win-state', (_e, state) => cb(state)),
 });

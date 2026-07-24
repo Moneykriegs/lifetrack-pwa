@@ -26,6 +26,8 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     resizable: true,
+    maximizable: true,
+    fullscreenable: true,
     show: false,
     title: 'LifeTrack HUD',
     webPreferences: {
@@ -48,6 +50,19 @@ function createWindow() {
   // Closing the window hides to tray so reminders keep firing.
   win.on('close', (e) => {
     if (!app.isQuitting) { e.preventDefault(); win.hide(); }
+  });
+
+  // Let the renderer know when max/fullscreen state changes (icon swap, etc).
+  const sendWinState = () => win && win.webContents.send('win-state', {
+    max: win.isMaximized(), fs: win.isFullScreen(),
+  });
+  ['maximize', 'unmaximize', 'enter-full-screen', 'leave-full-screen'].forEach(ev =>
+    win.on(ev, sendWinState));
+
+  // F11 toggles fullscreen (handled here, not globalShortcut, so it's local
+  // to this window and doesn't fight other apps' F11 bindings).
+  win.webContents.on('before-input-event', (_e, input) => {
+    if (input.type === 'keyDown' && input.key === 'F11') win.setFullScreen(!win.isFullScreen());
   });
 }
 
@@ -190,6 +205,25 @@ ipcMain.on('win:minimize', () => win && win.minimize());
 ipcMain.on('win:close', () => win && win.hide());
 ipcMain.on('win:mini', (_e, mini) => setMiniMode(!!mini));
 ipcMain.on('win:always-on-top', (_e, on) => win && win.setAlwaysOnTop(!!on));
+ipcMain.on('win:maximize-toggle', () => {
+  if (!win) return;
+  if (win.isMaximized()) win.unmaximize(); else win.maximize();
+});
+ipcMain.on('win:fullscreen-toggle', () => win && win.setFullScreen(!win.isFullScreen()));
+ipcMain.handle('win:get-state', () => win ? { max: win.isMaximized(), fs: win.isFullScreen() } : { max: false, fs: false });
+// Manual resize-by-delta for the frameless/transparent window (edge grips in
+// the renderer report pointer deltas since transparent windows don't always
+// get reliable native edge-resize hit-testing on Windows).
+ipcMain.on('win:resize-by', (_e, { edge, dx, dy }) => {
+  if (!win || win.isMaximized() || win.isFullScreen()) return;
+  const b = win.getBounds();
+  let { x, y, width, height } = b;
+  if (edge.includes('e')) width  += dx;
+  if (edge.includes('s')) height += dy;
+  if (edge.includes('w')) { width  -= dx; x += dx; }
+  if (edge.includes('n')) { height -= dy; y += dy; }
+  win.setBounds({ x, y, width: Math.max(width, 460), height: Math.max(height, 320) });
+});
 ipcMain.on('notify', (_e, { title, body }) => showNotification(title, body));
 ipcMain.on('schedule-reminders', (_e, list) => scheduleReminders(list));
 ipcMain.handle('oauth', (_e, { url, redirectPrefix }) => openOAuth(url, redirectPrefix));

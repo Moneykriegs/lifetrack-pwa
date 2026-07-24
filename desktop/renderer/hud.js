@@ -76,14 +76,29 @@ const HUD = {
     document.getElementById('tb-min').onclick = () => d && d.minimize();
     document.getElementById('tb-close').onclick = () => d ? d.close() : null;
     document.getElementById('tb-mini').onclick = () => { if (d) d.setMiniMode(!document.body.classList.contains('mini')); };
+    document.getElementById('tb-max').onclick = () => d && d.maximizeToggle();
     document.getElementById('tb-sync').onclick = () => this.manualSync();
+    // Double-click the drag areas to maximize/restore (Windows convention)
+    document.querySelectorAll('.tb-drag, .tb-brand').forEach(el =>
+      el.addEventListener('dblclick', () => d && d.maximizeToggle()));
     if (d) {
       d.onModeChanged(mode => document.body.classList.toggle('mini', mode === 'mini'));
       d.onSystemResumed(() => { this.render(); this.pushReminders(); });
       d.onReminderFired(() => this.render());
       d.onDataChanged(() => this.render()); // quick-log overlay wrote data
-
+      d.onWinState(({ max, fs }) => {
+        document.body.classList.toggle('maximized', !!max);
+        document.body.classList.toggle('fullscreen', !!fs);
+        const btn = document.getElementById('tb-max');
+        btn.textContent = max ? '❐' : '⛶';
+        btn.title = max ? 'Restaurar' : 'Maximizar';
+      });
+      d.getWinState().then(({ max, fs }) => {
+        document.body.classList.toggle('maximized', !!max);
+        document.body.classList.toggle('fullscreen', !!fs);
+      }).catch(() => {});
     }
+    this.bindResizeGrips();
 
     document.querySelectorAll('[data-water]').forEach(b =>
       b.onclick = () => this.addWater(+b.dataset.water));
@@ -117,6 +132,29 @@ const HUD = {
         document.querySelectorAll('#an-range .an-range-btn').forEach(x => x.classList.toggle('on', x === b));
         this.renderAnalytics();
       });
+  },
+
+  // Drag any .rz grip to resize the frameless window by pointer delta.
+  bindResizeGrips() {
+    if (!window.desktop) return; // no-op in a plain browser
+    document.querySelectorAll('.rz').forEach(grip => {
+      grip.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const edge = grip.dataset.edge;
+        let last = { x: e.screenX, y: e.screenY };
+        const onMove = (ev) => {
+          const dx = ev.screenX - last.x, dy = ev.screenY - last.y;
+          last = { x: ev.screenX, y: ev.screenY };
+          window.desktop.resizeBy(edge, dx, dy);
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    });
   },
 
   view: 'hud',

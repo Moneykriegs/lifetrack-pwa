@@ -435,3 +435,16 @@ body.mini .tb-tabs { display: none; }
 .gym-vol-stat { text-align: center; flex: 1; }
 .gym-vol-num { font-size: 22px; font-weight: 800; color: var(--cyan); text-shadow: 0 0 12px rgba(var(--accent-rgb),.4); }
 .gym-vol-lbl { font-size: 10px; letter-spacing: 1px; color: var(--ink-dim); margin-top: 2px; }
+
+/* ── Resize grips (manual, since transparent+frameless loses native edges) */
+.rz { position: fixed; z-index: 50; -webkit-app-region: no-drag; }
+.rz-n, .rz-s { left: 8px; right: 8px; height: 6px; cursor: ns-resize; }
+.rz-n { top: 0; } .rz-s { bottom: 0; }
+.rz-e, .rz-w { top: 8px; bottom: 8px; width: 6px; cursor: ew-resize; }
+.rz-e { right: 0; } .rz-w { left: 0; }
+.rz-nw, .rz-ne, .rz-sw, .rz-se { width: 12px; height: 12px; }
+.rz-nw { top: 0; left: 0; cursor: nwse-resize; }
+.rz-se { bottom: 0; right: 0; cursor: nwse-resize; }
+.rz-ne { top: 0; right: 0; cursor: nesw-resize; }
+.rz-sw { bottom: 0; left: 0; cursor: nesw-resize; }
+body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
