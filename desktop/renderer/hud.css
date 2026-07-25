@@ -534,7 +534,7 @@ body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
 
 .gym-plan-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .gym-plan-row {
-  display: grid; grid-template-columns: 1fr 60px 60px 70px 28px 28px;
+  display: grid; grid-template-columns: 26px 1fr 60px 60px 70px 28px 28px;
   gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px;
   background: rgba(var(--accent-rgb),0.03); border: 1px solid transparent; transition: .15s;
 }
@@ -584,3 +584,60 @@ body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
   font-size: 12px; color: var(--ink-dim); pointer-events: none; text-align: center;
 }
 .holo-empty[hidden] { display: none; }
+
+/* ── Animated exercise silhouettes ────────────────────────────── */
+.ex-icon { display: block; overflow: visible; color: inherit; flex-shrink: 0; }
+.ex-icon .ex-seg, .ex-icon .ex-arm, .ex-icon .ex-bar {
+  stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; fill: none;
+}
+.ex-icon .ex-arm { stroke-width: 1.8; opacity: .85; }
+.ex-icon .ex-bar { stroke-width: 2; }
+.ex-icon .ex-head { fill: currentColor; opacity: .9; }
+.ex-icon .ex-plate { fill: currentColor; opacity: .75; }
+.ex-icon .ex-bench-pad { fill: currentColor; opacity: .28; }
+.ex-icon .ex-ground {
+  stroke: currentColor; stroke-width: 1.4; opacity: .28; stroke-linecap: round;
+  stroke-dasharray: 2 2.5;
+}
+/* Joints rotate about their parent joint, in viewBox coordinates */
+.ex-icon .ex-up, .ex-icon .ex-thigh, .ex-icon .ex-shin,
+.ex-icon .ex-press, .ex-icon .ex-hinge, .ex-icon .ex-liftbar, .ex-icon .ex-overhead {
+  transform-box: view-box;
+}
+.ex-icon .ex-thigh    { transform-origin: 20px 21px; }
+.ex-icon .ex-shin     { transform-origin: 26px 27px; }
+.ex-icon .ex-hinge    { transform-origin: 20px 22px; }
+
+/* Motion is driven by UI state (active tab / hover) rather than running
+   everywhere at once — a wall of wiggling icons reads as noise. */
+.ex-icon.animated .ex-up,      .gym-lift-tab.on .ex-up,      .gym-lift-tab:hover .ex-up,
+.gym-pr-row:hover .ex-up,      .gym-plan-row:hover .ex-up      { animation: exSquatBody 2.2s ease-in-out infinite; }
+.ex-icon.animated .ex-thigh,   .gym-lift-tab.on .ex-thigh,   .gym-lift-tab:hover .ex-thigh,
+.gym-pr-row:hover .ex-thigh,   .gym-plan-row:hover .ex-thigh   { animation: exSquatThigh 2.2s ease-in-out infinite; }
+.ex-icon.animated .ex-shin,    .gym-lift-tab.on .ex-shin,    .gym-lift-tab:hover .ex-shin,
+.gym-pr-row:hover .ex-shin,    .gym-plan-row:hover .ex-shin    { animation: exSquatShin 2.2s ease-in-out infinite; }
+.ex-icon.animated .ex-press,   .gym-lift-tab.on .ex-press,   .gym-lift-tab:hover .ex-press,
+.gym-pr-row:hover .ex-press,   .gym-plan-row:hover .ex-press   { animation: exPress 1.9s ease-in-out infinite; }
+.ex-icon.animated .ex-hinge,   .gym-lift-tab.on .ex-hinge,   .gym-lift-tab:hover .ex-hinge,
+.gym-pr-row:hover .ex-hinge,   .gym-plan-row:hover .ex-hinge   { animation: exHinge 2.2s ease-in-out infinite; }
+.ex-icon.animated .ex-liftbar, .gym-lift-tab.on .ex-liftbar, .gym-lift-tab:hover .ex-liftbar,
+.gym-pr-row:hover .ex-liftbar, .gym-plan-row:hover .ex-liftbar { animation: exLiftBar 2.2s ease-in-out infinite; }
+.ex-icon.animated .ex-overhead,.gym-lift-tab.on .ex-overhead,.gym-lift-tab:hover .ex-overhead,
+.gym-pr-row:hover .ex-overhead,.gym-plan-row:hover .ex-overhead{ animation: exOverhead 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) { .ex-icon * { animation: none !important; } }
+
+@keyframes exSquatBody  { 0%,100% { transform: translateY(0) }      45%,55% { transform: translateY(5px) } }
+@keyframes exSquatThigh { 0%,100% { transform: rotate(0deg) }        45%,55% { transform: rotate(30deg) } }
+@keyframes exSquatShin  { 0%,100% { transform: rotate(0deg) }        45%,55% { transform: rotate(-32deg) } }
+@keyframes exPress      { 0%,100% { transform: translateY(0) }       45%,55% { transform: translateY(6px) } }
+@keyframes exHinge      { 0%,100% { transform: rotate(0deg) }        45%,55% { transform: rotate(38deg) } }
+@keyframes exLiftBar    { 0%,100% { transform: translateY(0) }       45%,55% { transform: translateY(6px) } }
+@keyframes exOverhead   { 0%,100% { transform: translateY(0) }       45%,55% { transform: translateY(7px) } }
+
+/* Icon slots in the gym UI */
+.gym-lift-tab { display: inline-flex; align-items: center; gap: 7px; }
+.gym-lift-tab .ex-icon { width: 22px; height: 22px; }
+.gym-pr-icon { color: var(--cyan); display: flex; }
+.gym-plan-icon { color: var(--ink-dim); display: flex; }
+.gym-plan-row:hover .gym-plan-icon { color: var(--cyan); }

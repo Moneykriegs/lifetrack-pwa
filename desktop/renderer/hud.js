@@ -580,6 +580,13 @@ const HUD = {
   },
   gymPlanDay: null, // lazily set to today() on first render
 
+  /** Animated silhouette for a lift, falling back to its emoji if the icon
+   *  module isn't available (e.g. a stripped-down build). */
+  _exIcon(lift, size = 26) {
+    if (typeof ExerciseIcons === 'undefined') return lift.emoji || '';
+    return ExerciseIcons.svg(lift.id, { size, title: lift.label });
+  },
+
   _liftDefs() {
     return (typeof LIFT_STANDARDS !== 'undefined' && LIFT_STANDARDS.lifts) || [
       { id: 'squat', label: 'Sentadilla', emoji: '🦵' }, { id: 'bench', label: 'Press banca', emoji: '🏋️' },
@@ -592,7 +599,7 @@ const HUD = {
     // Lift selector tabs
     const tabsEl = document.getElementById('gym-lift-tabs');
     tabsEl.innerHTML = defs.map(l =>
-      `<button class="gym-lift-tab ${l.id === this.gymLift ? 'on' : ''}" data-lift="${l.id}">${l.emoji} ${l.label}</button>`).join('');
+      `<button class="gym-lift-tab ${l.id === this.gymLift ? 'on' : ''}" data-lift="${l.id}">${this._exIcon(l, 22)} ${l.label}</button>`).join('');
     tabsEl.querySelectorAll('[data-lift]').forEach(b =>
       b.onclick = () => { this.gymLift = b.dataset.lift; this.renderGym(); });
 
@@ -684,7 +691,7 @@ const HUD = {
     el.innerHTML = defs.map(l => {
       const pr = prs[l.id];
       return `<div class="gym-pr-row">
-        <span class="gym-pr-emoji">${l.emoji}</span>
+        <span class="gym-pr-icon">${this._exIcon(l, 26)}</span>
         <span class="gym-pr-name">${l.label}</span>
         ${pr ? `<span class="gym-pr-val">${pr.e1rm} kg</span><span class="gym-pr-date">${pr.date.slice(5)}</span>`
               : `<span class="gym-pr-date">— sin datos</span>`}
@@ -805,8 +812,12 @@ const HUD = {
         const quickBtn = matchedLift
           ? `<button class="gym-plan-quick" data-quick="${e.id}" data-lift="${matchedLift.id}" title="Registrar esta serie">⚡</button>`
           : `<span></span>`;
+        const icon = matchedLift
+          ? this._exIcon(matchedLift, 24)
+          : (typeof ExerciseIcons !== 'undefined' ? ExerciseIcons.svg('generic', { size: 24 }) : '');
         return `
         <div class="gym-plan-row" data-row="${e.id}">
+          <span class="gym-plan-icon">${icon}</span>
           <input class="gym-plan-cell" list="gym-exercise-suggestions" data-field="name" value="${esc(e.name || '')}" placeholder="Ejercicio">
           <input class="gym-plan-cell num" type="number" min="1" max="15" data-field="sets" value="${e.sets ?? 3}" title="Series">
           <input class="gym-plan-cell num" type="number" min="1" max="30" data-field="reps" value="${e.reps ?? 10}" title="Reps">
