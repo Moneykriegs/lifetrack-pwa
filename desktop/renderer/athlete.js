@@ -20,6 +20,8 @@
 // and a limb mesh (both are `mesh.isMesh === true`).
 // ════════════════════════════════════════════════════════════════
 
+const DEG2RAD = Math.PI / 180;
+
 const Athlete = {
   _rigs: new Map(), // canvasId -> rig
 
@@ -214,6 +216,76 @@ const Athlete = {
     rig.grip.add(group);
     rig.barbell = group;
     return load;
+  },
+
+  // ── Per-exercise animation ──────────────────────────────────────
+  // Smooth perpetual 0→1→0 oscillation — the sine itself provides the
+  // ease-in/out, no easing curve needed on top.
+  _phase(t, periodSec) { return (Math.sin((t / periodSec) * Math.PI * 2 - Math.PI / 2) + 1) / 2; },
+
+  /**
+   * Apply one exercise's pose for a given elapsed time. Every pose
+   * parameter (hip height, torso lean, thigh/knee/shoulder/elbow flex, grip
+   * position) is computed exactly once per call as a single flat set of
+   * local variables, then applied — an earlier draft composed this from
+   * several independent if/else blocks and a later block could silently
+   * clobber an earlier one's value for the same joint when switching lifts.
+   * A single branch with full pose parameters per case avoids that class
+   * of bug entirely.
+   *
+   * The rig only knows how to stand, so all four lifts are stylized as
+   * standing movements (bench becomes a standing press-out) rather than
+   * adding a lying-down pose that would reorient the whole figure —
+   * jarring when switching tabs mid-orbit, and this keeps one consistent
+   * silhouette to inspect from any angle.
+   */
+  animate(view, liftId, t) {
+    const rig = this._rigs.get(view.id);
+    if (!rig) return;
+    const D = this.DIM;
+    const restHipY = D.shin + D.thigh;
+    const restGripY = -D.forearm - 0.05, restGripZ = 0.08;
+
+    let hipY = restHipY, torsoX = 0;
+    let thighX = 0, kneeX = 0;        // symmetric across L/R
+    let shoulderX = 0, elbowX = 0;    // symmetric across L/R
+    let gripY = restGripY, gripZ = restGripZ;
+
+    if (liftId === 'squat') {
+      const p = this._phase(t, 2.4);
+      hipY = restHipY - p * 0.14;
+      thighX = p * 32 * DEG2RAD;
+      kneeX = -p * 34 * DEG2RAD;
+      torsoX = p * 8 * DEG2RAD; // slight forward lean under load
+    } else if (liftId === 'bench') {
+      const p = this._phase(t, 1.9); // 0 = bar racked at chest, 1 = arms locked out
+      torsoX = -10 * DEG2RAD;
+      shoulderX = -20 * DEG2RAD;
+      elbowX = -(1 - p) * 70 * DEG2RAD;
+      gripY = restGripY + p * 0.10;
+      gripZ = restGripZ + 0.05 + p * 0.25;
+    } else if (liftId === 'deadlift') {
+      const p = this._phase(t, 2.4); // 0 = hinged over near the floor, 1 = locked out standing
+      torsoX = (1 - p) * 55 * DEG2RAD;
+      gripY = restGripY - (1 - p) * 0.30;
+      gripZ = restGripZ + 0.20;
+    } else if (liftId === 'ohp') {
+      const p = this._phase(t, 2.0); // 0 = racked at shoulders, 1 = overhead lockout
+      shoulderX = -p * 165 * DEG2RAD;
+      elbowX = -p * 15 * DEG2RAD;
+      gripY = restGripY + p * 0.55;
+      gripZ = restGripZ - p * 0.12;
+    }
+
+    rig.hips.position.y = hipY;
+    rig.torso.rotation.x = torsoX;
+    ['L', 'R'].forEach(side => {
+      rig.legs[side].thigh.rotation.x = thighX;
+      rig.legs[side].knee.rotation.x = kneeX;
+      rig.arms[side].shoulder.rotation.x = shoulderX;
+      rig.arms[side].elbow.rotation.x = elbowX;
+    });
+    rig.grip.position.set(0, gripY, gripZ);
   },
 
   /** Full teardown (rarely needed — Holo already skips hidden canvases and

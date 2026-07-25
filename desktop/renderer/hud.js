@@ -677,6 +677,17 @@ const HUD = {
         </div>`;
       }).join('');
     }
+
+    // Perpetual per-exercise animation. Replace any previous athlete anim
+    // callback (tagged via __athleteAnim) instead of pushing a new one on
+    // every render — gymAthlete() re-runs on the 30s refresh and on every
+    // lift-tab switch, and without this the callback array would grow
+    // unbounded with stale closures all animating the same rig redundantly.
+    view.anim = view.anim.filter(fn => !fn.__athleteAnim);
+    const liftId = this.gymLift;
+    const animFn = (t) => { Athlete.animate(view, liftId, t); return true; };
+    animFn.__athleteAnim = true;
+    view.anim.push(animFn);
   },
 
   /** Show the 3D canvas (and hide the SVG fallback) or vice-versa. */
