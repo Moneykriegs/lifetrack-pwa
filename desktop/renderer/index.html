@@ -166,15 +166,26 @@
     <div class="an-grid">
       <div class="panel an-wide">
         <div class="panel-hd" data-code="ANL·01"><span class="panel-hd-dot"></span>CALORÍAS vs META</div>
-        <svg viewBox="0 0 460 150" class="an-svg" id="an-kcal-bars" preserveAspectRatio="none"></svg>
+        <div class="holo-wrap">
+          <canvas class="holo-canvas" id="an-kcal-bars-3d"></canvas>
+          <svg viewBox="0 0 460 150" class="an-svg holo-fallback" id="an-kcal-bars" preserveAspectRatio="none" hidden></svg>
+          <span class="holo-hint">arrastra para rotar · rueda para zoom</span>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-hd" data-code="ANL·02"><span class="panel-hd-dot"></span>TENDENCIA DE PESO <span class="panel-hd-val" id="an-weight-cap"></span></div>
-        <svg viewBox="0 0 300 150" class="an-svg" id="an-weight-chart" preserveAspectRatio="none"></svg>
+        <div class="holo-wrap">
+          <canvas class="holo-canvas" id="an-weight-chart-3d"></canvas>
+          <svg viewBox="0 0 300 150" class="an-svg holo-fallback" id="an-weight-chart" preserveAspectRatio="none" hidden></svg>
+          <div class="holo-empty" id="an-weight-empty" hidden></div>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-hd" data-code="ANL·03"><span class="panel-hd-dot"></span>ADHERENCIA</div>
-        <div class="an-heat" id="an-heatstrip"></div>
+        <div class="holo-wrap">
+          <canvas class="holo-canvas" id="an-heatstrip-3d"></canvas>
+          <div class="an-heat holo-fallback" id="an-heatstrip" hidden></div>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-hd" data-code="ANL·04"><span class="panel-hd-dot"></span>CORRELACIONES</div>

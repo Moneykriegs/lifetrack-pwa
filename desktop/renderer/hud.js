@@ -384,6 +384,23 @@ const HUD = {
     const food = DB.foodLog();
     const goal = DB.settings().calorieGoal || 2000;
     const vals = days.map(d => (food[d] || []).reduce((a, f) => a + (f.kcal || 0), 0));
+
+    if (this._holoMode('an-kcal-bars-3d', 'an-kcal-bars')) {
+      const today = fmtDate(new Date());
+      Holo.bars('an-kcal-bars-3d', vals.map((v, i) => ({
+        value: v,
+        // Same semantic coloring as the flat chart: under goal green,
+        // slightly over amber, well over red; empty days stay dim.
+        color: v === 0 ? '#2b4a55'
+             : v <= goal ? Holo.css('--green', '#46f0a0')
+             : v <= goal * 1.1 ? Holo.css('--amber', '#ffb03a')
+             : Holo.css('--red', '#ff4d5e'),
+        highlight: days[i] === today && v > 0,
+      })), { goal, goalLabel: `meta ${goal}` });
+      return;
+    }
+
+    // ── SVG fallback (no WebGL) ──────────────────────────────────
     const W = 460, H = 150, padB = 18, padT = 8;
     const maxV = Math.max(goal * 1.2, ...vals, 1);
     const bw = (W / days.length);
@@ -415,12 +432,31 @@ const HUD = {
     const svg = document.getElementById('an-weight-chart');
     const cap = document.getElementById('an-weight-cap');
     const log = (DB.weightLog() || []).slice(-this.anRange);
+    const pred = (typeof calcPrediction === 'function') ? calcPrediction() : null;
+
+    if (this._holoMode('an-weight-chart-3d', 'an-weight-chart')) {
+      const canvas = document.getElementById('an-weight-chart-3d');
+      const empty = document.getElementById('an-weight-empty');
+      const tooFew = log.length < 2;
+      if (empty) { empty.hidden = !tooFew; empty.textContent = 'Registra tu peso para ver tendencia'; }
+      if (canvas) canvas.style.visibility = tooFew ? 'hidden' : '';
+      if (tooFew) { cap.textContent = ''; return; }
+
+      const refs = [];
+      if (pred && pred.goalKg) {
+        refs.push({ value: pred.goalKg, label: `meta ${pred.goalKg}`, color: Holo.css('--green', '#46f0a0') });
+      }
+      Holo.line('an-weight-chart-3d', log.map(w => ({ value: +w.kg.toFixed(1) })), { unit: ' kg', refs });
+      this._weightCaption(cap, log, pred);
+      return;
+    }
+
+    // ── SVG fallback (no WebGL) ──────────────────────────────────
     if (log.length < 2) {
       svg.innerHTML = `<text class="an-empty" x="150" y="75" text-anchor="middle">Registra tu peso para ver tendencia</text>`;
       cap.textContent = '';
       return;
     }
-    const pred = (typeof calcPrediction === 'function') ? calcPrediction() : null;
     const W = 300, H = 150, pad = 16;
     const kgs = log.map(w => w.kg);
     let min = Math.min(...kgs), max = Math.max(...kgs);
@@ -445,7 +481,12 @@ const HUD = {
     }
     svg.innerHTML = `<path class="an-warea" d="${area}"/><path class="an-wline" d="${line}"/>` +
       `<circle cx="${pts[pts.length-1][0].toFixed(1)}" cy="${pts[pts.length-1][1].toFixed(1)}" r="3" fill="var(--cyan)"/>` + extra;
-    const lastKg = +kgs[kgs.length - 1].toFixed(1);
+    this._weightCaption(cap, log, pred);
+  },
+
+  /** Weight panel caption: latest kg + weekly rate + ETA to goal. */
+  _weightCaption(cap, log, pred) {
+    const lastKg = +log[log.length - 1].kg.toFixed(1);
     cap.textContent = `${lastKg} kg`;
     if (pred && pred.kgPerWeek != null) {
       const rate = pred.kgPerWeek;
@@ -465,6 +506,17 @@ const HUD = {
       { label: 'Agua', cls: 'on', test: d => (water[d] || 0) >= wGoal * 0.9 },
       { label: 'Ejer', cls: 'p', test: d => (ex[d] || []).length > 0 },
     ];
+    if (this._holoMode('an-heatstrip-3d', 'an-heatstrip')) {
+      Holo.grid('an-heatstrip-3d', rows.map(r => ({
+        label: r.label,
+        // 'p' rows (exercise) use the protein hue; the rest inherit the theme accent
+        color: r.cls === 'p' ? Holo.css('--prot', '#7c8bff') : null,
+        cells: days.map(d => !!r.test(d)),
+      })));
+      return;
+    }
+
+    // ── DOM fallback (no WebGL) ──────────────────────────────────
     document.getElementById('an-heatstrip').innerHTML = rows.map(r => `
       <div class="an-heat-row">
         <span class="an-heat-label">${r.label}</span>
