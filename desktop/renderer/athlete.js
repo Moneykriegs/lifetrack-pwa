@@ -21,6 +21,9 @@
 // ════════════════════════════════════════════════════════════════
 
 const DEG2RAD = Math.PI / 180;
+// Scratch vectors reused every frame — allocating Vector3s inside the
+// animation loop would churn the GC at 60fps.
+const _vHandL = new THREE.Vector3(), _vHandR = new THREE.Vector3(), _vMid = new THREE.Vector3();
 
 const Athlete = {
   _rigs: new Map(), // canvasId -> rig
@@ -90,7 +93,7 @@ const Athlete = {
       hand.position.y = -D.forearm;
       elbow.add(hand);
 
-      arms[side] = { shoulder, elbow, hand, upperArmMesh, forearmMesh };
+      arms[side] = { shoulder, elbow, hand, upperArmMesh, forearmMesh, sign };
     });
 
     const legs = {};
@@ -167,7 +170,10 @@ const Athlete = {
     const armS = scaleOf(scores.arms);
     ['L', 'R'].forEach(side => {
       // Shoulder joint sphere reads deltoid size; arm capsules read biceps/triceps.
-      rig.arms[side].shoulder.children[0].scale.setScalar(1 + shoulderS * 0.55);
+      // Note scaleOf() already returns the final multiplier (1..1.9) — an earlier
+      // version wrapped it again as `1 + shoulderS * 0.55`, which pushed the
+      // deltoid spheres to ~2x and made the figure read as a pile of balls.
+      rig.arms[side].shoulder.children[0].scale.setScalar(shoulderS);
       rig.arms[side].upperArmMesh.scale.set(armS, 1, armS);
       rig.arms[side].forearmMesh.scale.set(armS * 0.9, 1, armS * 0.9);
     });
@@ -178,7 +184,7 @@ const Athlete = {
   setWeight(view, totalKg, sex) {
     const rig = this.rig(view);
     if (rig.barbell) {
-      rig.grip.remove(rig.barbell);
+      rig.root.remove(rig.barbell);
       rig.barbell.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     }
     const load = (typeof Strength !== 'undefined')
@@ -213,7 +219,9 @@ const Athlete = {
       });
     });
 
-    rig.grip.add(group);
+    // Parented to root (not to a chest-relative grip pivot) so animate() can
+    // place it exactly at the hands' world position each frame.
+    rig.root.add(group);
     rig.barbell = group;
     return load;
   },
@@ -224,68 +232,95 @@ const Athlete = {
   _phase(t, periodSec) { return (Math.sin((t / periodSec) * Math.PI * 2 - Math.PI / 2) + 1) / 2; },
 
   /**
-   * Apply one exercise's pose for a given elapsed time. Every pose
-   * parameter (hip height, torso lean, thigh/knee/shoulder/elbow flex, grip
-   * position) is computed exactly once per call as a single flat set of
-   * local variables, then applied — an earlier draft composed this from
-   * several independent if/else blocks and a later block could silently
-   * clobber an earlier one's value for the same joint when switching lifts.
-   * A single branch with full pose parameters per case avoids that class
-   * of bug entirely.
+   * Two-segment leg IK: given a hip height, find the thigh/knee rotations
+   * that keep the foot planted on the floor with the knee tracking forward.
+   * Law of cosines on the hip–knee–foot triangle:
+   *     cos(alpha) = (h^2 + a^2 - b^2) / (2·h·a)
+   * Solving this instead of hand-tuning angles is what actually keeps the
+   * feet on the ground — eyeballed rotations sank the foot ~0.07 units
+   * below the floor at the bottom of the squat.
+   */
+  _legIK(hipY) {
+    const a = this.DIM.thigh, b = this.DIM.shin;
+    const h = Math.max(0.05, Math.min(hipY, a + b - 1e-4)); // clamp to reachable
+    const cosA = Math.max(-1, Math.min(1, (h * h + a * a - b * b) / (2 * h * a)));
+    const alpha = Math.acos(cosA);                    // thigh angle off vertical
+    const thighRot = -alpha;                          // negative => knee travels forward (+Z)
+    const shinWorld = Math.atan2(a * Math.sin(alpha), h - a * Math.cos(alpha));
+    return { thighRot, kneeRot: shinWorld - thighRot };
+  },
+
+  /**
+   * Apply one exercise's pose for a given elapsed time. Every pose parameter
+   * is computed exactly once per call as a single flat set of locals, then
+   * applied — composing this from several independent if/else blocks let a
+   * later block silently clobber an earlier one's value for a shared joint.
    *
    * The rig only knows how to stand, so all four lifts are stylized as
    * standing movements (bench becomes a standing press-out) rather than
-   * adding a lying-down pose that would reorient the whole figure —
-   * jarring when switching tabs mid-orbit, and this keeps one consistent
-   * silhouette to inspect from any angle.
+   * adding a lying-down pose that would reorient the whole figure — jarring
+   * when switching tabs mid-orbit.
+   *
+   * The barbell is NOT posed independently: after the joints are set, it's
+   * snapped to the midpoint of the two hands in world space. Animating a
+   * chest-relative grip pivot separately from the arms left the bar floating
+   * 0.26–0.45 units away from the hands in every single pose.
    */
   animate(view, liftId, t) {
     const rig = this._rigs.get(view.id);
     if (!rig) return;
     const D = this.DIM;
     const restHipY = D.shin + D.thigh;
-    const restGripY = -D.forearm - 0.05, restGripZ = 0.08;
 
     let hipY = restHipY, torsoX = 0;
-    let thighX = 0, kneeX = 0;        // symmetric across L/R
-    let shoulderX = 0, elbowX = 0;    // symmetric across L/R
-    let gripY = restGripY, gripZ = restGripZ;
+    let shoulderX = 0, shoulderZ = 0, elbowX = 0;  // shoulderZ = abduction (arms out sideways)
+    let barZ = 0, barY = 0;                        // extra bar offset from the hands
 
     if (liftId === 'squat') {
       const p = this._phase(t, 2.4);
-      hipY = restHipY - p * 0.14;
-      thighX = p * 32 * DEG2RAD;
-      kneeX = -p * 34 * DEG2RAD;
-      torsoX = p * 8 * DEG2RAD; // slight forward lean under load
+      hipY = restHipY - p * 0.30;
+      torsoX = p * 12 * DEG2RAD;        // slight forward lean under load
+      shoulderZ = 78 * DEG2RAD;         // arms out to the sides, bar across the traps
+      barZ = -0.13;                     // sit the bar behind the neck, not through it
     } else if (liftId === 'bench') {
-      const p = this._phase(t, 1.9); // 0 = bar racked at chest, 1 = arms locked out
-      torsoX = -10 * DEG2RAD;
-      shoulderX = -20 * DEG2RAD;
-      elbowX = -(1 - p) * 70 * DEG2RAD;
-      gripY = restGripY + p * 0.10;
-      gripZ = restGripZ + 0.05 + p * 0.25;
+      const p = this._phase(t, 1.9);    // 0 = racked at chest, 1 = locked out
+      torsoX = -8 * DEG2RAD;
+      shoulderX = -92 * DEG2RAD;        // arms forward, horizontal
+      elbowX = -(1 - p) * 78 * DEG2RAD; // bend deep at the chest, straight at lockout
     } else if (liftId === 'deadlift') {
-      const p = this._phase(t, 2.4); // 0 = hinged over near the floor, 1 = locked out standing
-      torsoX = (1 - p) * 55 * DEG2RAD;
-      gripY = restGripY - (1 - p) * 0.30;
-      gripZ = restGripZ + 0.20;
+      const p = this._phase(t, 2.4);    // 0 = bent over the bar, 1 = locked out
+      torsoX = (1 - p) * 62 * DEG2RAD;
+      hipY = restHipY - (1 - p) * 0.14; // hips ride slightly lower off the floor
+      // Arms just hang — as the torso hinges, the shoulders (and so the hands,
+      // and so the bar) travel down with it. Anatomically correct for free.
     } else if (liftId === 'ohp') {
-      const p = this._phase(t, 2.0); // 0 = racked at shoulders, 1 = overhead lockout
-      shoulderX = -p * 165 * DEG2RAD;
-      elbowX = -p * 15 * DEG2RAD;
-      gripY = restGripY + p * 0.55;
-      gripZ = restGripZ - p * 0.12;
+      const p = this._phase(t, 2.0);    // 0 = racked at shoulders, 1 = overhead
+      shoulderX = -(18 + p * 158) * DEG2RAD;
+      elbowX = -(1 - p) * 72 * DEG2RAD;
     }
 
+    // Legs: solved so the feet stay planted for whatever hip height the lift wants
+    const ik = this._legIK(hipY);
     rig.hips.position.y = hipY;
     rig.torso.rotation.x = torsoX;
     ['L', 'R'].forEach(side => {
-      rig.legs[side].thigh.rotation.x = thighX;
-      rig.legs[side].knee.rotation.x = kneeX;
-      rig.arms[side].shoulder.rotation.x = shoulderX;
-      rig.arms[side].elbow.rotation.x = elbowX;
+      rig.legs[side].thigh.rotation.x = ik.thighRot;
+      rig.legs[side].knee.rotation.x = ik.kneeRot;
+      const arm = rig.arms[side];
+      arm.shoulder.rotation.x = shoulderX;
+      arm.shoulder.rotation.z = shoulderZ * arm.sign; // mirror abduction per side
+      arm.elbow.rotation.x = elbowX;
     });
-    rig.grip.position.set(0, gripY, gripZ);
+
+    // Snap the bar into the hands (world space), then convert back to root-local.
+    if (rig.barbell) {
+      rig.root.updateWorldMatrix(true, true);
+      rig.arms.L.hand.getWorldPosition(_vHandL);
+      rig.arms.R.hand.getWorldPosition(_vHandR);
+      _vMid.copy(_vHandL).add(_vHandR).multiplyScalar(0.5);
+      rig.root.worldToLocal(_vMid);
+      rig.barbell.position.set(_vMid.x, _vMid.y + barY, _vMid.z + barZ);
+    }
   },
 
   /** Full teardown (rarely needed — Holo already skips hidden canvases and

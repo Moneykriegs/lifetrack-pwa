@@ -634,11 +634,22 @@ const HUD = {
 
     const view = Holo.view('gym-athlete-3d');
     if (!view) return;
-    view.orbit.target.set(0, 0.9, 0);
+    // Framed to fit every lift without re-framing per exercise: the tallest
+    // pose is the OHP lockout (bar ~2.3 + plate radius), the lowest is the
+    // planted feet at 0, so aim mid-span. Re-framing on each tab switch
+    // looked like the camera was jumping around.
+    view.orbit.target.set(0, 1.2, 0);
     // Zoom bounds + initial distance are set once, not every render — the
     // periodic 30s refresh would otherwise fight the user's own zoom/orbit.
     if (!view._athleteInit) {
-      view.orbit.minR = 2.2; view.orbit.maxR = 6; view.orbit.radius = 4;
+      view.orbit.minR = 2.4; view.orbit.maxR = 7; view.orbit.radius = 4.1;
+      // Three-quarter view. These are all sagittal-plane movements, so a
+      // front-on camera makes them unreadable (a deadlift just looks like the
+      // torso collapsing into itself) — but a pure side view hides the loaded
+      // barbell end-on, which is half the point of the panel. ~50 deg shows
+      // both the movement and the plate stack.
+      view.orbit.theta = 0.85;
+      view.orbit.phi = 1.32;
       view._athleteInit = true;
     }
 
