@@ -161,6 +161,80 @@ test('Strength.volume sums sessions, reps and tonnage in range', () => {
   assert.equal(v.days, 2);
 });
 
+test('Strength.score01 is continuous and monotonic across tiers', () => {
+  const r = vm.runInContext(`(() => {
+    // male squat thresholds: [0.75,1.25,1.50,2.00,2.50] x bodyweight
+    const bodyKg = 80;
+    return JSON.stringify({
+      zero: Strength.score01('squat', 0, bodyKg, 'male'),
+      noBody: Strength.score01('squat', 100, null, 'male'),
+      belowBronze: Strength.score01('squat', 40, bodyKg, 'male'),   // ratio 0.5 < 0.75
+      atBronze: Strength.score01('squat', 60, bodyKg, 'male'),      // ratio 0.75
+      midGoldSilver: Strength.score01('squat', 110, bodyKg, 'male'),// ratio 1.375, between silver(1.25) and gold(1.5)
+      atDiamond: Strength.score01('squat', 240, bodyKg, 'male'),    // ratio 3.0 >= 2.5
+      aboveDiamond: Strength.score01('squat', 400, bodyKg, 'male'),
+    });
+  })()`, ctx);
+  const v = JSON.parse(r);
+  assert.equal(v.zero, 0);
+  assert.equal(v.noBody, 0);
+  assert.ok(v.belowBronze > 0 && v.belowBronze < 0.2, 'below first tier scales toward it, capped under 0.2');
+  assert.ok(v.atBronze > v.belowBronze, 'crossing into Bronce increases score');
+  assert.ok(v.midGoldSilver > v.atBronze && v.midGoldSilver < 1, 'mid-ladder score sits strictly between');
+  assert.equal(v.atDiamond, 1);
+  assert.equal(v.aboveDiamond, 1, 'score never exceeds 1 past Diamante');
+});
+
+test('Strength.muscleScores mixes lifts per group and exposes imbalance', () => {
+  const r = vm.runInContext(`(() => {
+    const bodyKg = 80, sex = 'male';
+    // Only squat trained — legs should score, chest/shoulders/arms should be ~0
+    const legsOnly = Strength.muscleScores({ squat: { e1rm: 150 } }, bodyKg, sex);
+    // No data at all
+    const none = Strength.muscleScores({}, bodyKg, sex);
+    // All four trained evenly
+    const balanced = Strength.muscleScores({
+      squat: { e1rm: 150 }, bench: { e1rm: 100 }, deadlift: { e1rm: 200 }, ohp: { e1rm: 65 },
+    }, bodyKg, sex);
+    return JSON.stringify({ legsOnly, none, balanced });
+  })()`, ctx);
+  const { legsOnly, none, balanced } = JSON.parse(r);
+  assert.ok(legsOnly.legs > 0, 'legs score from squat-only training');
+  assert.equal(legsOnly.chest, 0, 'chest is pure bench — untrained stays 0');
+  assert.equal(none.legs, 0); assert.equal(none.back, 0); assert.equal(none.chest, 0);
+  assert.equal(none.shoulders, 0); assert.equal(none.arms, 0);
+  ['legs','back','chest','shoulders','arms'].forEach(k => {
+    assert.ok(balanced[k] > 0, `${k} should score once its contributing lifts are trained`);
+    assert.ok(balanced[k] <= 1);
+  });
+});
+
+test('Strength.plateLoad breaks down a real barbell load with IWF plates', () => {
+  const r = vm.runInContext(`(() => {
+    return JSON.stringify({
+      empty: Strength.plateLoad(20, 'male'),          // bar only
+      hundred: Strength.plateLoad(100, 'male'),       // 40kg/side -> greedy 25+15
+      women: Strength.plateLoad(42.5, 'female'),      // 15kg bar, 13.75kg/side
+      inexact: Strength.plateLoad(21, 'male'),        // 0.5kg/side, unloadable with this set
+    });
+  })()`, ctx);
+  const { empty, hundred, women, inexact } = JSON.parse(r);
+  assert.equal(empty.barKg, 20);
+  assert.deepEqual(empty.perSide, []);
+  assert.equal(empty.achievable, true);
+
+  assert.equal(hundred.barKg, 20);
+  assert.deepEqual(hundred.perSide, [25, 15]); // greedy heaviest-first: fewest plates
+  assert.equal(hundred.totalKg, 100);
+  assert.equal(hundred.achievable, true);
+
+  assert.equal(women.barKg, 15);
+  assert.ok(women.perSide.reduce((a,b)=>a+b,0) <= 13.75 + 1e-6);
+
+  assert.equal(inexact.achievable, false, 'a target that cannot be loaded exactly is flagged');
+  assert.ok(inexact.totalKg < 21, 'rounds down rather than over-representing the lift');
+});
+
 test('DB.snapshot includes every synced domain', () => {
   const r = vm.runInContext(`JSON.stringify(Object.keys(DB.snapshot()).sort())`, ctx);
   assert.deepEqual(JSON.parse(r), [

@@ -527,6 +527,74 @@ const Strength = {
     return Math.round(idxs.reduce((a, b) => a + b, 0) / idxs.length);
   },
 
+  // ── 3D athlete physique (continuous score + per-muscle-group mix) ──
+
+  // Continuous 0..1 strength score for one lift: piecewise-linear interpolation
+  // across the same 5-tier ladder the segmented UI meter shows (ratio 0 → 0,
+  // each successive threshold → k/5, Diamante threshold → 1). Continuous and
+  // strictly monotonic in ratio — unlike bucketing by tier index, there's no
+  // discontinuity right at a threshold crossing.
+  score01(liftId, e1rm, bodyKg, sex) {
+    const m = LIFT_STANDARDS.mult[sex === 'female' ? 'female' : 'male']?.[liftId];
+    if (!m || !bodyKg || !e1rm) return 0;
+    const ratio = e1rm / bodyKg;
+    if (ratio <= 0) return 0;
+    const ratios = [0, ...m];               // 6 points: 0, Bronce..Diamante
+    const fracs  = m.map((_, i) => (i + 1) / m.length);
+    fracs.unshift(0);
+    if (ratio >= ratios[ratios.length - 1]) return 1;
+    let i = 0;
+    while (i < ratios.length - 1 && ratio > ratios[i + 1]) i++;
+    const span = ratios[i + 1] - ratios[i];
+    const within = span > 0 ? (ratio - ratios[i]) / span : 0;
+    return Math.max(0, Math.min(1, fracs[i] + within * (fracs[i + 1] - fracs[i])));
+  },
+
+  // Per-muscle-group scores (0..1 each) from a weighted mix of the 4 lifts.
+  // Weights are an anatomically-defensible approximation, not exact EMG data:
+  // squat/deadlift drive legs, deadlift/OHP drive back, bench is pure chest,
+  // OHP/bench drive shoulders, bench/OHP drive arms. Missing lifts contribute
+  // 0 to their weighted slots (an untrained lift pulls that group down,
+  // which is the point — it's meant to expose imbalance).
+  muscleScores(lifts, bodyKg, sex) {
+    const s = id => this.score01(id, lifts[id]?.e1rm, bodyKg, sex);
+    const squat = s('squat'), bench = s('bench'), deadlift = s('deadlift'), ohp = s('ohp');
+    return {
+      legs:      +(squat * 0.75 + deadlift * 0.25).toFixed(3),
+      back:      +(deadlift * 0.85 + ohp * 0.15).toFixed(3),
+      chest:     +(bench * 1.0).toFixed(3),
+      shoulders: +(ohp * 0.70 + bench * 0.30).toFixed(3),
+      arms:      +(bench * 0.5 + ohp * 0.5).toFixed(3),
+    };
+  },
+
+  // Standard IWF plate set (kg) with color, heaviest first — used both for
+  // the greedy per-side breakdown and for coloring the 3D discs.
+  PLATES: [
+    { kg: 25,   color: '#e0342a' }, { kg: 20,   color: '#2a6fe0' },
+    { kg: 15,   color: '#f0c419' }, { kg: 10,   color: '#3aa15c' },
+    { kg: 5,    color: '#f4f4f4' }, { kg: 2.5,  color: '#2b2b2b' },
+    { kg: 1.25, color: '#c9c9c9' },
+  ],
+
+  // Real barbell load: standard 20kg bar (15kg women's/training bar), greedy
+  // per-side plate breakdown from the IWF set. `achievable` is false when the
+  // requested total can't be hit exactly with this plate set (rounds down to
+  // the nearest loadable weight rather than over-representing the lift).
+  plateLoad(totalKg, sex) {
+    const barKg = sex === 'female' ? 15 : 20;
+    const perSideTarget = Math.max(0, (totalKg - barKg) / 2);
+    const perSide = [];
+    let remaining = perSideTarget;
+    const eps = 1e-6;
+    for (const p of this.PLATES) {
+      while (remaining + eps >= p.kg) { perSide.push(p.kg); remaining -= p.kg; }
+    }
+    const loadedPerSide = perSide.reduce((a, b) => a + b, 0);
+    const achievable = Math.abs(loadedPerSide - perSideTarget) < 0.01;
+    return { barKg, perSide, totalKg: +(barKg + loadedPerSide * 2).toFixed(2), achievable };
+  },
+
   // ── Progression / PRs / volume (operate on DB.liftLog()) ────────
   // Sorted history for one lift, each entry flagged isPR (new all-time e1rm).
   progress(history) {
