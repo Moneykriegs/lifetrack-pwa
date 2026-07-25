@@ -57,6 +57,7 @@ const HUD = {
   },
 
   start() {
+    this._started = true;
     this.hideLogin();
     // Restore cached identity label if present
     const u = (typeof CloudSync !== 'undefined') ? CloudSync._loadCachedUser() : null;
@@ -181,6 +182,12 @@ const HUD = {
   applyTheme(theme) {
     document.documentElement.dataset.theme = theme || '';
     localStorage.setItem('lt_hud_theme', theme || '');
+    // 3D scenes bake the accent color into their materials, so they need an
+    // explicit rebuild — CSS custom properties can't reach into WebGL.
+    if (this._started && typeof Holo !== 'undefined' && Holo.supported()) {
+      if (this.view === 'analytics') this.renderAnalytics();
+      if (this.view === 'gym') this.renderGym();
+    }
   },
 
   syncIntervalMs() {
@@ -545,6 +552,16 @@ const HUD = {
     this.renderGymPlan();
   },
 
+  /** Show the 3D canvas (and hide the SVG fallback) or vice-versa. */
+  _holoMode(canvasId, svgId) {
+    const canvas = document.getElementById(canvasId);
+    const svg = document.getElementById(svgId);
+    const on = typeof Holo !== 'undefined' && Holo.supported();
+    if (canvas) canvas.hidden = !on;
+    if (svg) svg.hidden = on;
+    return on;
+  },
+
   gymChart() {
     const svg = document.getElementById('gym-chart');
     const def = this._liftDefs().find(l => l.id === this.gymLift);
@@ -552,17 +569,9 @@ const HUD = {
     const hist = (typeof Strength !== 'undefined')
       ? Strength.progress(DB.liftHistory(this.gymLift))
       : DB.liftHistory(this.gymLift);
-    if (!hist || hist.length < 1) {
-      svg.innerHTML = `<text class="an-empty" x="230" y="80" text-anchor="middle">Aún no registras este ejercicio</text>`;
-      return;
-    }
-    if (hist.length === 1) {
-      const e = hist[0];
-      svg.innerHTML = `<circle class="gym-cpr" cx="230" cy="80" r="5"/><text class="an-empty" x="230" y="110" text-anchor="middle">${e.e1rm} kg · registra más para ver la curva</text>`;
-      return;
-    }
-    // Tier threshold reference lines (Bronce→Diamante in e1RM kg for this lift
-    // + bodyweight) so it's immediately visible what the next rank requires.
+
+    // Tier threshold reference planes (Bronce→Diamante in e1RM kg for this
+    // lift + bodyweight) so it's immediately visible what the next rank needs.
     const s = DB.settings();
     const sex = s.gender === 'female' ? 'female' : 'male';
     const bodyKg = (DB.weightLog().slice(-1)[0] || {}).kg || null;
@@ -570,6 +579,31 @@ const HUD = {
       ? LIFT_STANDARDS.mult[sex][this.gymLift].map(mult => mult * bodyKg)
       : [];
 
+    const holo = this._holoMode('gym-chart-3d', 'gym-chart');
+    const empty = document.getElementById('gym-chart-empty');
+    const tooFew = !hist || hist.length < 2;
+    if (empty) {
+      empty.hidden = !tooFew;
+      empty.textContent = !hist || !hist.length
+        ? 'Aún no registras este ejercicio'
+        : `${hist[0].e1rm} kg · registra otra serie para ver la progresión`;
+    }
+    if (holo) {
+      const canvas = document.getElementById('gym-chart-3d');
+      if (canvas) canvas.style.visibility = tooFew ? 'hidden' : '';
+      if (tooFew) return;
+      Holo.line('gym-chart-3d', hist.map(h => ({ value: h.e1rm, pr: h.isPR })), {
+        unit: ' kg',
+        refs: thresholdsKg.map((kg, i) => {
+          const tier = (typeof LIFT_TIERS !== 'undefined') ? LIFT_TIERS[i] : null;
+          return { value: kg, label: `${tier ? tier.emoji : ''} ${Math.round(kg)}`, color: tier ? tier.color : null };
+        }),
+      });
+      return;
+    }
+
+    // ── SVG fallback (no WebGL) ──────────────────────────────────
+    if (tooFew) { svg.innerHTML = ''; return; }
     const W = 460, H = 160, pad = 20;
     const es = hist.map(h => h.e1rm || 0);
     const domainVals = [...es, ...thresholdsKg];

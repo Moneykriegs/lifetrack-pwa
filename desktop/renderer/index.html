@@ -193,7 +193,12 @@
       <div class="panel gym-wide">
         <div class="panel-hd" data-code="GYM·01"><span class="panel-hd-dot"></span>PROGRESIÓN 1RM <span class="panel-hd-val" id="gym-lift-name"></span></div>
         <div class="gym-lift-tabs" id="gym-lift-tabs"></div>
-        <svg viewBox="0 0 460 160" class="an-svg" id="gym-chart" preserveAspectRatio="none"></svg>
+        <div class="holo-wrap">
+          <canvas class="holo-canvas" id="gym-chart-3d"></canvas>
+          <svg viewBox="0 0 460 160" class="an-svg holo-fallback" id="gym-chart" preserveAspectRatio="none" hidden></svg>
+          <div class="holo-empty" id="gym-chart-empty" hidden></div>
+          <span class="holo-hint">arrastra para rotar · rueda para zoom · doble clic reinicia</span>
+        </div>
       </div>
 
       <div class="panel gym-log">
@@ -276,6 +281,9 @@
   <script src="vendor/db.js"></script>
   <script src="vendor/core.js"></script>
   <script src="vendor/insights.js"></script>
+  <!-- Three.js (wrapped as a global by copy-shared.js) + the holo chart toolkit -->
+  <script src="vendor/three.js"></script>
+  <script src="holo.js"></script>
   <script src="hud.js"></script>
 </body>
 </html>

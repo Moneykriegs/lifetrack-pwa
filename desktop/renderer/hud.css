@@ -560,3 +560,27 @@ body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
 /* Tier threshold reference lines on the 1RM progression chart */
 .gym-tier-line { stroke: rgba(var(--accent-rgb),.25); stroke-width: 1; stroke-dasharray: 3 3; }
 .gym-tier-line-lbl { fill: var(--ink-dim); font-size: 8px; letter-spacing: .3px; }
+
+/* ── Holographic 3D chart containers ──────────────────────────── */
+.holo-wrap { position: relative; width: 100%; }
+.holo-canvas {
+  width: 100%; height: 190px; display: block; border-radius: 8px;
+  background:
+    radial-gradient(120% 90% at 50% 110%, rgba(var(--accent-rgb),.07), transparent 65%),
+    radial-gradient(rgba(var(--accent-rgb),.10) 1px, transparent 1px) 0 0 / 18px 18px;
+}
+.holo-canvas:active { cursor: grabbing; }
+.holo-hint {
+  position: absolute; right: 8px; bottom: 6px;
+  font-size: 9px; letter-spacing: .6px; color: var(--ink-dim);
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+.holo-wrap:hover .holo-hint { opacity: .75; }
+.holo-fallback[hidden] { display: none; }
+/* Taller canvas for the wide analytics panels */
+.an-wide .holo-canvas, .gym-wide .holo-canvas { height: 215px; }
+.holo-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--ink-dim); pointer-events: none; text-align: center;
+}
+.holo-empty[hidden] { display: none; }

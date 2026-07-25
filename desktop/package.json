@@ -14,12 +14,15 @@
   },
   "devDependencies": {
     "electron": "^31.7.6",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "three": "^0.185.1"
   },
   "build": {
     "appId": "com.lifetrack.hud",
     "productName": "LifeTrack HUD",
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "main.js",
       "preload.js",
