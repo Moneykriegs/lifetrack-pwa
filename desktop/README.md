@@ -8,6 +8,10 @@ both stay in sync through the same Supabase backend.
 
 - **HUD dashboard** — arc-reactor calorie gauge, macro rings, water column,
   streak flames, weight sparkline, meal timeline, assistant orb + insight ticker.
+- **Holographic 3D charts** — calories, weight trend, adherence and 1RM
+  progression render in WebGL (Three.js); drag to orbit, wheel to zoom,
+  double-click to reset. Falls back to flat SVG automatically without WebGL.
+- **Animated exercise silhouettes** — articulated stick figures per lift.
 - **Analytics view** — titlebar tab: calories-vs-goal bars, weight trend +
   projection, adherence heat-strip, wellness correlations, weekly summary (7/30d).
 - **Global quick-log** — `Ctrl+Shift+L` from any app pops a small overlay to log
