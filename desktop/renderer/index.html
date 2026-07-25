@@ -201,7 +201,7 @@
   <!-- ── Gym progress view ─────────────────────────────────────────── -->
   <main class="gym" id="gym" hidden>
     <div class="gym-grid">
-      <div class="panel gym-wide">
+      <div class="panel">
         <div class="panel-hd" data-code="GYM·01"><span class="panel-hd-dot"></span>PROGRESIÓN 1RM <span class="panel-hd-val" id="gym-lift-name"></span></div>
         <div class="gym-lift-tabs" id="gym-lift-tabs"></div>
         <div class="holo-wrap">
@@ -210,6 +210,16 @@
           <div class="holo-empty" id="gym-chart-empty" hidden></div>
           <span class="holo-hint">arrastra para rotar · rueda para zoom · doble clic reinicia</span>
         </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd" data-code="GYM·07"><span class="panel-hd-dot"></span>ATLETA <span class="panel-hd-val" id="gym-athlete-weight"></span></div>
+        <div class="holo-wrap">
+          <canvas class="holo-canvas ex-tall" id="gym-athlete-3d"></canvas>
+          <div class="holo-empty" id="gym-athlete-empty" hidden></div>
+          <span class="holo-hint">arrastra para rotar · rueda para zoom</span>
+        </div>
+        <div class="gym-muscle-legend" id="gym-muscle-legend"></div>
       </div>
 
       <div class="panel gym-log">
@@ -295,6 +305,7 @@
   <!-- Three.js (wrapped as a global by copy-shared.js) + the holo chart toolkit -->
   <script src="vendor/three.js"></script>
   <script src="holo.js"></script>
+  <script src="athlete.js"></script>
   <script src="exercise-icons.js"></script>
   <script src="hud.js"></script>
 </body>

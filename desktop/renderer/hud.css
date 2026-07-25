@@ -641,3 +641,12 @@ body.mini .rz, body.maximized .rz, body.fullscreen .rz { display: none; }
 .gym-pr-icon { color: var(--cyan); display: flex; }
 .gym-plan-icon { color: var(--ink-dim); display: flex; }
 .gym-plan-row:hover .gym-plan-icon { color: var(--cyan); }
+
+/* ── Athlete 3D panel ──────────────────────────────────────────── */
+.holo-canvas.ex-tall { height: 240px; }
+.gym-muscle-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.gml-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.gml-label { width: 68px; color: var(--ink-dim); flex-shrink: 0; }
+.gml-bar-wrap { flex: 1; height: 5px; background: rgba(var(--accent-rgb),0.1); border-radius: 3px; overflow: hidden; }
+.gml-bar { height: 100%; background: var(--cyan); border-radius: 3px; box-shadow: 0 0 5px rgba(var(--accent-rgb),.5); transition: width .6s cubic-bezier(.2,1,.3,1); }
+.gml-pct { width: 30px; text-align: right; color: var(--ink-dim); font-size: 10px; flex-shrink: 0; }

@@ -604,11 +604,79 @@ const HUD = {
       b.onclick = () => { this.gymLift = b.dataset.lift; this.renderGym(); });
 
     this.gymChart();
+    this.gymAthlete();
     this.gymPRs();
     this.gymTiers();
     this.gymVolume();
     if (!this.gymPlanDay) this.gymPlanDay = this._todayDayId();
     this.renderGymPlan();
+  },
+
+  /** 3D athlete: physique scaled per muscle group from all logged lifts,
+   *  holding a real barbell loaded for the currently selected exercise. */
+  gymAthlete() {
+    const holo = this._holoMode('gym-athlete-3d', null);
+    const empty = document.getElementById('gym-athlete-empty');
+    const legendEl = document.getElementById('gym-muscle-legend');
+    const weightLbl = document.getElementById('gym-athlete-weight');
+    if (!holo || typeof Athlete === 'undefined' || typeof Strength === 'undefined') {
+      if (empty) { empty.hidden = false; empty.textContent = 'Vista 3D no disponible en este equipo'; }
+      if (legendEl) legendEl.innerHTML = '';
+      if (weightLbl) weightLbl.textContent = '';
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    const s = DB.settings();
+    const bodyKg = (DB.weightLog().slice(-1)[0] || {}).kg || s.weightGoal || null;
+    const sex = s.gender === 'female' ? 'female' : 'male';
+    const lifts = DB.lifts();
+
+    const view = Holo.view('gym-athlete-3d');
+    if (!view) return;
+    view.orbit.target.set(0, 0.9, 0);
+    // Zoom bounds + initial distance are set once, not every render — the
+    // periodic 30s refresh would otherwise fight the user's own zoom/orbit.
+    if (!view._athleteInit) {
+      view.orbit.minR = 2.2; view.orbit.maxR = 6; view.orbit.radius = 4;
+      view._athleteInit = true;
+    }
+
+    const rig = Athlete.rig(view, Holo.accent());
+    // Recolor in place on theme change instead of a full rig rebuild.
+    const liveAccent = Holo.accent();
+    if (!rig.color.equals(liveAccent)) Athlete.recolor(view, liveAccent);
+
+    const scores = Strength.muscleScores(lifts, bodyKg, sex);
+    Athlete.setPhysique(view, scores);
+
+    // Weight on the bar: the current lift's most recent working set if it's
+    // been trained today-ish, else its PR, else an empty bar — "what you're
+    // actually lifting" rather than always maxing out the figure.
+    const hist = DB.liftHistory(this.gymLift);
+    const latest = hist.length ? hist[hist.length - 1] : null;
+    const prs = Strength.prs(DB.liftLog());
+    const pr = prs[this.gymLift];
+    const kgToShow = (latest && latest.kg) || (pr && pr.kg) || 0;
+    const load = Athlete.setWeight(view, kgToShow || (sex === 'female' ? 15 : 20), sex);
+    if (weightLbl) {
+      weightLbl.textContent = kgToShow ? `${load.totalKg} kg` : '';
+    }
+
+    if (legendEl) {
+      const GROUPS = [
+        { id: 'legs', label: 'Piernas' }, { id: 'back', label: 'Espalda' },
+        { id: 'chest', label: 'Pecho' }, { id: 'shoulders', label: 'Hombros' }, { id: 'arms', label: 'Brazos' },
+      ];
+      legendEl.innerHTML = GROUPS.map(g => {
+        const pct = Math.round((scores[g.id] || 0) * 100);
+        return `<div class="gml-row">
+          <span class="gml-label">${g.label}</span>
+          <span class="gml-bar-wrap"><span class="gml-bar" style="width:${pct}%"></span></span>
+          <span class="gml-pct">${pct}%</span>
+        </div>`;
+      }).join('');
+    }
   },
 
   /** Show the 3D canvas (and hide the SVG fallback) or vice-versa. */
